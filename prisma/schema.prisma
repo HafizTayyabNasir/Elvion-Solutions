@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String
+  isAdmin   Boolean  @default(false)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  date      DateTime @default(now()) // Stored as ISO string or Date object
+  createdAt DateTime @default(now())
+}
+
+model Slot {
+  id           Int      @id @default(autoincrement())
+  date         String   // YYYY-MM-DD
+  time         String   // HH:mm
+  isBooked     Boolean  @default(false)
+  bookedBy     String?  // Email of user who booked
+  bookedByName String?  // Name of user who booked
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userName  String
+  text      String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model InternshipApplication {
+  id              Int      @id @default(autoincrement())
+  fullName        String
+  personalEmail   String
+  universityEmail String?
+  fieldOfInterest String
+  expectations    String?
+  cvFileName      String?
+  cvFileUrl       String?
+  cvFileData      String?  @db.Text // Base64 encoded file data
+  cvFileType      String?  // MIME type (e.g., application/pdf)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

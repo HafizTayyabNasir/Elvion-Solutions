@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-elvion-dark: #121212;
+  --color-elvion-card: #1E1E1E;
+  --color-elvion-primary: #00D28D;
+  --color-elvion-secondary: #FFFFFF;
+  --color-elvion-accent: #00B074;
+  --color-elvion-gray: #A1A1A1;
+}
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 18, 18, 18;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #121212;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #00D28D;
+  border-radius: 4px;
+}
+ 
