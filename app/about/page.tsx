@@ -161,7 +161,7 @@ export default function About() {
                 </div>
 
                 {/* Grid pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,210,141,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,210,141,0.03)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse" style={{ animationDuration: '4s' }}></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,210,141,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(0,210,141,0.12)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse" style={{ animationDuration: '4s' }}></div>
 
                 <div className="max-w-6xl mx-auto px-4 relative z-10">
                     <div className="text-center space-y-6 animate-slide-up">

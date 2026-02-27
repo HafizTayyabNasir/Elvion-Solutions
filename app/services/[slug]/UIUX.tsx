@@ -262,7 +262,7 @@ export default function UIUX() {
                 </div>
 
                 {/* Animated Grid pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" style={{ animation: 'pulse 6s ease-in-out infinite' }}></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(168,85,247,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.12)_1px,transparent_1px)] bg-[size:50px_50px]" style={{ animation: 'pulse 6s ease-in-out infinite' }}></div>
 
                 <div className="max-w-7xl mx-auto px-4 relative z-10">
                     <div className="text-center max-w-4xl mx-auto space-y-8">

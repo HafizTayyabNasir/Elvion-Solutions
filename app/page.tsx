@@ -44,10 +44,10 @@ const initialComments: Comment[] = [
 ];
 
 const teamMembers = [
-  { name: "Muhammad Zohaib Tabassum", role: "CEO & Founder", image: "/Zohaib_Tabassum.webp", linkedin: "https://www.linkedin.com/in/mzohaibtabassum-softwareengineer/" },
-  { name: "Muhammad Tayyab", role: "Co-Founder & Chief Technology Officer", image: "/Muhammad_Tayyab.webp", linkedin: "https://www.linkedin.com/in/muhammad-tayyab-sofwareengineer/" },
-  { name: "Husnain Mehmood", role: "Co-Founder & Chief Marketing Officer", image: "/Husnain_Mehmood.webp", linkedin: "https://www.linkedin.com/in/husnain-mehmood-b977362bb/" },
-  { name: "Hammad Ahmad", role: "Co-Founder & Customer Acquisition Specialist", image: "/Hammad_Ahmad.webp", linkedin: "https://www.linkedin.com/in/hammad-ahmad-0b1b3b1b3/" }
+  { name: "Muhammad Zohaib Tabassum", role: "Founder & CEO", image: "/Zohaib_Tabassum.webp", linkedin: "https://www.linkedin.com/in/mzohaibtabassum-softwareengineer/" },
+  { name: "Muhammad Tayyab", role: "Chief Technical Officer", image: "/Muhammad_Tayyab.webp", linkedin: "https://www.linkedin.com/in/muhammad-tayyab-sofwareengineer/" },
+  { name: "Husnain Mehmood", role: "Chief Of Operations", image: "/Husnain_Mehmood.webp", linkedin: "https://www.linkedin.com/in/husnain-mehmood-b977362bb/" },
+  { name: "Hammad Ahmad", role: "Business Developer", image: "/Hammad_Ahmad.webp", linkedin: "https://www.linkedin.com/in/hammad-ahmad-0b1b3b1b3/" }
 ];
 
 export default function Home() {
@@ -284,7 +284,7 @@ export default function Home() {
         </div>
 
         {/* Animated Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,210,141,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,210,141,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" style={{ animation: 'pulse 6s ease-in-out infinite' }}></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,210,141,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(0,210,141,0.12)_1px,transparent_1px)] bg-[size:50px_50px]" style={{ animation: 'pulse 6s ease-in-out infinite' }}></div>
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto space-y-8">
