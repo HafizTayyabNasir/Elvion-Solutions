@@ -9,7 +9,6 @@ import {
   Ticket,
   FileText,
   Users,
-  UserPlus,
   Handshake,
   Receipt,
   BarChart3,
@@ -18,7 +17,9 @@ import {
   Menu,
   X,
   ChevronLeft,
-  Bell,
+  ChevronRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 const menuItems = [
@@ -69,12 +70,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated || !user?.is_admin) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-elvion-dark">
+    <div className="min-h-screen bg-elvion-dark flex">
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg bg-white dark:bg-elvion-card shadow-lg"
+          className="p-2 rounded-lg bg-elvion-card border border-white/10 shadow-lg text-white hover:bg-white/5 transition-colors"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -82,27 +83,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-elvion-card border-r border-gray-200 dark:border-white/10 transition-all duration-300 flex flex-col ${
-          sidebarOpen ? "w-64" : "w-20"
+        className={`fixed inset-y-0 left-0 z-40 bg-elvion-card border-r border-white/10 transition-all duration-300 flex flex-col ${
+          sidebarOpen ? "w-64" : "w-[70px]"
         } ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-white/10">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-elvion-primary rounded-lg flex items-center justify-center text-black font-bold">
+        {/* Logo & Toggle */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 bg-elvion-primary rounded-lg flex items-center justify-center text-black font-bold shrink-0">
               E
             </div>
             {sidebarOpen && (
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-lg font-semibold text-white truncate">
                 Admin
               </span>
             )}
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:flex p-1 rounded hover:bg-gray-100 dark:hover:bg-white/5"
+            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors shrink-0"
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <ChevronLeft size={20} className={`transform transition-transform ${!sidebarOpen ? "rotate-180" : ""}`} />
+            {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
         </div>
 
@@ -124,16 +126,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     }
                     setMobileMenuOpen(false);
                   }}
+                  title={!sidebarOpen ? item.name : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     isActive
                       ? "bg-elvion-primary/10 text-elvion-primary"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <item.icon size={20} />
-                  {sidebarOpen && <span className="font-medium flex-1">{item.name}</span>}
+                  <item.icon size={20} className="shrink-0" />
+                  {sidebarOpen && <span className="font-medium flex-1 truncate">{item.name}</span>}
                   {hasChildren && sidebarOpen && (
-                    <ChevronLeft size={16} className={`transform transition-transform ${isExpanded ? "-rotate-90" : "rotate-180"}`} />
+                    <ChevronRight size={16} className={`transform transition-transform shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
                   )}
                 </Link>
                 {hasChildren && isExpanded && sidebarOpen && (
@@ -145,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                           pathname === child.href
                             ? "text-elvion-primary bg-elvion-primary/5"
-                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                            : "text-gray-400 hover:text-white"
                         }`}
                       >
                         {child.name}
@@ -159,33 +162,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-gray-200 dark:border-white/10">
+        <div className="p-4 border-t border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold">
+            <div className="w-10 h-10 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold shrink-0">
               {user?.name?.charAt(0)?.toUpperCase() || "A"}
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name || "Admin"}</p>
+                <p className="text-sm font-medium text-white truncate">{user?.name || "Admin"}</p>
                 <p className="text-xs text-gray-500 truncate">{user?.email}</p>
               </div>
             )}
           </div>
           <button
             onClick={() => { logout(); router.push("/login"); }}
-            className={`mt-4 flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors ${sidebarOpen ? "w-full" : "justify-center w-full"}`}
+            className={`mt-3 flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors w-full ${!sidebarOpen ? "justify-center" : ""}`}
           >
-            <LogOut size={18} />
+            <LogOut size={18} className="shrink-0" />
             {sidebarOpen && <span className="text-sm font-medium">Sign Out</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className={`transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}`}>
+      <main className={`flex-1 min-h-screen transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-[70px]"}`}>
         <div className="p-4 lg:p-8 pt-20 lg:pt-8">{children}</div>
       </main>
 
+      {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
       )}

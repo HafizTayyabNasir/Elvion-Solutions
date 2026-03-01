@@ -14,8 +14,9 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronLeft,
   Receipt,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 interface CustomerLayoutProps {
@@ -86,12 +87,12 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-elvion-dark">
+    <div className="min-h-screen bg-elvion-dark flex">
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg bg-white dark:bg-elvion-card shadow-lg"
+          className="p-2 rounded-lg bg-elvion-card border border-white/10 shadow-lg text-white hover:bg-white/5 transition-colors"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -99,37 +100,33 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-elvion-card border-r border-gray-200 dark:border-white/10 transition-all duration-300 ${
-          sidebarOpen ? "w-64" : "w-20"
+        className={`fixed inset-y-0 left-0 z-40 bg-elvion-card border-r border-white/10 transition-all duration-300 flex flex-col ${
+          sidebarOpen ? "w-64" : "w-[70px]"
         } ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-white/10">
-          <Link href="/customer/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-elvion-primary rounded-lg flex items-center justify-center text-black font-bold">
+        {/* Logo & Toggle */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-white/10 shrink-0">
+          <Link href="/customer/dashboard" className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 bg-elvion-primary rounded-lg flex items-center justify-center text-black font-bold shrink-0">
               E
             </div>
             {sidebarOpen && (
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+              <span className="text-lg font-semibold text-white truncate">
                 Portal
               </span>
             )}
           </Link>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hidden lg:flex p-1 rounded hover:bg-gray-100 dark:hover:bg-white/5"
+            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors shrink-0"
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <ChevronLeft
-              size={20}
-              className={`transform transition-transform ${
-                !sidebarOpen ? "rotate-180" : ""
-              }`}
-            />
+            {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
@@ -137,14 +134,15 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
                 key={item.name}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
+                title={!sidebarOpen ? item.name : undefined}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative ${
                   isActive
                     ? "bg-elvion-primary/10 text-elvion-primary"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
+                    : "text-gray-400 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <item.icon size={20} />
-                {sidebarOpen && <span className="font-medium">{item.name}</span>}
+                <item.icon size={20} className="shrink-0" />
+                {sidebarOpen && <span className="font-medium truncate">{item.name}</span>}
                 {item.name === "Notifications" && notificationCount > 0 && (
                   <span
                     className={`absolute ${
@@ -160,17 +158,17 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-gray-200 dark:border-white/10">
+        <div className="p-4 border-t border-white/10 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold">
+            <div className="w-10 h-10 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold shrink-0">
               {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
             </div>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-white truncate">
                   {user?.name || "User"}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                <p className="text-xs text-gray-500 truncate">
                   {user?.email}
                 </p>
               </div>
@@ -178,26 +176,20 @@ export default function CustomerLayout({ children }: CustomerLayoutProps) {
           </div>
           <button
             onClick={handleLogout}
-            className={`mt-4 flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors ${
-              sidebarOpen ? "w-full" : "justify-center w-full"
-            }`}
+            className={`mt-3 flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors w-full ${!sidebarOpen ? "justify-center" : ""}`}
           >
-            <LogOut size={18} />
+            <LogOut size={18} className="shrink-0" />
             {sidebarOpen && <span className="text-sm font-medium">Sign Out</span>}
           </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "lg:ml-64" : "lg:ml-20"
-        }`}
-      >
+      <main className={`flex-1 min-h-screen transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-[70px]"}`}>
         <div className="p-4 lg:p-8 pt-20 lg:pt-8">{children}</div>
       </main>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"

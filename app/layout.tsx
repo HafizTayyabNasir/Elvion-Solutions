@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import { LayoutShell } from "@/components/LayoutShell";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
@@ -24,11 +23,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={montserrat.className}>
         <AuthProvider>
-          <Navbar />
-          <main className="min-h-screen pt-20">
+          <LayoutShell>
             {children}
-          </main>
-          <Footer />
+          </LayoutShell>
         </AuthProvider>
       </body>
     </html>
