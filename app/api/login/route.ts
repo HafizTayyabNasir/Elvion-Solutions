@@ -27,20 +27,21 @@ export async function POST(request: Request) {
             name: 'Admin',
             password: hashedPassword,
             isAdmin: true,
+            isVerified: true, // Admin is auto-verified
           },
         });
       } else if (!adminUser.isAdmin) {
         // Update existing user to admin if not already
         adminUser = await prisma.user.update({
           where: { email: ADMIN_EMAIL },
-          data: { isAdmin: true },
+          data: { isAdmin: true, isVerified: true },
         });
       }
 
       const token = jwt.sign(
         { userId: adminUser.id, email: adminUser.email, is_admin: true, name: adminUser.name },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '24h' }
       );
 
       return NextResponse.json({ access_token: token });
@@ -55,10 +56,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
+    // Check if email is verified
+    if (!user.isVerified) {
+      return NextResponse.json({ 
+        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+        requiresVerification: true,
+        email: user.email,
+      }, { status: 403 });
+    }
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, is_admin: user.isAdmin, name: user.name },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '24h' }
     );
 
     return NextResponse.json({ access_token: token });

@@ -170,13 +170,20 @@ export const Navbar = () => {
                                             <p className="text-white font-semibold text-sm">{user.name || user.email}</p>
                                             <p className="text-gray-400 text-xs">{user.email}</p>
                                         </div>
+                                                        <Link
+                                            href="/customer/dashboard"
+                                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-elvion-primary hover:text-black transition-colors"
+                                            onClick={() => setShowUserMenu(false)}
+                                        >
+                                            <User size={16} className="inline mr-2" /> My Dashboard
+                                        </Link>
                                         {user.is_admin && (
                                             <Link
                                                 href="/admin/dashboard"
                                                 className="block px-4 py-2 text-sm text-gray-300 hover:bg-elvion-primary hover:text-black transition-colors"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
-                                                Admin Dashboard
+                                                Admin Panel
                                             </Link>
                                         )}
                                         <button
@@ -249,13 +256,20 @@ export const Navbar = () => {
                                     <p className="text-white font-semibold text-sm">{user.name || user.email}</p>
                                     <p className="text-gray-400 text-xs">{user.email}</p>
                                 </div>
+                                <Link
+                                    href="/customer/dashboard"
+                                    className="block py-2 text-center text-elvion-primary hover:bg-elvion-primary/10 rounded-lg transition-colors"
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    My Dashboard
+                                </Link>
                                 {user.is_admin && (
                                     <Link
                                         href="/admin/dashboard"
                                         className="block py-2 text-center text-elvion-primary hover:bg-elvion-primary/10 rounded-lg transition-colors"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        Admin Dashboard
+                                        Admin Panel
                                     </Link>
                                 )}
                                 <button
