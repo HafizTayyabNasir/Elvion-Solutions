@@ -4,8 +4,12 @@ import { sendEmail, isEmailConfigured } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(request: Request) {
+  // Parse email outside try/catch so it's accessible in the catch block
+  let email: string | undefined;
+
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    email = body.email;
 
     if (!email) {
       return NextResponse.json({ message: 'Email is required' }, { status: 400 });
@@ -24,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     if (!isEmailConfigured()) {
-      // Auto-verify the user when SMTP is not available
+      // Auto-verify the user when no email provider is available
       await prisma.user.update({
         where: { id: user.id },
         data: { isVerified: true },
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
     // Send verification email
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verificationToken}`;
     
-    await sendEmail(
+    const result = await sendEmail(
       email,
       'Verify Your Email - Elvion Solutions',
       `Please verify your email by clicking the following link: ${verificationUrl}`,
@@ -78,21 +82,29 @@ export async function POST(request: Request) {
       `
     );
 
+    // If sendEmail returned null (no provider worked), auto-verify
+    if (result === null) {
+      await prisma.user.update({
+        where: { email },
+        data: { isVerified: true },
+      });
+      return NextResponse.json({ message: 'Email service unavailable. Your account has been auto-verified. You can now login.' });
+    }
+
     return NextResponse.json({ message: 'Verification email sent successfully' });
   } catch (error) {
     console.error('Resend verification error:', error);
-    // If email fails, auto-verify the user so they can still login
-    try {
-      const { email: retryEmail } = await request.clone().json();
-      if (retryEmail) {
+    // If email sending fails, auto-verify the user so they aren't stuck
+    if (email) {
+      try {
         await prisma.user.update({
-          where: { email: retryEmail },
+          where: { email },
           data: { isVerified: true },
         });
         return NextResponse.json({ message: 'Email service unavailable. Your account has been auto-verified. You can now login.' });
+      } catch (innerError) {
+        console.error('Auto-verify fallback error:', innerError);
       }
-    } catch (innerError) {
-      console.error('Auto-verify fallback error:', innerError);
     }
     return NextResponse.json({ message: 'Failed to send verification email. Please contact support.' }, { status: 500 });
   }

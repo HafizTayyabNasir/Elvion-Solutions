@@ -76,7 +76,16 @@ export async function POST(request: Request) {
       );
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
-      // Continue with registration even if email fails
+      // Auto-verify the user if email fails so they aren't stuck
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+      return NextResponse.json({ 
+        message: 'Account created successfully! You can now login.', 
+        userId: user.id,
+        requiresVerification: false,
+      }, { status: 201 });
     }
 
     return NextResponse.json({ 
