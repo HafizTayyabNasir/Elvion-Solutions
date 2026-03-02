@@ -128,10 +128,23 @@ export async function DELETE(
   }
 
   try {
-    await prisma.user.delete({ where: { id: userId } });
+    // Delete related records first to avoid foreign key constraints
+    // Most relations have onDelete: Cascade, but Task creator/assignee don't
+    await prisma.$transaction([
+      prisma.notification.deleteMany({ where: { userId } }),
+      prisma.activity.deleteMany({ where: { userId } }),
+      prisma.projectMember.deleteMany({ where: { userId } }),
+      prisma.task.deleteMany({ where: { creatorId: userId } }),
+      prisma.task.updateMany({ where: { assigneeId: userId }, data: { assigneeId: null } }),
+      prisma.ticket.updateMany({ where: { assigneeId: userId }, data: { assigneeId: null } }),
+      prisma.lead.deleteMany({ where: { userId } }),
+      prisma.contact.deleteMany({ where: { userId } }),
+      prisma.deal.deleteMany({ where: { userId } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
     return NextResponse.json({ message: 'User deleted' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ message: 'Failed to delete user. They may have associated records.' }, { status: 500 });
   }
 }
