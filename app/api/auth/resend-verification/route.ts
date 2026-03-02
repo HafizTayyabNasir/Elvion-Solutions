@@ -3,8 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { sendEmail, isEmailConfigured } from '@/lib/email';
 import crypto from 'crypto';
 
+function generate6DigitCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 export async function POST(request: Request) {
-  // Parse email outside try/catch so it's accessible in the catch block
   let email: string | undefined;
 
   try {
@@ -28,7 +31,6 @@ export async function POST(request: Request) {
     }
 
     if (!isEmailConfigured()) {
-      // Auto-verify the user when no email provider is available
       await prisma.user.update({
         where: { id: user.id },
         data: { isVerified: true },
@@ -36,25 +38,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Email auto-verified (email service not configured). You can now login.' });
     }
 
-    // Generate new verification token
+    // Generate new verification token + code
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationCode = generate6DigitCode();
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
         verificationToken,
+        verificationCode,
         verificationExpiry,
       },
     });
 
-    // Send verification email
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verificationToken}`;
     
     const result = await sendEmail(
       email,
       'Verify Your Email - Elvion Solutions',
-      `Please verify your email by clicking the following link: ${verificationUrl}`,
+      `Your verification code is: ${verificationCode}\n\nOr verify via link: ${verificationUrl}`,
       `
       <!DOCTYPE html>
       <html>
@@ -62,19 +65,27 @@ export async function POST(request: Request) {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
         <div style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); padding: 30px; border-radius: 10px;">
           <h1 style="color: #00D28D; margin-bottom: 20px; text-align: center;">Elvion Solutions</h1>
           <div style="background: #fff; padding: 30px; border-radius: 8px;">
-            <h2 style="color: #1a1a2e; margin-bottom: 15px;">Verify Your Email</h2>
+            <h2 style="color: #1a1a2e; margin-bottom: 15px; text-align: center;">Verify Your Email</h2>
             <p style="margin-bottom: 20px;">Hi ${user.name || 'there'},</p>
-            <p style="margin-bottom: 20px;">Thank you for registering with Elvion Solutions. Please click the button below to verify your email address:</p>
+            <p style="margin-bottom: 20px;">Use the verification code below to verify your email address:</p>
+            
             <div style="text-align: center; margin: 30px 0;">
+              <div style="background: #f8f9fa; border: 2px dashed #00D28D; border-radius: 10px; padding: 20px; display: inline-block;">
+                <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Your Verification Code</p>
+                <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #1a1a2e; font-family: monospace;">${verificationCode}</div>
+              </div>
+            </div>
+
+            <p style="text-align: center; color: #666; margin: 20px 0;">Or click the button below:</p>
+            
+            <div style="text-align: center; margin: 20px 0;">
               <a href="${verificationUrl}" style="background-color: #00D28D; color: #000; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Verify Email</a>
             </div>
-            <p style="margin-bottom: 10px; color: #666; font-size: 14px;">Or copy and paste this link in your browser:</p>
-            <p style="word-break: break-all; color: #00D28D; font-size: 14px;">${verificationUrl}</p>
-            <p style="margin-top: 20px; color: #666; font-size: 14px;">This link will expire in 24 hours.</p>
+            <p style="margin-top: 20px; color: #666; font-size: 14px; text-align: center;">This code expires in 24 hours.</p>
           </div>
         </div>
       </body>
@@ -82,30 +93,13 @@ export async function POST(request: Request) {
       `
     );
 
-    // If sendEmail returned null (no provider worked), auto-verify
     if (result === null) {
-      await prisma.user.update({
-        where: { email },
-        data: { isVerified: true },
-      });
-      return NextResponse.json({ message: 'Email service unavailable. Your account has been auto-verified. You can now login.' });
+      return NextResponse.json({ message: 'Email service is not available. Please contact support.' }, { status: 500 });
     }
 
-    return NextResponse.json({ message: 'Verification email sent successfully' });
+    return NextResponse.json({ message: 'Verification code sent! Check your email.' });
   } catch (error) {
     console.error('Resend verification error:', error);
-    // If email sending fails, auto-verify the user so they aren't stuck
-    if (email) {
-      try {
-        await prisma.user.update({
-          where: { email },
-          data: { isVerified: true },
-        });
-        return NextResponse.json({ message: 'Email service unavailable. Your account has been auto-verified. You can now login.' });
-      } catch (innerError) {
-        console.error('Auto-verify fallback error:', innerError);
-      }
-    }
-    return NextResponse.json({ message: 'Failed to send verification email. Please contact support.' }, { status: 500 });
+    return NextResponse.json({ message: 'Failed to send verification code. Please try again or contact support.' }, { status: 500 });
   }
 }

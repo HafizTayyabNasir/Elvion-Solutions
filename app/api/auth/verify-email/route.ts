@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       data: {
         isVerified: true,
         verificationToken: null,
+        verificationCode: null,
         verificationExpiry: null,
       },
     });
