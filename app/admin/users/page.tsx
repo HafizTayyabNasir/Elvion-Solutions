@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
-import { Search, Edit2, Trash2, Shield, ShieldOff, UserCheck, UserX, Mail, Calendar } from "lucide-react";
+import { Search, Trash2, Shield, ShieldOff, UserCheck, UserX, Mail, Calendar, MoreVertical } from "lucide-react";
 
 interface User {
   id: number; name: string; email: string; phone: string; isAdmin: boolean;
@@ -13,6 +13,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const fetchUsers = () => {
     fetchAPI("/users").then(setUsers).catch(console.error).finally(() => setLoading(false));
@@ -20,12 +22,20 @@ export default function AdminUsersPage() {
 
   useEffect(() => { fetchUsers(); }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = () => setOpenMenu(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, []);
+
   const toggleAdmin = async (user: User) => {
     if (!confirm(`${user.isAdmin ? "Remove" : "Grant"} admin access for ${user.name}?`)) return;
     try {
       await fetchAPI(`/users/${user.id}`, { method: "PUT", body: JSON.stringify({ isAdmin: !user.isAdmin }) });
       fetchUsers();
     } catch (err) { alert(err instanceof Error ? err.message : "Failed"); }
+    setOpenMenu(null);
   };
 
   const toggleVerified = async (user: User) => {
@@ -33,11 +43,21 @@ export default function AdminUsersPage() {
       await fetchAPI(`/users/${user.id}`, { method: "PUT", body: JSON.stringify({ isVerified: !user.isVerified }) });
       fetchUsers();
     } catch (err) { console.error(err); }
+    setOpenMenu(null);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this user? This action cannot be undone.")) return;
-    try { await fetchAPI(`/users/${id}`, { method: "DELETE" }); fetchUsers(); } catch (err) { console.error(err); }
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Are you sure you want to DELETE "${name}"?\n\nThis will permanently remove the user and all their data. This action cannot be undone.`)) return;
+    setDeleting(id);
+    try {
+      await fetchAPI(`/users/${id}`, { method: "DELETE" });
+      fetchUsers();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete user");
+      console.error(err);
+    }
+    setDeleting(null);
+    setOpenMenu(null);
   };
 
   const filtered = users.filter(u => {
@@ -51,7 +71,7 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users</h1><p className="text-gray-500 mt-1">Manage system users</p></div>
+        <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">Users Management</h1><p className="text-gray-500 mt-1">Manage system users — click the ⋮ menu or the red Delete button to remove a user</p></div>
         <div className="flex gap-3 text-sm">
           <span className="px-3 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-600 rounded-lg">{users.filter(u => u.isAdmin).length} Admins</span>
           <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 rounded-lg">{users.length} Total</span>
@@ -72,54 +92,111 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-50 dark:bg-white/5"><tr>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">User</th>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">Contact</th>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">Role</th>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">Verified</th>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">Joined</th>
-              <th className="p-4 text-gray-900 dark:text-white font-medium">Actions</th>
-            </tr></thead>
-            <tbody>
-              {filtered.map(user => (
-                <tr key={user.id} className="border-t border-gray-200 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-elvion-primary/10 flex items-center justify-center text-elvion-primary font-bold text-sm">{user.name.charAt(0).toUpperCase()}</div>
-                      <div><p className="font-medium text-gray-900 dark:text-white">{user.name}</p></div>
-                    </div>
-                  </td>
-                  <td className="p-4"><div className="space-y-1"><p className="text-xs text-gray-500 flex items-center gap-1"><Mail size={12} /> {user.email}</p>{user.phone && <p className="text-xs text-gray-500">{user.phone}</p>}</div></td>
-                  <td className="p-4">
-                    <span className={`text-xs px-2 py-1 rounded-full ${user.isAdmin ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400" : "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400"}`}>
-                      {user.isAdmin ? "Admin" : "User"}
+      {/* User Cards - always visible on all screen sizes */}
+      <div className="grid gap-4">
+        {filtered.map(user => (
+          <div key={user.id} className={`bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-4 sm:p-5 transition-all ${deleting === user.id ? "opacity-50 pointer-events-none" : "hover:border-elvion-primary/30"}`}>
+            <div className="flex items-center justify-between">
+              {/* Left: User info */}
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="w-11 h-11 rounded-full bg-elvion-primary/10 flex items-center justify-center text-elvion-primary font-bold text-lg shrink-0">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${user.isAdmin ? "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400" : "bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400"}`}>
+                      {user.isAdmin ? "ADMIN" : "USER"}
                     </span>
-                  </td>
-                  <td className="p-4">
-                    <button onClick={() => toggleVerified(user)} className={`flex items-center gap-1 text-xs ${user.isVerified ? "text-green-500" : "text-gray-400"}`}>
-                      {user.isVerified ? <UserCheck size={14} /> : <UserX size={14} />}
-                      {user.isVerified ? "Verified" : "Unverified"}
-                    </button>
-                  </td>
-                  <td className="p-4 text-xs text-gray-500 flex items-center gap-1"><Calendar size={12} /> {new Date(user.createdAt).toLocaleDateString()}</td>
-                  <td className="p-4">
-                    <div className="flex gap-1">
-                      <button onClick={() => toggleAdmin(user)} title={user.isAdmin ? "Remove admin" : "Make admin"} className={`p-1.5 rounded ${user.isAdmin ? "hover:bg-orange-50 dark:hover:bg-orange-500/10 text-orange-500" : "hover:bg-purple-50 dark:hover:bg-purple-500/10 text-purple-500"}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${user.isVerified ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"}`}>
+                      {user.isVerified ? "✓ Verified" : "✗ Unverified"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                    <span className="flex items-center gap-1 truncate"><Mail size={12} /> {user.email}</span>
+                    <span className="flex items-center gap-1 shrink-0"><Calendar size={12} /> {new Date(user.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Action buttons - ALWAYS VISIBLE */}
+              <div className="flex items-center gap-2 ml-4 shrink-0">
+                {/* Toggle Admin Button */}
+                <button
+                  onClick={() => toggleAdmin(user)}
+                  title={user.isAdmin ? "Remove admin role" : "Grant admin role"}
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    user.isAdmin
+                      ? "bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-500/10 dark:text-orange-400 dark:hover:bg-orange-500/20"
+                      : "bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-500/10 dark:text-purple-400 dark:hover:bg-purple-500/20"
+                  }`}
+                >
+                  {user.isAdmin ? <ShieldOff size={14} /> : <Shield size={14} />}
+                  {user.isAdmin ? "Remove Admin" : "Make Admin"}
+                </button>
+
+                {/* Toggle Verified Button */}
+                <button
+                  onClick={() => toggleVerified(user)}
+                  title={user.isVerified ? "Mark as unverified" : "Mark as verified"}
+                  className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    user.isVerified
+                      ? "bg-gray-50 text-gray-600 hover:bg-gray-100 dark:bg-gray-500/10 dark:text-gray-400 dark:hover:bg-gray-500/20"
+                      : "bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20"
+                  }`}
+                >
+                  {user.isVerified ? <UserX size={14} /> : <UserCheck size={14} />}
+                  {user.isVerified ? "Unverify" : "Verify"}
+                </button>
+
+                {/* DELETE BUTTON - Big and Red - Always visible */}
+                <button
+                  onClick={() => handleDelete(user.id, user.name)}
+                  disabled={deleting === user.id}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors border border-red-200 dark:border-red-500/20"
+                >
+                  <Trash2 size={14} />
+                  <span>{deleting === user.id ? "Deleting..." : "Delete"}</span>
+                </button>
+
+                {/* Mobile: 3-dot menu for extra actions */}
+                <div className="relative sm:hidden">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === user.id ? null : user.id); }}
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {openMenu === user.id && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-elvion-card border border-gray-200 dark:border-white/10 rounded-lg shadow-lg z-50 py-1">
+                      <button
+                        onClick={() => toggleAdmin(user)}
+                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
+                      >
                         {user.isAdmin ? <ShieldOff size={14} /> : <Shield size={14} />}
+                        {user.isAdmin ? "Remove Admin" : "Make Admin"}
                       </button>
-                      <button onClick={() => handleDelete(user.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded text-red-500"><Trash2 size={14} /></button>
+                      <button
+                        onClick={() => toggleVerified(user)}
+                        className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-300"
+                      >
+                        {user.isVerified ? <UserX size={14} /> : <UserCheck size={14} />}
+                        {user.isVerified ? "Unverify" : "Verify"}
+                      </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && <div className="p-8 text-center text-gray-500">No users found</div>}
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {filtered.length === 0 && (
+        <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-12 text-center">
+          <p className="text-gray-500">No users found</p>
+        </div>
+      )}
     </div>
   );
 }
