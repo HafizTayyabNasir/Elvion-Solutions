@@ -1,7 +1,19 @@
 
 import nodemailer from 'nodemailer';
 
+/**
+ * Check if SMTP is properly configured
+ */
+export const isEmailConfigured = (): boolean => {
+    return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+};
+
 export const sendEmail = async (to: string, subject: string, text: string, html?: string) => {
+    if (!isEmailConfigured()) {
+        console.warn('SMTP not configured — skipping email to:', to, 'Subject:', subject);
+        return null;
+    }
+
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: parseInt(process.env.SMTP_PORT || '587'),

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const smtpAvailable = isEmailConfigured();
 
     const user = await prisma.user.create({
       data: {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
         company,
         verificationToken,
         verificationExpiry,
-        isVerified: false,
+        isVerified: !smtpAvailable, // auto-verify if SMTP not configured
       },
     });
 

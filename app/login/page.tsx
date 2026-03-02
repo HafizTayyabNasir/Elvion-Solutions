@@ -63,12 +63,13 @@ function LoginContent() {
 
     const handleResendVerification = async () => {
         setResendLoading(true);
+        setError("");
         try {
-            await fetchAPI("/auth/resend-verification", {
+            const data = await fetchAPI("/auth/resend-verification", {
                 method: "POST",
                 body: JSON.stringify({ email: resendEmail }),
             });
-            setSuccess("Verification email sent! Please check your inbox.");
+            setSuccess(data.message || "Done! You can now try logging in.");
             setShowVerificationResend(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to send verification email");

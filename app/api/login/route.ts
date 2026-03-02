@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { isEmailConfigured } from '@/lib/email';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
@@ -56,8 +57,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check if email is verified
-    if (!user.isVerified) {
+    // Check if email is verified (skip if SMTP is not configured)
+    if (!user.isVerified && isEmailConfigured()) {
       return NextResponse.json({ 
         message: 'Please verify your email before logging in. Check your inbox for the verification link.',
         requiresVerification: true,

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
 import crypto from 'crypto';
 
 export async function POST(request: Request) {
@@ -21,6 +21,15 @@ export async function POST(request: Request) {
 
     if (user.isVerified) {
       return NextResponse.json({ message: 'Email is already verified' }, { status: 400 });
+    }
+
+    if (!isEmailConfigured()) {
+      // Auto-verify the user when SMTP is not available
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { isVerified: true },
+      });
+      return NextResponse.json({ message: 'Email auto-verified (email service not configured). You can now login.' });
     }
 
     // Generate new verification token
@@ -72,6 +81,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Verification email sent successfully' });
   } catch (error) {
     console.error('Resend verification error:', error);
-    return NextResponse.json({ message: 'Failed to send verification email' }, { status: 500 });
+    // If email fails, auto-verify the user so they can still login
+    try {
+      const { email: retryEmail } = await request.clone().json();
+      if (retryEmail) {
+        await prisma.user.update({
+          where: { email: retryEmail },
+          data: { isVerified: true },
+        });
+        return NextResponse.json({ message: 'Email service unavailable. Your account has been auto-verified. You can now login.' });
+      }
+    } catch (innerError) {
+      console.error('Auto-verify fallback error:', innerError);
+    }
+    return NextResponse.json({ message: 'Failed to send verification email. Please contact support.' }, { status: 500 });
   }
 }
