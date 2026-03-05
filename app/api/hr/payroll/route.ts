@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       });
 
       const payrolls = await Promise.all(
-        employees.map(emp =>
+        employees.map((emp: { id: number; salary: number | null; currency: string }) =>
           prisma.payroll.upsert({
             where: {
               employeeId_month_year: {

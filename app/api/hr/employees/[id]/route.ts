@@ -62,7 +62,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       'emergencyName', 'emergencyPhone', 'emergencyRelation',
     ];
 
-    fields.forEach(f => { if (body[f] !== undefined) data[f] = body[f]; });
+    fields.forEach((f: string) => { if (body[f] !== undefined) data[f] = body[f]; });
     if (body.dateOfBirth !== undefined) data.dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
     if (body.departmentId !== undefined) data.departmentId = body.departmentId ? parseInt(body.departmentId) : null;
     if (body.salary !== undefined) data.salary = body.salary ? parseFloat(body.salary) : null;
