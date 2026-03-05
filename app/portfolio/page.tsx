@@ -22,6 +22,7 @@ import {
     Filter,
     Search
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Portfolio() {
     const router = useRouter();
@@ -29,6 +30,7 @@ export default function Portfolio() {
     const [isVisible, setIsVisible] = useState(false);
     const [activeFilter, setActiveFilter] = useState("all");
     const [hoveredProject, setHoveredProject] = useState<number | null>(null);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -47,11 +49,11 @@ export default function Portfolio() {
     }, []);
 
     const filters = [
-        { id: "all", label: "All Projects", icon: Globe },
-        { id: "web", label: "Web Design", icon: Code },
-        { id: "mobile", label: "Mobile Apps", icon: Smartphone },
-        { id: "ecommerce", label: "E-commerce", icon: ShoppingCart },
-        { id: "branding", label: "Branding", icon: Palette }
+        { id: "all", label: t("portfolio.filters.all"), icon: Globe },
+        { id: "web", label: t("portfolio.filters.web"), icon: Code },
+        { id: "mobile", label: t("portfolio.filters.mobile"), icon: Smartphone },
+        { id: "ecommerce", label: t("portfolio.filters.ecommerce"), icon: ShoppingCart },
+        { id: "branding", label: t("portfolio.filters.branding"), icon: Palette }
     ];
 
     const projects = [
@@ -143,10 +145,10 @@ export default function Portfolio() {
         : projects.filter(p => p.category === activeFilter);
 
     const stats = [
-        { value: "150+", label: "Projects Completed", icon: Briefcase },
-        { value: "98%", label: "Client Satisfaction", icon: Heart },
-        { value: "50+", label: "Happy Clients", icon: Award },
-        { value: "5+", label: "Years Experience", icon: Star }
+        { value: "150+", label: t("portfolio.stats.projects"), icon: Briefcase },
+        { value: "98%", label: t("portfolio.stats.satisfaction"), icon: Heart },
+        { value: "50+", label: t("portfolio.stats.clients"), icon: Award },
+        { value: "5+", label: t("portfolio.stats.years"), icon: Star }
     ];
 
     return (
@@ -274,20 +276,20 @@ export default function Portfolio() {
                     <div className="text-center max-w-4xl mx-auto space-y-8">
                         <div className={`inline-block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.1s' }}>
                             <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/30 hover:bg-[#00d28d]/20 hover:scale-110 hover:border-[#00d28d]/60 transition-all duration-500 cursor-default shimmer animate-pulse-border inline-block animate-glow">
-                                Our Best Work
+                                {t("portfolio.hero.badge")}
                             </span>
                         </div>
 
                         <h1 className={`text-5xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.3s' }}>
-                            SHOWCASING OUR
+                            {t("portfolio.hero.title1")}
                             <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d28d] via-[#4a90e2] to-[#00d28d] animate-gradient text-shadow-glow inline-block hover:scale-105 transition-transform duration-500">
-                                PORTFOLIO
+                                {t("portfolio.hero.titleHighlight")}
                             </span>
                         </h1>
 
                         <p className={`text-[#888] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.5s' }}>
-                            Showcasing our best work in Web Development, Mobile Apps, Branding, and Digital Design. Each project represents our commitment to excellence.
+                            {t("portfolio.hero.description")}
                         </p>
 
                         {/* Stats */}
@@ -412,7 +414,7 @@ export default function Portfolio() {
 
                                     {/* View Button */}
                                     <button className="w-full py-3 bg-transparent border-2 border-white/10 hover:border-[#00d28d] hover:bg-[#00d28d]/10 text-white rounded-full font-bold transition-all duration-500 flex items-center justify-center gap-2 group/btn">
-                                        <span>View Case Study</span>
+                                        <span>{t("portfolio.viewCaseStudy")}</span>
                                         <ArrowRight size={18} className="group-hover/btn:translate-x-2 transition-transform duration-300" />
                                     </button>
                                 </div>
@@ -424,8 +426,8 @@ export default function Portfolio() {
                     {filteredProjects.length === 0 && (
                         <div className="text-center py-20">
                             <Search size={64} className="text-[#888] mx-auto mb-4" />
-                            <h3 className="text-2xl font-bold text-white mb-2">No Projects Found</h3>
-                            <p className="text-[#888]">Try selecting a different category</p>
+                            <h3 className="text-2xl font-bold text-white mb-2">{t("portfolio.noResults.title")}</h3>
+                            <p className="text-[#888]">{t("portfolio.noResults.desc")}</p>
                         </div>
                     )}
                 </div>
@@ -437,21 +439,21 @@ export default function Portfolio() {
 
                 <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-110 transition-transform duration-500 cursor-default">
-                        Ready to Start Your Project?
+                        {t("portfolio.cta.title")}
                     </h2>
                     <p className="text-white/90 text-xl mb-8">
-                        Let&apos;s create something amazing together. Get a free consultation today.
+                        {t("portfolio.cta.description")}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button className="group bg-white text-[#0a0a0a] hover:bg-white/90 px-8 py-6 rounded-full text-lg font-bold hover-lift relative overflow-hidden animate-glow">
                             <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                                Start Your Project
+                                {t("portfolio.cta.startButton")}
                                 <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                             </span>
                             <div className="absolute inset-0 bg-gradient-to-r from-white via-gray-100 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
                         </button>
                         <button className="group bg-transparent text-white hover:bg-white/10 px-8 py-6 rounded-full text-lg font-bold border-2 border-white hover:border-white transition-all duration-500 hover-lift">
-                            <span className="relative z-10">Contact Us</span>
+                            <span className="relative z-10">{t("portfolio.cta.contactButton")}</span>
                         </button>
                     </div>
                 </div>
@@ -461,16 +463,16 @@ export default function Portfolio() {
             <section className="py-20 bg-[#0a0a0a]">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">Want to Work With Us?</h2>
-                        <p className="text-[#888] text-lg">Here&apos;s how we bring your vision to life</p>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{t("portfolio.process.title")}</h2>
+                        <p className="text-[#888] text-lg">{t("portfolio.process.description")}</p>
                     </div>
 
                     <div className="grid md:grid-cols-4 gap-6">
                         {[
-                            { icon: Target, title: "Discovery", desc: "Understanding your goals" },
-                            { icon: Palette, title: "Design", desc: "Creating stunning visuals" },
-                            { icon: Code, title: "Development", desc: "Building with precision" },
-                            { icon: Zap, title: "Launch", desc: "Delivering excellence" }
+                            { icon: Target, title: t("portfolio.process.discovery"), desc: t("portfolio.process.discoveryDesc") },
+                            { icon: Palette, title: t("portfolio.process.design"), desc: t("portfolio.process.designDesc") },
+                            { icon: Code, title: t("portfolio.process.development"), desc: t("portfolio.process.developmentDesc") },
+                            { icon: Zap, title: t("portfolio.process.launch"), desc: t("portfolio.process.launchDesc") }
                         ].map((step, idx) => (
                             <div key={idx} className="group text-center p-6 bg-[#111] rounded-2xl border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 hover-lift cursor-default animate-pulse-border">
                                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#00d28d]/30 to-[#4a90e2]/30 rounded-xl flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-700 animate-glow">

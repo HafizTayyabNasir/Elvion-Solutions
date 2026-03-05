@@ -15,10 +15,12 @@ import {
     Lightbulb,
     Rocket
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Internship() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -38,36 +40,36 @@ export default function Internship() {
 
     const positions = [
         {
-            title: "Web Development Intern",
+            title: t("internship.positions.webDev"),
             icon: Code,
-            duration: "3-6 Months",
-            type: "Full-time/Part-time",
+            duration: t("internship.positions.duration"),
+            type: t("internship.positions.type"),
             skills: ["React", "Next.js", "Tailwind CSS"],
             color: "from-[#00d28d]/20 to-[#4a90e2]/20"
         },
         {
-            title: "UI/UX Design Intern",
+            title: t("internship.positions.uiux"),
             icon: Palette,
-            duration: "3-6 Months",
-            type: "Full-time/Part-time",
+            duration: t("internship.positions.duration"),
+            type: t("internship.positions.type"),
             skills: ["Figma", "Adobe XD", "Prototyping"],
             color: "from-purple-500/20 to-pink-500/20"
         },
         {
-            title: "Digital Marketing Intern",
+            title: t("internship.positions.marketing"),
             icon: TrendingUp,
-            duration: "3-6 Months",
-            type: "Full-time/Part-time",
+            duration: t("internship.positions.duration"),
+            type: t("internship.positions.type"),
             skills: ["SEO", "Social Media", "Analytics"],
             color: "from-blue-500/20 to-green-500/20"
         }
     ];
 
     const benefits = [
-        { icon: GraduationCap, title: "Learn & Grow", desc: "Hands-on experience with real projects" },
-        { icon: Users, title: "Mentorship", desc: "Guidance from industry experts" },
-        { icon: Award, title: "Certificate", desc: "Completion certificate upon finishing" },
-        { icon: Rocket, title: "Career Growth", desc: "Potential full-time opportunities" }
+        { icon: GraduationCap, title: t("internship.benefits.learnTitle"), desc: t("internship.benefits.learnDesc") },
+        { icon: Users, title: t("internship.benefits.mentorTitle"), desc: t("internship.benefits.mentorDesc") },
+        { icon: Award, title: t("internship.benefits.certTitle"), desc: t("internship.benefits.certDesc") },
+        { icon: Rocket, title: t("internship.benefits.careerTitle"), desc: t("internship.benefits.careerDesc") }
     ];
 
     return (
@@ -195,35 +197,35 @@ export default function Internship() {
                     <div className="text-center max-w-4xl mx-auto space-y-8">
                         <div className={`inline-block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.1s' }}>
                             <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/30 hover:bg-[#00d28d]/20 hover:scale-110 hover:border-[#00d28d]/60 transition-all duration-500 cursor-default shimmer animate-pulse-border inline-block animate-glow">
-                                Join Our Team
+                                {t("internship.hero.badge")}
                             </span>
                         </div>
 
                         <h1 className={`text-5xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.3s' }}>
-                            KICKSTART YOUR
+                            {t("internship.hero.title1")}
                             <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d28d] via-[#4a90e2] to-[#00d28d] animate-gradient text-shadow-glow inline-block hover:scale-105 transition-transform duration-500">
-                                CAREER
+                                {t("internship.hero.titleHighlight")}
                             </span>
-                            <br />WITH US
+                            <br />{t("internship.hero.title3")}
                         </h1>
 
                         <p className={`text-[#888] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.5s' }}>
-                            Join Elvion Solutions and gain real-world experience in web development, design, and digital marketing. Learn from experts and work on exciting projects.
+                            {t("internship.hero.description")}
                         </p>
 
                         <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center pt-6 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.7s' }}>
                             <Link href="/inernshipform">
                                 <button className="group relative px-8 py-6 bg-[#00d28d] text-[#0a0a0a] rounded-full font-bold text-base overflow-hidden hover-lift animate-glow">
                                     <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                                        Apply Now
+                                        {t("internship.hero.applyButton")}
                                         <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                                     </span>
                                     <div className="absolute inset-0 bg-gradient-to-r from-[#00d28d] via-[#00b377] to-[#00d28d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
                                 </button>
                             </Link>
                             <button className="group px-8 py-6 bg-transparent text-white rounded-full font-bold text-base border-2 border-white/20 hover:border-[#00d28d] hover:bg-[#00d28d]/10 transition-all duration-500 hover-lift relative overflow-hidden">
-                                <span className="relative z-10">Learn More</span>
+                                <span className="relative z-10">{t("internship.hero.learnMore")}</span>
                                 <div className="absolute inset-0 bg-[#00d28d]/20 scale-0 group-hover:scale-100 transition-transform duration-500 rounded-full"></div>
                             </button>
                         </div>
@@ -235,10 +237,10 @@ export default function Internship() {
             <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16 space-y-4">
-                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Open Positions</span>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white">Internship Opportunities</h2>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("internship.positions.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white">{t("internship.positions.title")}</h2>
                         <p className="text-[#888] text-lg max-w-2xl mx-auto">
-                            Choose the role that matches your passion and start your journey with us
+                            {t("internship.positions.description")}
                         </p>
                     </div>
 
@@ -275,7 +277,7 @@ export default function Internship() {
                                     </div>
 
                                     <div className="mb-6">
-                                        <p className="text-xs text-[#888] mb-2">Required Skills:</p>
+                                        <p className="text-xs text-[#888] mb-2">{t("internship.positions.skills")}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {position.skills.map((skill, i) => (
                                                 <span key={i} className="text-xs px-3 py-1 bg-[#0a0a0a] text-[#888] rounded-full border border-white/5 group-hover:border-[#00d28d]/30 group-hover:text-[#00d28d] transition-all duration-300">
@@ -287,7 +289,7 @@ export default function Internship() {
 
                                     <Link href="/inernshipform">
                                         <button className="w-full py-3 bg-transparent border-2 border-white/10 hover:border-[#00d28d] hover:bg-[#00d28d] hover:text-[#0a0a0a] text-white rounded-full font-bold transition-all duration-500 flex items-center justify-center gap-2">
-                                            Apply Now
+                                            {t("internship.positions.applyButton")}
                                         </button>
                                     </Link>
                                 </div>
@@ -303,10 +305,10 @@ export default function Internship() {
             <section className="py-20 bg-[#0a0a0a]">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16 space-y-4">
-                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Why Join Us</span>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white">Internship Benefits</h2>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("internship.benefits.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white">{t("internship.benefits.title")}</h2>
                         <p className="text-[#888] text-lg max-w-2xl mx-auto">
-                            More than just an internship—it&apos;s a launchpad for your career
+                            {t("internship.benefits.description")}
                         </p>
                     </div>
 
@@ -342,22 +344,22 @@ export default function Internship() {
                     <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] rounded-3xl p-8 md:p-12 border border-white/10 hover:border-[#00d28d]/30 transition-all duration-500">
                         <div className="grid lg:grid-cols-2 gap-12 items-center">
                             <div className="space-y-6">
-                                <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">What You&apos;ll Learn</span>
+                                <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("internship.learn.badge")}</span>
                                 <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                                    Gain Real-World Experience
+                                    {t("internship.learn.title")}
                                 </h2>
                                 <p className="text-[#888] text-lg leading-relaxed">
-                                    Work on live projects, collaborate with our talented team, and build a portfolio that stands out. We provide the guidance and support you need to excel.
+                                    {t("internship.learn.description")}
                                 </p>
 
                                 <div className="space-y-3 pt-4">
                                     {[
-                                        "Work on real client projects",
-                                        "Learn industry best practices",
-                                        "Receive personalized mentorship",
-                                        "Build your professional portfolio",
-                                        "Network with industry professionals",
-                                        "Get certificate upon completion"
+                                        t("internship.learn.item1"),
+                                        t("internship.learn.item2"),
+                                        t("internship.learn.item3"),
+                                        t("internship.learn.item4"),
+                                        t("internship.learn.item5"),
+                                        t("internship.learn.item6")
                                     ].map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-3 group cursor-default">
                                             <CheckCircle2 size={20} className="text-[#00d28d] flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
@@ -375,7 +377,7 @@ export default function Internship() {
                                             <Lightbulb size={64} className="text-[#00d28d] animate-pulse" style={{ animationDuration: '2s' }} />
                                         </div>
                                         <p className="text-white/70 text-lg italic group-hover:text-white transition-colors duration-300">
-                                        &quot;The best way to learn is by doing. Join us and transform your passion into expertise.&quot;
+                                        {t("internship.learn.quote")}
                                         </p>
                                     </div>
                                 </div>
@@ -391,15 +393,15 @@ export default function Internship() {
 
                 <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-110 transition-transform duration-500 cursor-default">
-                        Ready to Begin Your Journey?
+                        {t("internship.cta.title")}
                     </h2>
                     <p className="text-white/90 text-xl mb-8">
-                        Apply now and take the first step towards an exciting career in tech
+                        {t("internship.cta.description")}
                     </p>
                     <Link href="/inernshipform">
                         <button className="group bg-white text-[#0a0a0a] hover:bg-white/90 px-8 py-6 rounded-full text-lg font-bold hover-lift relative overflow-hidden animate-glow">
                             <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                                Submit Your Application
+                                {t("internship.cta.button")}
                                 <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                             </span>
                             <div className="absolute inset-0 bg-gradient-to-r from-white via-gray-100 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>

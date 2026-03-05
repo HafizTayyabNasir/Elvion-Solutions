@@ -12,8 +12,10 @@ import {
     X,
     Check
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function InternshipForm() {
+    const { t } = useLanguage();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [fileName, setFileName] = useState("");
@@ -63,11 +65,11 @@ export default function InternshipForm() {
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                setErrors({ ...errors, cv: "File size should be less than 5MB" });
+                setErrors({ ...errors, cv: t("internForm.cvFileSizeError") });
                 return;
             }
             if (!file.name.match(/\.(doc|docx|pdf)$/i)) {
-                setErrors({ ...errors, cv: "Only DOC, DOCX, and PDF files are allowed" });
+                setErrors({ ...errors, cv: t("internForm.cvFileTypeError") });
                 return;
             }
             setFileName(file.name);
@@ -85,28 +87,28 @@ export default function InternshipForm() {
         const newErrors: Record<string, string> = {};
 
         if (!formData.fullName.trim()) {
-            newErrors.fullName = "Full name is required";
+            newErrors.fullName = t("internForm.fullNameRequired");
         }
 
         if (!formData.personalEmail.trim()) {
-            newErrors.personalEmail = "Personal email is required";
+            newErrors.personalEmail = t("internForm.personalEmailRequired");
         } else if (!/\S+@\S+\.\S+/.test(formData.personalEmail)) {
-            newErrors.personalEmail = "Please enter a valid email";
+            newErrors.personalEmail = t("internForm.invalidEmail");
         }
 
         // University email is optional, but if provided, must be valid
         if (formData.universityEmail.trim() && !/\S+@\S+\.\S+/.test(formData.universityEmail)) {
-            newErrors.universityEmail = "Please enter a valid email";
+            newErrors.universityEmail = t("internForm.invalidEmail");
         }
 
         if (!formData.fieldOfInterest) {
-            newErrors.fieldOfInterest = "Please select a field of interest";
+            newErrors.fieldOfInterest = t("internForm.fieldRequired");
         }
 
         // Expectations is optional, no validation needed
 
         if (!formData.cv) {
-            newErrors.cv = "Please upload your CV";
+            newErrors.cv = t("internForm.cvRequired");
         }
 
         setErrors(newErrors);
@@ -155,9 +157,9 @@ export default function InternshipForm() {
                 let message = "";
                 try {
                     const data = await response.json();
-                    message = data.message || data.error || "Failed to submit application";
+                    message = data.message || data.error || t("internForm.submitFailed");
                 } catch {
-                    message = "Failed to submit application. Please try again.";
+                    message = t("internForm.submitFailedRetry");
                 }
                 throw new Error(message);
             }
@@ -182,7 +184,7 @@ export default function InternshipForm() {
             }, 3000);
         } catch (error: unknown) {
             console.error("Submission error:", error);
-            const errorMessage = error instanceof Error ? error.message : "Failed to submit application. Please try again.";
+            const errorMessage = error instanceof Error ? error.message : t("internForm.submitFailedRetry");
             setErrors({ ...errors, submit: errorMessage });
         } finally {
             setIsSubmitting(false);
@@ -301,16 +303,16 @@ export default function InternshipForm() {
                     <div className="text-center space-y-6">
                         <div className={`inline-block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.1s' }}>
                             <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/30 hover:bg-[#00d28d]/20 hover:scale-110 hover:border-[#00d28d]/60 transition-all duration-500 cursor-default shimmer animate-pulse-border inline-block animate-glow">
-                                Application Form
+                                {t("internForm.badge")}
                             </span>
                         </div>
 
                         <h1 className={`text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.3s' }}>
-                            Internship Form
+                            {t("internForm.title")}
                         </h1>
 
                         <p className={`text-[#888] text-lg max-w-2xl mx-auto leading-relaxed transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.5s' }}>
-                            Fill this form for internship at Elvion Solutions
+                            {t("internForm.description")}
                         </p>
                     </div>
                 </div>
@@ -324,14 +326,14 @@ export default function InternshipForm() {
                         <div className="mb-6">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <User size={18} className="text-[#00d28d]" />
-                                Full Name <span className="text-red-500">*</span>
+                                {t("internForm.fullNameLabel")} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.fullName}
                                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                                 className={`w-full bg-[#0a0a0a] border ${errors.fullName ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 text-white placeholder:text-[#888] focus:outline-none focus:border-[#00d28d] focus:ring-2 focus:ring-[#00d28d]/20 transition-all duration-500`}
-                                placeholder="Enter your full name"
+                                placeholder={t("internForm.fullNamePlaceholder")}
                             />
                             {errors.fullName && (
                                 <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
@@ -344,7 +346,7 @@ export default function InternshipForm() {
                         <div className="mb-6">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <Mail size={18} className="text-[#00d28d]" />
-                                Personal Email <span className="text-red-500">*</span>
+                                {t("internForm.personalEmailLabel")} <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
@@ -364,7 +366,7 @@ export default function InternshipForm() {
                         <div className="mb-6">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <Mail size={18} className="text-[#00d28d]" />
-                                University Email
+                                {t("internForm.universityEmailLabel")}
                             </label>
                             <input
                                 type="email"
@@ -384,14 +386,14 @@ export default function InternshipForm() {
                         <div className="mb-6">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <Briefcase size={18} className="text-[#00d28d]" />
-                                Field of Interest <span className="text-red-500">*</span>
+                                {t("internForm.fieldOfInterestLabel")} <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={formData.fieldOfInterest}
                                 onChange={(e) => setFormData({ ...formData, fieldOfInterest: e.target.value })}
                                 className={`w-full bg-[#0a0a0a] border ${errors.fieldOfInterest ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 text-white focus:outline-none focus:border-[#00d28d] focus:ring-2 focus:ring-[#00d28d]/20 transition-all duration-500`}
                             >
-                                <option value="" className="bg-[#0a0a0a]">Select a field</option>
+                                <option value="" className="bg-[#0a0a0a]">{t("internForm.selectField")}</option>
                                 {fields.map((field) => (
                                     <option key={field} value={field} className="bg-[#0a0a0a]">{field}</option>
                                 ))}
@@ -407,17 +409,17 @@ export default function InternshipForm() {
                         <div className="mb-6">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <FileText size={18} className="text-[#00d28d]" />
-                                Why you select this Field? OR What are your expectations with this field?
+                                {t("internForm.expectationsLabel")}
                             </label>
                             <textarea
                                 value={formData.expectations}
                                 onChange={(e) => setFormData({ ...formData, expectations: e.target.value })}
                                 rows={6}
                                 className={`w-full bg-[#0a0a0a] border ${errors.expectations ? 'border-red-500' : 'border-white/10'} rounded-xl p-4 text-white placeholder:text-[#888] focus:outline-none focus:border-[#00d28d] focus:ring-2 focus:ring-[#00d28d]/20 transition-all duration-500 resize-none`}
-                                placeholder="Share your passion, goals, and what you hope to learn during this internship..."
+                                placeholder={t("internForm.expectationsPlaceholder")}
                             />
                             <div className="flex justify-end items-center mt-2">
-                                <p className="text-[#888] text-sm">{formData.expectations.length} characters</p>
+                                <p className="text-[#888] text-sm">{formData.expectations.length} {t("internForm.characters")}</p>
                             </div>
                         </div>
 
@@ -425,14 +427,14 @@ export default function InternshipForm() {
                         <div className="mb-8">
                             <label className="block text-white font-bold mb-2 flex items-center gap-2">
                                 <Upload size={18} className="text-[#00d28d]" />
-                                Attach your CV <span className="text-red-500">*</span>
+                                {t("internForm.cvLabel")} <span className="text-red-500">*</span>
                             </label>
 
                             {!fileName ? (
                                 <label className={`block w-full bg-[#0a0a0a] border-2 ${errors.cv ? 'border-red-500' : 'border-dashed border-white/20'} rounded-xl p-8 text-center cursor-pointer hover:border-[#00d28d] hover:bg-[#00d28d]/5 transition-all duration-500 group`}>
                                     <Upload size={48} className="mx-auto mb-4 text-[#888] group-hover:text-[#00d28d] transition-colors duration-300" />
-                                    <p className="text-white font-medium mb-2">Click to upload or drag and drop</p>
-                                    <p className="text-[#888] text-sm">DOC, DOCX, PDF (Max 5MB)</p>
+                                    <p className="text-white font-medium mb-2">{t("internForm.cvUploadTitle")}</p>
+                                    <p className="text-[#888] text-sm">{t("internForm.cvUploadDesc")}</p>
                                     <input
                                         type="file"
                                         onChange={handleFileChange}
@@ -448,7 +450,7 @@ export default function InternshipForm() {
                                         </div>
                                         <div>
                                             <p className="text-white font-medium">{fileName}</p>
-                                            <p className="text-[#888] text-sm">Ready to upload</p>
+                                            <p className="text-[#888] text-sm">{t("internForm.readyToUpload")}</p>
                                         </div>
                                     </div>
                                     <button
@@ -492,16 +494,16 @@ export default function InternshipForm() {
                                 {isSubmitted ? (
                                     <>
                                         <Check size={20} className="mr-2" />
-                                        Application Submitted Successfully!
+                                        {t("internForm.submitted")}
                                     </>
                                 ) : isSubmitting ? (
                                     <>
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                                        Submitting...
+                                        {t("internForm.submitting")}
                                     </>
                                 ) : (
                                     <>
-                                        Submit Application
+                                        {t("internForm.submitButton")}
                                         <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                                     </>
                                 )}
@@ -513,16 +515,16 @@ export default function InternshipForm() {
 
                         {/* Note */}
                         <p className="text-[#888] text-sm text-center mt-6">
-                            <span className="text-red-500">*</span> Required fields. We&apos;ll review your application and get back to you within 3-5 business days.
+                            <span className="text-red-500">*</span> {t("internForm.note")}
                         </p>
                     </form>
 
                     {/* Info Cards */}
                     <div className="grid md:grid-cols-3 gap-4 mt-8">
                         {[
-                            { icon: CheckCircle2, text: "Quick Response" },
-                            { icon: CheckCircle2, text: "No Application Fee" },
-                            { icon: CheckCircle2, text: "Equal Opportunity" }
+                            { icon: CheckCircle2, text: t("internForm.quickResponse") },
+                            { icon: CheckCircle2, text: t("internForm.noFee") },
+                            { icon: CheckCircle2, text: t("internForm.equalOpportunity") }
                         ].map((item, idx) => (
                             <div key={idx} className="bg-[#111] p-4 rounded-xl border border-white/5 flex items-center gap-3 hover:border-[#00d28d]/30 transition-all duration-500">
                                 <item.icon size={20} className="text-[#00d28d] flex-shrink-0" />

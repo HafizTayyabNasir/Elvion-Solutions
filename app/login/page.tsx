@@ -5,10 +5,12 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { fetchAPI } from "@/lib/api";
 import { useSearchParams } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Login() {
+    const { t } = useLanguage();
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-elvion-dark"><div className="text-white">Loading...</div></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-elvion-dark"><div className="text-white">{t("login.loading")}</div></div>}>
             <LoginContent />
         </Suspense>
     );
@@ -17,6 +19,7 @@ export default function Login() {
 function LoginContent() {
     const { login } = useAuth();
     const searchParams = useSearchParams();
+    const { t } = useLanguage();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -32,7 +35,7 @@ function LoginContent() {
 
     useEffect(() => {
         if (searchParams.get('verified') === 'true') {
-            setSuccess('Email verified successfully! You can now login.');
+            setSuccess(t('login.emailVerifiedSuccess'));
         }
     }, [searchParams]);
 
@@ -90,7 +93,7 @@ function LoginContent() {
                 }
                 setError(message.includes(':') ? message.split(':').slice(1).join(':').trim() : message);
             } else {
-                setError("Invalid credentials");
+                setError(t("login.invalidCredentials"));
             }
         } finally {
             setLoading(false);
@@ -100,7 +103,7 @@ function LoginContent() {
     const handleVerifyCode = async () => {
         const code = verificationCode.join('');
         if (code.length !== 6) {
-            setError("Please enter all 6 digits");
+            setError(t("login.enterAllDigits"));
             return;
         }
         setVerifyLoading(true);
@@ -110,11 +113,11 @@ function LoginContent() {
                 method: "POST",
                 body: JSON.stringify({ email: resendEmail, code }),
             });
-            setSuccess(data.message || "Email verified! You can now login.");
+            setSuccess(data.message || t("login.emailVerified"));
             setShowVerification(false);
             setVerificationCode(["", "", "", "", "", ""]);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Verification failed");
+            setError(err instanceof Error ? err.message : t("login.verificationFailed"));
         } finally {
             setVerifyLoading(false);
         }
@@ -129,13 +132,13 @@ function LoginContent() {
                 method: "POST",
                 body: JSON.stringify({ email: resendEmail }),
             });
-            setSuccess(data.message || "New verification code sent!");
+            setSuccess(data.message || t("login.codeSent"));
             setResendCooldown(60);
             setVerificationCode(["", "", "", "", "", ""]);
             inputRefs.current[0]?.focus();
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to resend verification code");
+            setError(err instanceof Error ? err.message : t("login.resendFailed"));
         } finally {
             setResendLoading(false);
         }
@@ -144,14 +147,14 @@ function LoginContent() {
     return (
         <div className="min-h-screen flex items-center justify-center px-4 bg-elvion-dark">
             <div className="w-full max-w-md bg-elvion-card p-8 rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(0,210,141,0.1)]">
-                <h1 className="text-2xl font-bold text-white mb-2 text-center">Login</h1>
+                <h1 className="text-2xl font-bold text-white mb-2 text-center">{t("login.title")}</h1>
                 {success && <div className="text-green-500 text-sm mb-4 text-center bg-green-500/10 p-3 rounded-lg">{success}</div>}
                 {error && <div className="text-red-500 text-sm mb-4 text-center bg-red-500/10 p-3 rounded-lg">{error}</div>}
                 
                 {showVerification && (
                     <div className="mb-4 p-4 bg-elvion-dark border border-elvion-primary/20 rounded-xl">
                         <p className="text-elvion-gray text-sm mb-3 text-center">
-                            Your email is not verified. Enter the 6-digit code from your email:
+                            {t("login.verificationPrompt")}
                         </p>
                         <div className="flex justify-center gap-2 mb-4">
                             {verificationCode.map((digit, index) => (
@@ -178,7 +181,7 @@ function LoginContent() {
                             disabled={verifyLoading || verificationCode.join('').length !== 6}
                             className="w-full py-2.5 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90 transition disabled:opacity-50 mb-3"
                         >
-                            {verifyLoading ? "Verifying..." : "Verify Code"}
+                            {verifyLoading ? t("login.verifying") : t("login.verifyButton")}
                         </button>
                         <div className="text-center">
                             <button
@@ -187,10 +190,10 @@ function LoginContent() {
                                 className="text-elvion-primary hover:underline text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {resendLoading
-                                    ? "Sending..."
+                                    ? t("login.resendSending")
                                     : resendCooldown > 0
-                                        ? `Resend code in ${resendCooldown}s`
-                                        : "Didn't receive the code? Resend"
+                                        ? `${t("login.resendCooldown")} ${resendCooldown}s`
+                                        : `${t("login.resendCode")} ${t("login.resend")}`
                                 }
                             </button>
                         </div>
@@ -199,7 +202,7 @@ function LoginContent() {
                 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="text-sm text-gray-400 block mb-1">Email</label>
+                        <label className="text-sm text-gray-400 block mb-1">{t("login.emailLabel")}</label>
                         <input
                             type="email"
                             value={email}
@@ -209,7 +212,7 @@ function LoginContent() {
                         />
                     </div>
                     <div>
-                        <label className="text-sm text-gray-400 block mb-1">Password</label>
+                        <label className="text-sm text-gray-400 block mb-1">{t("login.passwordLabel")}</label>
                         <input
                             type="password"
                             value={password}
@@ -219,16 +222,16 @@ function LoginContent() {
                         />
                         <div className="flex justify-end mt-1">
                             <Link href="/forgot-password" className="text-sm text-elvion-primary hover:underline">
-                                Forgot Password?
+                                {t("login.forgotPassword")}
                             </Link>
                         </div>
                     </div>
                     <Button className="w-full mt-4" disabled={loading}>
-                        {loading ? "Logging in..." : "Login"}
+                        {loading ? t("login.submitting") : t("login.submitButton")}
                     </Button>
                 </form>
                 <p className="text-center text-gray-500 mt-4 text-sm">
-                    Don&apos;t have an account? <Link href="/signup" className="text-elvion-primary hover:underline">Sign up</Link>
+                    {t("login.noAccount")} <Link href="/signup" className="text-elvion-primary hover:underline">{t("login.signupLink")}</Link>
                 </p>
             </div>
         </div>

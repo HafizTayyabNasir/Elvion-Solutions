@@ -3,6 +3,7 @@ import { Button } from "@/components/Button";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Signup() {
     const [formData, setFormData] = useState({
@@ -24,6 +25,7 @@ export default function Signup() {
     const [verifyError, setVerifyError] = useState("");
     const [verifySuccess, setVerifySuccess] = useState("");
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const { t } = useLanguage();
 
     // Resend cooldown timer
     useEffect(() => {
@@ -74,12 +76,12 @@ export default function Signup() {
         setError("");
 
         if (formData.password !== formData.confirmPassword) {
-            setError("Passwords do not match!");
+            setError(t("signup.error.passwordMismatch"));
             return;
         }
 
         if (formData.password.length < 8) {
-            setError("Password must be at least 8 characters long");
+            setError(t("signup.error.passwordLength"));
             return;
         }
 
@@ -106,7 +108,7 @@ export default function Signup() {
             if (err instanceof Error) {
                 setError(err.message);
             } else {
-                setError("Registration failed");
+                setError(t("signup.error.registrationFailed"));
             }
         } finally {
             setLoading(false);
@@ -116,7 +118,7 @@ export default function Signup() {
     const handleVerifyCode = async () => {
         const code = verificationCode.join('');
         if (code.length !== 6) {
-            setVerifyError("Please enter all 6 digits");
+            setVerifyError(t("signup.verify.enterAll"));
             return;
         }
 
@@ -127,13 +129,13 @@ export default function Signup() {
                 method: "POST",
                 body: JSON.stringify({ email: formData.email, code }),
             });
-            setVerifySuccess(data.message || "Email verified successfully!");
+            setVerifySuccess(data.message || t("signup.verify.success"));
             setTimeout(() => setSuccess(true), 1500);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setVerifyError(err.message);
             } else {
-                setVerifyError("Verification failed");
+                setVerifyError(t("signup.error.verificationFailed"));
             }
         } finally {
             setVerifyLoading(false);
@@ -149,7 +151,7 @@ export default function Signup() {
                 method: "POST",
                 body: JSON.stringify({ email: formData.email }),
             });
-            setVerifySuccess(data.message || "New verification code sent!");
+            setVerifySuccess(data.message || t("signup.verify.codeSent"));
             setResendCooldown(60);
             setVerificationCode(["", "", "", "", "", ""]);
             inputRefs.current[0]?.focus();
@@ -158,7 +160,7 @@ export default function Signup() {
             if (err instanceof Error) {
                 setVerifyError(err.message);
             } else {
-                setVerifyError("Failed to resend code");
+                setVerifyError(t("signup.error.resendFailed"));
             }
         } finally {
             setResendLoading(false);
@@ -175,12 +177,12 @@ export default function Signup() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Account Created!</h1>
+                    <h1 className="text-2xl font-bold text-white mb-2">{t("signup.success.title")}</h1>
                     <p className="text-elvion-gray mb-6">
-                        Your account has been verified successfully. You can now login.
+                        {t("signup.success.desc")}
                     </p>
                     <Link href="/login">
-                        <Button className="w-full">Go to Login</Button>
+                        <Button className="w-full">{t("signup.success.loginButton")}</Button>
                     </Link>
                 </div>
             </div>
@@ -197,9 +199,9 @@ export default function Signup() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Verify Your Email</h1>
+                    <h1 className="text-2xl font-bold text-white mb-2">{t("signup.verify.title")}</h1>
                     <p className="text-elvion-gray mb-2">
-                        We&apos;ve sent a 6-digit verification code to
+                        {t("signup.verify.desc")}
                     </p>
                     <p className="text-elvion-primary font-medium mb-6">{formData.email}</p>
 
@@ -237,12 +239,12 @@ export default function Signup() {
                         onClick={handleVerifyCode}
                         disabled={verifyLoading || verificationCode.join('').length !== 6}
                     >
-                        {verifyLoading ? "Verifying..." : "Verify Email"}
+                        {verifyLoading ? t("signup.verify.verifying") : t("signup.verify.button")}
                     </Button>
 
                     <div className="border-t border-white/10 pt-4 mt-4">
                         <p className="text-sm text-gray-500 mb-3">
-                            Didn&apos;t receive the code? Check your spam folder.
+                            {t("signup.verify.noCode")}
                         </p>
                         <button
                             onClick={handleResendCode}
@@ -250,16 +252,16 @@ export default function Signup() {
                             className="text-elvion-primary hover:underline text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
                             {resendLoading
-                                ? "Sending..."
+                                ? t("signup.verify.resendSending")
                                 : resendCooldown > 0
-                                    ? `Resend code in ${resendCooldown}s`
-                                    : "Resend Verification Code"
+                                    ? `${t("signup.verify.resendCooldown")} ${resendCooldown}s`
+                                    : t("signup.verify.resendButton")
                             }
                         </button>
                     </div>
 
                     <p className="text-xs text-gray-600 mt-4">
-                        We also sent a verification link in the email.
+                        {t("signup.verify.linkNote")}
                     </p>
                 </div>
             </div>
@@ -269,14 +271,14 @@ export default function Signup() {
     return (
         <div className="flex min-h-screen items-center justify-center bg-elvion-dark px-4 py-12">
             <div className="w-full max-w-md rounded-2xl border border-white/10 bg-elvion-card p-8 shadow-[0_0_30px_rgba(0,210,141,0.1)]">
-                <h1 className="mb-2 text-center text-2xl font-bold text-white">Create Account</h1>
-                <p className="mb-6 text-center text-sm text-elvion-gray">Join Elvion Solutions today</p>
+                <h1 className="mb-2 text-center text-2xl font-bold text-white">{t("signup.title")}</h1>
+                <p className="mb-6 text-center text-sm text-elvion-gray">{t("signup.subtitle")}</p>
 
                 {error && <div className="mb-4 text-center text-sm text-red-500 bg-red-500/10 p-3 rounded-lg">{error}</div>}
 
                 <form onSubmit={handleSignup} className="space-y-4">
                     <div>
-                        <label className="mb-1 block text-sm text-gray-400">Full Name</label>
+                        <label className="mb-1 block text-sm text-gray-400">{t("signup.fullNameLabel")}</label>
                         <input
                             name="name"
                             type="text"
@@ -286,7 +288,7 @@ export default function Signup() {
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm text-gray-400">Email</label>
+                        <label className="mb-1 block text-sm text-gray-400">{t("signup.emailLabel")}</label>
                         <input
                             name="email"
                             type="email"
@@ -297,7 +299,7 @@ export default function Signup() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="mb-1 block text-sm text-gray-400">Phone (Optional)</label>
+                            <label className="mb-1 block text-sm text-gray-400">{t("signup.phoneLabel")}</label>
                             <input
                                 name="phone"
                                 type="tel"
@@ -306,7 +308,7 @@ export default function Signup() {
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm text-gray-400">Company (Optional)</label>
+                            <label className="mb-1 block text-sm text-gray-400">{t("signup.companyLabel")}</label>
                             <input
                                 name="company"
                                 type="text"
@@ -316,7 +318,7 @@ export default function Signup() {
                         </div>
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm text-gray-400">Password</label>
+                        <label className="mb-1 block text-sm text-gray-400">{t("signup.passwordLabel")}</label>
                         <input
                             name="password"
                             type="password"
@@ -327,7 +329,7 @@ export default function Signup() {
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-sm text-gray-400">Confirm Password</label>
+                        <label className="mb-1 block text-sm text-gray-400">{t("signup.confirmPasswordLabel")}</label>
                         <input
                             name="confirmPassword"
                             type="password"
@@ -337,11 +339,11 @@ export default function Signup() {
                         />
                     </div>
                     <Button className="mt-4 w-full" disabled={loading}>
-                        {loading ? "Creating Account..." : "Sign Up"}
+                        {loading ? t("signup.submitting") : t("signup.submitButton")}
                     </Button>
                 </form>
                 <p className="mt-4 text-center text-sm text-gray-500">
-                    Already have an account? <Link href="/login" className="text-elvion-primary hover:underline">Login</Link>
+                    {t("signup.hasAccount")} <Link href="/login" className="text-elvion-primary hover:underline">{t("signup.loginLink")}</Link>
                 </p>
             </div>
         </div>

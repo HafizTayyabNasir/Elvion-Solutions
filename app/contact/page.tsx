@@ -3,6 +3,7 @@ import { Button } from "@/components/Button";
 import { Mail, Phone } from "lucide-react";
 import { useState } from "react";
 import { fetchAPI } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Contact() {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ export default function Contact() {
     });
     const [status, setStatus] = useState("");
     const [loading, setLoading] = useState(false);
+    const { t } = useLanguage();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,13 +31,13 @@ export default function Contact() {
                     date: new Date().toISOString().split('T')[0] // Send current date
                 }),
             });
-            setStatus("Message sent successfully!");
+            setStatus(t("contact.success"));
             setFormData({ name: "", email: "", message: "" });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setStatus(error.message);
             } else {
-                setStatus("Failed to send message.");
+                setStatus(t("contact.error"));
             }
         } finally {
             setLoading(false);
@@ -45,9 +47,9 @@ export default function Contact() {
     return (
         <div className="mx-auto grid min-h-screen max-w-6xl items-center gap-12 px-4 py-10 md:grid-cols-2">
             <div>
-                <h1 className="mb-6 text-4xl font-bold text-white">Let&apos;s Start Your Digital Journey</h1>
+                <h1 className="mb-6 text-4xl font-bold text-white">{t("contact.title")}</h1>
                 <p className="mb-8 text-elvion-gray">
-                    Ready to see that growth arrow point straight up? Let&apos;s talk.
+                    {t("contact.description")}
                 </p>
 
                 <div className="space-y-6">
@@ -56,7 +58,7 @@ export default function Contact() {
                             <Mail />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Email Us</p>
+                            <p className="text-sm text-gray-400">{t("contact.emailLabel")}</p>
                             <p className="font-semibold">team@elvionsolutions.com</p>
                         </div>
                     </div>
@@ -66,7 +68,7 @@ export default function Contact() {
                             <Phone />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-400">Call Us</p>
+                            <p className="text-sm text-gray-400">{t("contact.phoneLabel")}</p>
                             <p className="font-semibold">+92 326 5942996</p>
                         </div>
                     </div>
@@ -74,14 +76,14 @@ export default function Contact() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-elvion-card p-8">
-                <h2 className="mb-6 text-2xl font-bold text-white">Send a Message</h2>
+                <h2 className="mb-6 text-2xl font-bold text-white">{t("contact.formTitle")}</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <input 
                         name="name" 
                         value={formData.name} 
                         onChange={handleChange} 
                         type="text" 
-                        placeholder="Full Name" 
+                        placeholder={t("contact.namePlaceholder")} 
                         className="w-full rounded-lg border border-white/10 bg-elvion-dark p-3 text-white outline-none focus:border-elvion-primary" 
                         required 
                     />
@@ -90,7 +92,7 @@ export default function Contact() {
                         value={formData.email} 
                         onChange={handleChange} 
                         type="email" 
-                        placeholder="Email Address" 
+                        placeholder={t("contact.emailPlaceholder")} 
                         className="w-full rounded-lg border border-white/10 bg-elvion-dark p-3 text-white outline-none focus:border-elvion-primary" 
                         required 
                     />
@@ -99,13 +101,13 @@ export default function Contact() {
                         value={formData.message} 
                         onChange={handleChange} 
                         rows={4} 
-                        placeholder="Your Message" 
+                        placeholder={t("contact.messagePlaceholder")} 
                         className="w-full rounded-lg border border-white/10 bg-elvion-dark p-3 text-white outline-none focus:border-elvion-primary" 
                         required 
                     />
                     {status && <p className={`text-center text-sm ${status.includes("success") ? "text-green-500" : "text-red-500"}`}>{status}</p>}
                     <Button className="w-full" disabled={loading}>
-                        {loading ? "Sending..." : "Send Message"}
+                        {loading ? t("contact.submitting") : t("contact.submitButton")}
                     </Button>
                 </form>
             </div>

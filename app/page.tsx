@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Comment {
   id: number;
@@ -44,14 +45,15 @@ const initialComments: Comment[] = [
 ];
 
 const teamMembers = [
-  { name: "Muhammad Zohaib Tabassum", role: "Founder & CEO", image: "/Zohaib_Tabassum.webp", linkedin: "https://www.linkedin.com/in/mzohaibtabassum-softwareengineer/" },
-  { name: "Muhammad Tayyab", role: "Chief Technical Officer", image: "/Muhammad_Tayyab.webp", linkedin: "https://www.linkedin.com/in/muhammad-tayyab-sofwareengineer/" },
-  { name: "Husnain Mehmood", role: "Chief Of Operations", image: "/Husnain_Mehmood.webp", linkedin: "https://www.linkedin.com/in/husnain-mehmood-b977362bb/" },
-  { name: "Hammad Ahmad", role: "Business Developer", image: "/Hammad_Ahmad.webp", linkedin: "https://www.linkedin.com/in/hammad-ahmad-0b1b3b1b3/" }
+  { name: "Muhammad Zohaib Tabassum", roleKey: "home.team.founderCeo", image: "/Zohaib_Tabassum.webp", linkedin: "https://www.linkedin.com/in/mzohaibtabassum-softwareengineer/" },
+  { name: "Muhammad Tayyab", roleKey: "home.team.cto", image: "/Muhammad_Tayyab.webp", linkedin: "https://www.linkedin.com/in/muhammad-tayyab-sofwareengineer/" },
+  { name: "Husnain Mehmood", roleKey: "home.team.coo", image: "/Husnain_Mehmood.webp", linkedin: "https://www.linkedin.com/in/husnain-mehmood-b977362bb/" },
+  { name: "Hammad Ahmad", roleKey: "home.team.bizDev", image: "/Hammad_Ahmad.webp", linkedin: "https://www.linkedin.com/in/hammad-ahmad-0b1b3b1b3/" }
 ];
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState(initialComments);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -96,7 +98,7 @@ export default function Home() {
 
   const handleCommentSubmit = async () => {
     if (!comment.trim()) {
-      setStatus("Please enter a comment");
+      setStatus(t("home.testimonials.empty"));
       return;
     }
     setLoading(true);
@@ -119,13 +121,13 @@ export default function Home() {
       };
       setComments([...comments, newComment]);
       setComment("");
-      setStatus("Comment posted successfully!");
+      setStatus(t("home.testimonials.success"));
       setTimeout(() => setStatus(""), 3000);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setStatus(error.message);
       } else {
-        setStatus("Failed to post comment");
+        setStatus(t("home.testimonials.error"));
       }
     } finally {
       setLoading(false);
@@ -290,27 +292,27 @@ export default function Home() {
           <div className="text-center max-w-4xl mx-auto space-y-8">
             <div className={`inline-block transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.1s' }}>
               <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/30 hover:bg-[#00d28d]/20 hover:scale-110 hover:border-[#00d28d]/60 transition-all duration-500 cursor-default shimmer animate-pulse-border inline-block animate-glow">
-                Smart Digital & Automation Solutions
+                {t("home.hero.badge")}
               </span>
             </div>
 
             <h1 className={`text-5xl md:text-5xl lg:text-7xl font-black text-white leading-[1.1] transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.3s' }}>
-              WE LEAD YOU TO<br />
+              {t("home.hero.title1")}<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d28d] via-[#4a90e2] to-[#00d28d] animate-gradient text-shadow-glow inline-block hover:scale-105 transition-transform duration-500">
-                SUCCESS
+                {t("home.hero.titleHighlight")}
               </span>
-              <br />IN YOUR BUSINESS
+              <br />{t("home.hero.title3")}
             </h1>
 
             <p className={`text-[#888] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.5s' }}>
-              Transform your business with cutting-edge digital solutions. From zero to hero, we handle your business growth with proven strategies and powerful automation.
+              {t("home.hero.description")}
             </p>
 
             <div className={`flex flex-col sm:flex-row gap-4 justify-center items-center pt-6 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.7s' }}>
               <Link href="/contact">
                 <button className="group relative px-8 py-6 bg-[#00d28d] text-[#0a0a0a] rounded-full font-bold text-base overflow-hidden hover-lift animate-glow">
                   <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                    Get Free Consultation
+                    {t("home.hero.getConsultation")}
                     <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00d28d] via-[#00b377] to-[#00d28d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
@@ -318,7 +320,7 @@ export default function Home() {
               </Link>
               <Link href="/services/web-designs">
                 <button className="group px-8 py-6 bg-transparent text-white rounded-full font-bold text-base border-2 border-white/20 hover:border-[#00d28d] hover:bg-[#00d28d]/10 transition-all duration-500 hover-lift relative overflow-hidden">
-                  <span className="relative z-10">View Our Work</span>
+                  <span className="relative z-10">{t("home.hero.viewWork")}</span>
                   <div className="absolute inset-0 bg-[#00d28d]/20 scale-0 group-hover:scale-100 transition-transform duration-500 rounded-full"></div>
                 </button>
               </Link>
@@ -327,10 +329,10 @@ export default function Home() {
             {/* Trust Indicators */}
             <div className={`flex flex-wrap justify-center gap-8 pt-12 text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '0.9s' }}>
               {[
-                { value: "350+", label: "Projects Delivered" },
-                { value: "100%", label: "Client Satisfaction" },
-                { value: "50+", label: "Active Clients" },
-                { value: "24/7", label: "Support Available" }
+                { value: "350+", label: t("home.hero.projectsDelivered") },
+                { value: "100%", label: t("home.hero.clientSatisfaction") },
+                { value: "50+", label: t("home.hero.activeClients") },
+                { value: "24/7", label: t("home.hero.supportAvailable") }
               ].map((stat, idx) => (
                 <div key={idx} className="space-y-1 group cursor-default">
                   <div className="text-3xl font-bold text-[#00d28d] group-hover:scale-125 transition-all duration-500 animate-scale-pulse" style={{ animationDelay: `${idx * 0.2}s` }}>
@@ -350,10 +352,10 @@ export default function Home() {
       <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
-            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">What We Offer</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white">Our Core Services</h2>
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("home.services.badge")}</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white">{t("home.services.title")}</h2>
             <p className="text-[#888] text-lg max-w-2xl mx-auto">
-              Comprehensive digital solutions designed to elevate your brand and drive measurable results
+              {t("home.services.description")}
             </p>
           </div>
 
@@ -361,39 +363,39 @@ export default function Home() {
             {[
               {
                 icon: Code,
-                title: "Full-Stack Development",
-                desc: "Next.js, React & FastAPI solutions with seamless AI integration for modern web applications.",
-                features: ["Next.js & React", "FastAPI Backend", "AI Integration"]
+                title: t("home.services.fullStack.title"),
+                desc: t("home.services.fullStack.desc"),
+                features: [t("home.services.fullStack.f1"), t("home.services.fullStack.f2"), t("home.services.fullStack.f3")]
               },
               {
                 icon: Globe,
-                title: "SEO & Digital Marketing",
-                desc: "Rank #1 on Google with our data-driven SEO strategies and content optimization.",
-                features: ["On-Page SEO", "Technical SEO", "Link Building"]
+                title: t("home.services.seo.title"),
+                desc: t("home.services.seo.desc"),
+                features: [t("home.services.seo.f1"), t("home.services.seo.f2"), t("home.services.seo.f3")]
               },
               {
                 icon: Smartphone,
-                title: "Social Media Management",
-                desc: "Strategic content creation and campaign management that converts followers into loyal customers.",
-                features: ["Content Strategy", "Community Management", "Analytics"]
+                title: t("home.services.smm.title"),
+                desc: t("home.services.smm.desc"),
+                features: [t("home.services.smm.f1"), t("home.services.smm.f2"), t("home.services.smm.f3")]
               },
               {
                 icon: Megaphone,
-                title: "Performance Marketing",
-                desc: "High ROI ad campaigns on Meta, Google, and TikTok with continuous optimization.",
-                features: ["Meta Ads", "Google Ads", "Campaign Optimization"]
+                title: t("home.services.ads.title"),
+                desc: t("home.services.ads.desc"),
+                features: [t("home.services.ads.f1"), t("home.services.ads.f2"), t("home.services.ads.f3")]
               },
               {
                 icon: PenTool,
-                title: "Graphic Design & Branding",
-                desc: "Stunning visuals and brand identity design that captures attention and defines your market presence.",
-                features: ["Logo Design", "Brand Guidelines", "Marketing Materials"]
+                title: t("home.services.design.title"),
+                desc: t("home.services.design.desc"),
+                features: [t("home.services.design.f1"), t("home.services.design.f2"), t("home.services.design.f3")]
               },
               {
                 icon: BarChart,
-                title: "Analytics & Reporting",
-                desc: "Data-driven insights and detailed reports for informed decision-making and maximum growth.",
-                features: ["Google Analytics", "Custom Dashboards", "Performance Reports"]
+                title: t("home.services.reporting.title"),
+                desc: t("home.services.reporting.desc"),
+                features: [t("home.services.reporting.f1"), t("home.services.reporting.f2"), t("home.services.reporting.f3")]
               },
             ].map((service, idx) => (
               <div
@@ -441,22 +443,22 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="text-center mb-16 space-y-4">
-            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Our Approach</span>
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("home.process.badge")}</span>
             <h2 className="text-4xl md:text-5xl font-bold text-white">
-              Your Journey to Success
+              {t("home.process.title")}
             </h2>
             <p className="text-[#888] text-lg max-w-2xl mx-auto">
-              A proven 5-step process that transforms your business from concept to reality
+              {t("home.process.description")}
             </p>
           </div>
 
           <div className="grid md:grid-cols-5 gap-6">
             {[
-              { number: "01", icon: Target, title: "Strategy", desc: "Define goals and create roadmap" },
-              { number: "02", icon: PenTool, title: "Branding", desc: "Build your unique identity" },
-              { number: "03", icon: Globe, title: "SEO", desc: "Optimize for search engines" },
-              { number: "04", icon: Users, title: "SMM", desc: "Engage your audience" },
-              { number: "05", icon: Award, title: "Success", desc: "Achieve measurable results" },
+              { number: "01", icon: Target, title: t("home.process.strategy"), desc: t("home.process.strategyDesc") },
+              { number: "02", icon: PenTool, title: t("home.process.branding"), desc: t("home.process.brandingDesc") },
+              { number: "03", icon: Globe, title: t("home.process.seo"), desc: t("home.process.seoDesc") },
+              { number: "04", icon: Users, title: t("home.process.smm"), desc: t("home.process.smmDesc") },
+              { number: "05", icon: Award, title: t("home.process.success"), desc: t("home.process.successDesc") },
             ].map((step, idx) => (
               <div key={idx} className="relative group">
                 <div className="bg-[#111] rounded-2xl p-6 border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 hover-lift animate-pulse-border">
@@ -490,10 +492,10 @@ export default function Home() {
       <section className="py-20 bg-[#0a0a0a]">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">Our Team</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">Meet The Experts</h2>
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("home.team.badge")}</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("home.team.title")}</h2>
             <p className="text-[#888] text-lg mt-4">
-              Passionate professionals dedicated to your success
+              {t("home.team.description")}
             </p>
           </div>
 
@@ -518,7 +520,7 @@ export default function Home() {
                   {member.name}
                 </h3>
                 <p className="text-[#888] text-sm group-hover:text-[#aaa] transition-colors duration-300 mb-4">
-                  {member.role}
+                  {t(member.roleKey)}
                 </p>
 
                 {/* LinkedIn and Portfolio Buttons */}
@@ -526,13 +528,13 @@ export default function Home() {
                   <Link href={member.linkedin || "#"} target="_blank" rel="noopener noreferrer">
                     <button className="group flex items-center gap-2 px-4 py-2 text-xs font-medium text-white bg-transparent border border-white/20 hover:border-[#00d28d] hover:bg-[#00d28d]/10 rounded-full transition-all duration-300">
                       <Linkedin size={14} className="group-hover:text-[#00d28d] transition-colors duration-300" />
-                      LinkedIn
+                      {t("home.team.linkedin")}
                     </button>
                   </Link>
                   <Link href="/portfolio">
                     <button className="flex items-center gap-2 px-4 py-2 text-xs font-medium text-[#0a0a0a] bg-[#00d28d] hover:bg-[#00a86f] rounded-full transition-colors duration-300">
                       <Briefcase size={14} />
-                      Portfolio
+                      {t("home.team.portfolio")}
                     </button>
                   </Link>
                 </div>
@@ -547,20 +549,20 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Why Elvion Solutions</span>
+              <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("home.whyUs.badge")}</span>
               <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                We Are Creative Business Solutions Agency
+                {t("home.whyUs.title")}
               </h2>
               <p className="text-[#888] text-lg leading-relaxed">
-                Ready to elevate your brand? At Elvion Solutions, we specialize in high-impact strategies that cut through the digital noise and deliver real, measurable results.
+                {t("home.whyUs.description")}
               </p>
 
               <div className="grid sm:grid-cols-2 gap-4 pt-4">
                 {[
-                  { icon: Zap, text: "Lightning Fast Delivery" },
-                  { icon: TrendingUp, text: "Data-Driven Results" },
-                  { icon: Rocket, text: "Scalable Solutions" },
-                  { icon: Award, text: "Award-Winning Team" },
+                  { icon: Zap, text: t("home.whyUs.fastDelivery") },
+                  { icon: TrendingUp, text: t("home.whyUs.dataResults") },
+                  { icon: Rocket, text: t("home.whyUs.scalable") },
+                  { icon: Award, text: t("home.whyUs.awardTeam") },
                 ].map((item, idx) => (
                   <div key={idx} className="group flex items-center space-x-3 bg-[#111] p-4 rounded-lg border border-white/5 hover:border-[#00d28d]/60 transition-all duration-500 hover-lift cursor-default animate-pulse-border">
                     <div className="w-10 h-10 bg-[#00d28d]/30 rounded-lg flex items-center justify-center text-[#00d28d] flex-shrink-0 group-hover:scale-125 group-hover:rotate-[360deg] transition-all duration-700 animate-glow">
@@ -574,7 +576,7 @@ export default function Home() {
               <Link href="/contact">
                 <button className="group mt-6 px-8 py-6 bg-[#00d28d] text-[#0a0a0a] rounded-full font-bold text-base hover-lift relative overflow-hidden animate-glow">
                   <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                    Start Your Digital Journey
+                    {t("home.whyUs.startJourney")}
                     <ArrowRight size={20} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-[#00d28d] via-[#00b377] to-[#00d28d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
@@ -590,7 +592,7 @@ export default function Home() {
                     <Target size={64} className="text-[#00d28d] animate-pulse" style={{ animationDuration: '2s' }} />
                   </div>
                   <p className="text-white/70 text-lg italic group-hover:text-white transition-colors duration-500">
-                    Consistency is Key! Your identity must shine across every scroll and every click.
+                    {t("home.whyUs.quote")}
                   </p>
                 </div>
               </div>
@@ -605,15 +607,15 @@ export default function Home() {
 
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-110 transition-transform duration-500 cursor-default">
-            Ready to Build a Brand That Truly Engages?
+            {t("home.cta.title")}
           </h2>
           <p className="text-white/90 text-xl mb-8">
-            Get a free digital audit and discover how we can transform your business
+            {t("home.cta.description")}
           </p>
           <Link href="/contact">
             <button className="group bg-white text-[#0a0a0a] hover:bg-white/90 px-8 py-6 rounded-full text-lg font-bold hover-lift relative overflow-hidden animate-glow">
               <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                Get Your Free Consultation Call
+                {t("home.cta.button")}
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white via-[#f0f0f0] to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
             </button>
@@ -625,9 +627,9 @@ export default function Home() {
       <section className="py-20 lg:py-32 bg-[#0a0a0a]">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-16 space-y-4">
-            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Testimonials</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-white">What People Say About Us</h2>
-            <p className="text-[#888] text-lg">Real feedback from our satisfied clients</p>
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("home.testimonials.badge")}</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white">{t("home.testimonials.title")}</h2>
+            <p className="text-[#888] text-lg">{t("home.testimonials.description")}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 mb-12">
@@ -655,13 +657,13 @@ export default function Home() {
           </div>
 
           <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] p-8 rounded-2xl border border-white/10 hover:border-[#00d28d]/60 transition-all duration-700 animate-pulse-border">
-            <h3 className="text-2xl font-bold text-white mb-2">Share Your Experience</h3>
-            <p className="text-[#888] mb-6">Let us know how we helped transform your business</p>
+            <h3 className="text-2xl font-bold text-white mb-2">{t("home.testimonials.shareTitle")}</h3>
+            <p className="text-[#888] mb-6">{t("home.testimonials.shareDesc")}</p>
             <div className="space-y-4">
               <textarea
                 className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-4 text-white placeholder:text-[#888] focus:outline-none focus:border-[#00d28d] focus:ring-2 focus:ring-[#00d28d]/20 transition-all duration-500 resize-none hover:border-[#00d28d]/50"
                 rows={4}
-                placeholder="Share your experience with Elvion Solutions..."
+                placeholder={t("home.testimonials.placeholder")}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
@@ -672,7 +674,7 @@ export default function Home() {
                 className="group w-full sm:w-auto px-8 py-3 bg-[#00d28d] text-[#0a0a0a] rounded-full font-bold hover-lift relative overflow-hidden animate-glow disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="relative z-10 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                  {loading ? "Posting..." : "Post Comment"}
+                  {loading ? t("home.testimonials.posting") : t("home.testimonials.postComment")}
                   {!loading && <ArrowRight size={18} className="ml-2 group-hover:translate-x-3 transition-transform duration-300" />}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00d28d] via-[#00b377] to-[#00d28d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>

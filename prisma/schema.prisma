@@ -40,6 +40,7 @@ model User {
   invoices         Invoice[]
   notifications    Notification[]
   activities       Activity[]
+  employee         Employee?
 }
 
 model Message {
@@ -276,5 +277,128 @@ model Activity {
   userId      Int
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+}
+
+// ============== HR Management Models ==============
+
+model Department {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  description String?    @db.Text
+  managerId   Int?
+  budget      Float?
+  isActive    Boolean    @default(true)
+  employees   Employee[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Employee {
+  id              Int       @id @default(autoincrement())
+  employeeId      String    @unique  // e.g. ELV-001
+  userId          Int?      @unique
+  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  firstName       String
+  lastName        String
+  email           String    @unique
+  phone           String?
+  dateOfBirth     DateTime?
+  gender          String?   // male, female, other
+  address         String?   @db.Text
+  city            String?
+  country         String?
+  avatar          String?
+
+  // Employment Details
+  departmentId    Int?
+  department      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position        String?
+  employmentType  String    @default("full_time") // full_time, part_time, contract, intern
+  status          String    @default("active")     // active, on_leave, terminated, resigned
+  hireDate        DateTime  @default(now())
+  terminationDate DateTime?
+  
+  // Compensation
+  salary          Float?
+  currency        String    @default("USD")
+
+  // Emergency Contact
+  emergencyName   String?
+  emergencyPhone  String?
+  emergencyRelation String?
+
+  // Relations
+  attendances     Attendance[]
+  leaveRequests   LeaveRequest[]
+  payrolls        Payroll[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Attendance {
+  id          Int       @id @default(autoincrement())
+  employeeId  Int
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date        DateTime  @db.Date
+  clockIn     DateTime?
+  clockOut    DateTime?
+  status      String    @default("present") // present, absent, late, half_day, remote
+  hoursWorked Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([employeeId, date])
+}
+
+model LeaveType {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique // Annual, Sick, Maternity, etc.
+  description   String?
+  defaultDays   Int            @default(0)
+  isPaid        Boolean        @default(true)
+  isActive      Boolean        @default(true)
+  leaveRequests LeaveRequest[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model LeaveRequest {
+  id            Int        @id @default(autoincrement())
+  employeeId    Int
+  employee      Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId   Int
+  leaveType     LeaveType  @relation(fields: [leaveTypeId], references: [id])
+  startDate     DateTime   @db.Date
+  endDate       DateTime   @db.Date
+  totalDays     Float
+  reason        String?    @db.Text
+  status        String     @default("pending") // pending, approved, rejected, cancelled
+  approvedBy    Int?       // userId of approver
+  approvalNote  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Payroll {
+  id            Int       @id @default(autoincrement())
+  employeeId    Int
+  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month         Int       // 1-12
+  year          Int
+  baseSalary    Float     @default(0)
+  bonus         Float     @default(0)
+  deductions    Float     @default(0)
+  tax           Float     @default(0)
+  netPay        Float     @default(0)
+  currency      String    @default("USD")
+  status        String    @default("draft") // draft, processed, paid
+  paidDate      DateTime?
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([employeeId, month, year])
 }
 

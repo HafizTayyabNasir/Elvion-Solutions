@@ -20,6 +20,7 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  Building2,
 } from "lucide-react";
 
 const menuItems = [
@@ -28,6 +29,14 @@ const menuItems = [
     { name: "Leads", href: "/admin/crm/leads" },
     { name: "Contacts", href: "/admin/crm/contacts" },
     { name: "Deals", href: "/admin/crm/deals" },
+  ]},
+  { name: "HR", href: "/admin/hr", icon: Building2, children: [
+    { name: "Dashboard", href: "/admin/hr/dashboard" },
+    { name: "Employees", href: "/admin/hr/employees" },
+    { name: "Departments", href: "/admin/hr/departments" },
+    { name: "Attendance", href: "/admin/hr/attendance" },
+    { name: "Leaves", href: "/admin/hr/leaves" },
+    { name: "Payroll", href: "/admin/hr/payroll" },
   ]},
   { name: "Projects", href: "/admin/projects", icon: FolderKanban },
   { name: "Tasks", href: "/admin/tasks", icon: FileText },
@@ -52,10 +61,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  // Auto-expand CRM menu if on CRM page
+  // Auto-expand CRM/HR menu if on respective page
   useEffect(() => {
     if (pathname?.startsWith("/admin/crm")) {
       setExpandedMenu("CRM");
+    } else if (pathname?.startsWith("/admin/hr")) {
+      setExpandedMenu("HR");
     }
   }, [pathname]);
 

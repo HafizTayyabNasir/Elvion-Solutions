@@ -22,9 +22,11 @@ import {
     Clock,
     Shield
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function About() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [activeTab, setActiveTab] = useState("mission");
 
@@ -45,26 +47,26 @@ export default function About() {
     }, []);
 
     const coreValues = [
-        { icon: Heart, title: "Passion", desc: "We love what we do and it shows in every project" },
-        { icon: Shield, title: "Integrity", desc: "Honest, transparent, and committed to excellence" },
-        { icon: Zap, title: "Innovation", desc: "Always pushing boundaries with creative solutions" },
-        { icon: Users, title: "Collaboration", desc: "Your success is our success" }
+        { icon: Heart, title: t("about.values.passion"), desc: t("about.values.passionDesc") },
+        { icon: Shield, title: t("about.values.integrity"), desc: t("about.values.integrityDesc") },
+        { icon: Zap, title: t("about.values.innovation"), desc: t("about.values.innovationDesc") },
+        { icon: Users, title: t("about.values.collaboration"), desc: t("about.values.collaborationDesc") }
     ];
 
     const achievements = [
-        { number: "500+", label: "Projects Completed", icon: Award },
-        { number: "200+", label: "Happy Clients", icon: Users },
-        { number: "5+", label: "Years Experience", icon: Clock },
-        { number: "98%", label: "Client Retention", icon: Star }
+        { number: "500+", label: t("about.achievements.projects"), icon: Award },
+        { number: "200+", label: t("about.achievements.clients"), icon: Users },
+        { number: "5+", label: t("about.achievements.years"), icon: Clock },
+        { number: "98%", label: t("about.achievements.retention"), icon: Star }
     ];
 
     const services = [
-        { icon: Code, name: "Web Development" },
-        { icon: Smartphone, name: "Mobile Apps" },
-        { icon: Globe, name: "SEO & Marketing" },
-        { icon: PenTool, name: "Design & Branding" },
-        { icon: BarChart, name: "Analytics" },
-        { icon: Rocket, name: "Growth Strategy" }
+        { icon: Code, name: t("about.services.webDev") },
+        { icon: Smartphone, name: t("about.services.mobileApps") },
+        { icon: Globe, name: t("about.services.seoMarketing") },
+        { icon: PenTool, name: t("about.services.designBranding") },
+        { icon: BarChart, name: t("about.services.analytics") },
+        { icon: Rocket, name: t("about.services.growthStrategy") }
     ];
 
     return (
@@ -166,19 +168,19 @@ export default function About() {
                 <div className="max-w-6xl mx-auto px-4 relative z-10">
                     <div className="text-center space-y-6 animate-slide-up">
                         <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/20 hover:bg-[#00d28d]/20 hover:scale-105 transition-all duration-300 cursor-default shimmer inline-block">
-                            About Elvion Solutions
+                            {t("about.hero.badge")}
                         </span>
 
                         <h1 className="text-5xl md:text-7xl font-black text-white leading-tight">
-                            We Build Digital
+                            {t("about.hero.title1")}
                             <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d28d] via-[#4a90e2] to-[#00d28d] animate-gradient text-shadow-glow">
-                                Excellence
+                                {t("about.hero.titleHighlight")}
                             </span>
                         </h1>
 
                         <p className="text-[#888] text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
-                            At Elvion Solutions, we empower brands to grow smarter, faster, and stronger — with strategic, creative, and tech-driven solutions that transform simple ideas into high-performing digital assets.
+                            {t("about.hero.description")}
                         </p>
                     </div>
                 </div>
@@ -190,9 +192,9 @@ export default function About() {
                     {/* Tab Navigation */}
                     <div className="flex flex-wrap justify-center gap-4 mb-12">
                         {[
-                            { id: "mission", icon: Target, label: "Our Mission" },
-                            { id: "vision", icon: Eye, label: "Our Vision" },
-                            { id: "values", icon: Heart, label: "Core Values" }
+                            { id: "mission", icon: Target, label: t("about.tabs.mission") },
+                            { id: "vision", icon: Eye, label: t("about.tabs.vision") },
+                            { id: "values", icon: Heart, label: t("about.tabs.values") }
                         ].map((tab) => (
                             <button
                                 key={tab.id}
@@ -216,16 +218,16 @@ export default function About() {
                                     <div className="w-16 h-16 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-2xl flex items-center justify-center">
                                         <Target size={32} className="text-[#00d28d]" />
                                     </div>
-                                    <h2 className="text-3xl md:text-4xl font-bold text-white">Our Mission</h2>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-white">{t("about.mission.title")}</h2>
                                 </div>
                                 <p className="text-[#888] text-lg leading-relaxed">
-                                    To provide cutting-edge digital tools and innovative solutions that transform simple ideas into high-performing assets. We are committed to helping businesses of all sizes achieve their digital goals through strategic planning, creative execution, and measurable results.
+                                    {t("about.mission.description")}
                                 </p>
                                 <div className="grid md:grid-cols-3 gap-4 pt-6">
                                     {[
-                                        { icon: Zap, text: "Fast & Efficient Delivery" },
-                                        { icon: Target, text: "Result-Driven Approach" },
-                                        { icon: Heart, text: "Client-Centric Solutions" }
+                                        { icon: Zap, text: t("about.mission.item1") },
+                                        { icon: Target, text: t("about.mission.item2") },
+                                        { icon: Heart, text: t("about.mission.item3") }
                                     ].map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-3 bg-[#0a0a0a] p-4 rounded-xl border border-white/5 hover:border-[#00d28d]/30 transition-all duration-300">
                                             <item.icon size={20} className="text-[#00d28d]" />
@@ -242,21 +244,21 @@ export default function About() {
                                     <div className="w-16 h-16 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-2xl flex items-center justify-center">
                                         <Eye size={32} className="text-[#00d28d]" />
                                     </div>
-                                    <h2 className="text-3xl md:text-4xl font-bold text-white">Our Vision</h2>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-white">{t("about.vision.title")}</h2>
                                 </div>
                                 <p className="text-[#888] text-lg leading-relaxed">
-                                    To be the leading one-stop digital growth partner for startups and established businesses in Pakistan and beyond. We envision a future where every business, regardless of size, has access to world-class digital solutions that drive growth, innovation, and success.
+                                    {t("about.vision.description")}
                                 </p>
                                 <div className="grid md:grid-cols-2 gap-6 pt-6">
                                     <div className="bg-gradient-to-br from-[#00d28d]/10 to-transparent p-6 rounded-2xl border border-[#00d28d]/20">
                                         <Globe size={32} className="text-[#00d28d] mb-3" />
-                                        <h3 className="text-xl font-bold text-white mb-2">Global Standards</h3>
-                                        <p className="text-[#888] text-sm">Delivering international quality with local understanding</p>
+                                        <h3 className="text-xl font-bold text-white mb-2">{t("about.vision.globalTitle")}</h3>
+                                        <p className="text-[#888] text-sm">{t("about.vision.globalDesc")}</p>
                                     </div>
                                     <div className="bg-gradient-to-br from-[#4a90e2]/10 to-transparent p-6 rounded-2xl border border-[#4a90e2]/20">
                                         <Rocket size={32} className="text-[#4a90e2] mb-3" />
-                                        <h3 className="text-xl font-bold text-white mb-2">Future-Ready</h3>
-                                        <p className="text-[#888] text-sm">Staying ahead with cutting-edge technologies</p>
+                                        <h3 className="text-xl font-bold text-white mb-2">{t("about.vision.futureTitle")}</h3>
+                                        <p className="text-[#888] text-sm">{t("about.vision.futureDesc")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -299,8 +301,8 @@ export default function About() {
             <section className="py-20 bg-[#0a0a0a] relative overflow-hidden">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="text-center mb-12">
-                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">Our Achievements</span>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">Numbers That Speak</h2>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.achievements.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.achievements.title")}</h2>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -329,10 +331,10 @@ export default function About() {
             <section className="py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="text-center mb-12">
-                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">What We Do</span>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">Our Expertise</h2>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.services.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.services.title")}</h2>
                         <p className="text-[#888] text-lg mt-4 max-w-2xl mx-auto">
-                            Comprehensive digital solutions tailored to your business needs
+                            {t("about.services.description")}
                         </p>
                     </div>
 
@@ -362,22 +364,22 @@ export default function About() {
                     <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] rounded-3xl p-8 md:p-12 border border-white/10 hover:border-[#00d28d]/30 transition-all duration-500">
                         <div className="grid lg:grid-cols-2 gap-12 items-center">
                             <div className="space-y-6">
-                                <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">Why Choose Us</span>
+                                <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.whyUs.badge")}</span>
                                 <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-                                    Your Growth Is Our Priority
+                                    {t("about.whyUs.title")}
                                 </h2>
                                 <p className="text-[#888] text-lg leading-relaxed">
-                                    We don&apos;t just deliver projects—we build partnerships. With a perfect blend of creativity, technology, and strategy, we ensure every solution is crafted to drive real business results.
+                                    {t("about.whyUs.description")}
                                 </p>
 
                                 <div className="space-y-3 pt-4">
                                     {[
-                                        "Dedicated team of experienced professionals",
-                                        "Proven track record of successful projects",
-                                        "24/7 customer support and maintenance",
-                                        "Transparent communication throughout",
-                                        "Competitive pricing with no hidden costs",
-                                        "Continuous innovation and improvement"
+                                        t("about.whyUs.item1"),
+                                        t("about.whyUs.item2"),
+                                        t("about.whyUs.item3"),
+                                        t("about.whyUs.item4"),
+                                        t("about.whyUs.item5"),
+                                        t("about.whyUs.item6")
                                     ].map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-3 group cursor-default">
                                             <CheckCircle2 size={20} className="text-[#00d28d] flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
@@ -395,10 +397,10 @@ export default function About() {
                                             <Coffee size={64} className="text-[#00d28d] animate-pulse" />
                                         </div>
                                         <p className="text-white/70 text-lg italic group-hover:text-white transition-colors duration-300">
-                                            {"Success is not final, failure is not fatal: it is the courage to continue that counts."}
+                                            {t("about.whyUs.quote")}
                                         </p>
 
-                                        <p className="text-[#00d28d] font-bold">— Our Team Motto</p>
+                                        <p className="text-[#00d28d] font-bold">{t("about.whyUs.quoteAttr")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -413,15 +415,15 @@ export default function About() {
 
                 <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-105 transition-transform duration-300 cursor-default">
-                        Ready to Start Your Journey?
+                        {t("about.cta.title")}
                     </h2>
                     <p className="text-white/90 text-xl mb-8">
-                        Let&apos;s discuss how we can help transform your digital presence
+                        {t("about.cta.description")}
                     </p>
                     <Link href="/contact">
                         <button className="group bg-white text-[#0a0a0a] hover:bg-white/90 px-8 py-6 rounded-full text-lg font-bold hover-lift relative overflow-hidden">
                             <span className="relative z-10 flex items-center justify-center">
-                                Get Started Today
+                                {t("about.cta.button")}
                             </span>
                             <div className="absolute inset-0 bg-gradient-to-r from-white to-[#f0f0f0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>

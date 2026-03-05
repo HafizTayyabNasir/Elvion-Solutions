@@ -5,47 +5,50 @@ import Image from "next/image";
 import { ChevronDown, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "./Button";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const navLinks = [
-    { name: "About Us", href: "/about" },
+    { name: "nav.aboutUs", href: "/about" },
     {
-        name: "Web-Designs",
+        name: "nav.webDesigns",
         href: "/services/web-designs",
         submenu: [
-            { name: "Business Website Design", href: "/services/business-web" },
-            { name: "Portfolio Website Design", href: "/services/portfolio-web" },
-            { name: "E-commerce Development", href: "/services/ecommerce" },
-            { name: "Custom Web App", href: "/services/custom-app" },
-            { name: "Full-Stack Solutions", href: "/services/fullstack" },
+            { name: "nav.sub.businessWebsite", href: "/services/business-web" },
+            { name: "nav.sub.portfolioWebsite", href: "/services/portfolio-web" },
+            { name: "nav.sub.ecommerce", href: "/services/ecommerce" },
+            { name: "nav.sub.customApp", href: "/services/custom-app" },
+            { name: "nav.sub.fullStack", href: "/services/fullstack" },
         ],
     },
     {
-        name: "Digital Marketing",
+        name: "nav.digitalMarketing",
         href: "/services/digital-marketing",
         submenu: [
-            { name: "SEO", href: "/services/seo" },
-            { name: "Social Media Marketing", href: "/services/smm" },
-            { name: "Google / Meta Ads", href: "/services/ads" },
-            { name: "Content Marketing", href: "/services/content" },
-            { name: "Analytics", href: "/services/analytics" },
+            { name: "nav.sub.seo", href: "/services/seo" },
+            { name: "nav.sub.socialMedia", href: "/services/smm" },
+            { name: "nav.sub.googleMetaAds", href: "/services/ads" },
+            { name: "nav.sub.contentMarketing", href: "/services/content" },
+            { name: "nav.sub.analytics", href: "/services/analytics" },
         ],
     },
     {
-        name: "UI/UX",
+        name: "nav.uiUx",
         href: "/services/ui-ux",
         submenu: [
-            { name: "Website UI/UX", href: "/services/web-ui" },
-            { name: "Mobile App UI/UX", href: "/services/app-ui" },
-            { name: "Branding & Logo", href: "/services/branding" },
-            { name: "Prototyping", href: "/services/prototyping" },
+            { name: "nav.sub.websiteUiUx", href: "/services/web-ui" },
+            { name: "nav.sub.mobileAppUiUx", href: "/services/app-ui" },
+            { name: "nav.sub.brandingLogo", href: "/services/branding" },
+            { name: "nav.sub.prototyping", href: "/services/prototyping" },
         ],
     },
-    { name: "Portfolios", href: "/portfolio" },
-    { name: "Internship", href: "/internship" },
+    { name: "nav.portfolios", href: "/portfolio" },
+    { name: "nav.internship", href: "/internship" },
 ];
 
 export const Navbar = () => {
     const { user, logout, isAuthenticated } = useAuth();
+    const { t } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -113,11 +116,11 @@ export const Navbar = () => {
                                     <div className="flex items-center gap-1">
                                         {link.href ? (
                                             <Link href={link.href} className="flex items-center gap-1 py-2 text-sm font-medium text-gray-300 hover:text-elvion-primary">
-                                                {link.name}
+                                                {t(link.name)}
                                             </Link>
                                         ) : (
                                             <span className="flex cursor-default items-center gap-1 py-2 text-sm font-medium text-gray-300 hover:text-elvion-primary">
-                                                {link.name}
+                                                {t(link.name)}
                                             </span>
                                         )}
                                         <button className="text-gray-300 hover:text-elvion-primary">
@@ -126,7 +129,7 @@ export const Navbar = () => {
                                     </div>
                                 ) : (
                                     <Link href={link.href} className="text-sm font-medium text-gray-300 hover:text-elvion-primary">
-                                        {link.name}
+                                        {t(link.name)}
                                     </Link>
                                 )}
 
@@ -138,7 +141,7 @@ export const Navbar = () => {
                                                 href={sub.href}
                                                 className="block px-4 py-3 text-sm text-gray-300 transition-colors hover:bg-elvion-primary hover:text-black"
                                             >
-                                                {sub.name}
+                                                {t(sub.name)}
                                             </Link>
                                         ))}
                                     </div>
@@ -148,11 +151,12 @@ export const Navbar = () => {
                     </div>
 
                     <div className="hidden items-center gap-4 lg:flex">
+                        <LanguageSwitcher />
                         <Link href="/contact">
-                            <Button variant="outline" className="px-4 py-2 text-sm">Contact Us</Button>
+                            <Button variant="outline" className="px-4 py-2 text-sm">{t("nav.contactUs")}</Button>
                         </Link>
                         <Link href="/appointment">
-                            <Button className="px-4 py-2 text-sm">Get Appointment</Button>
+                            <Button className="px-4 py-2 text-sm">{t("nav.getAppointment")}</Button>
                         </Link>
                         {isAuthenticated && user ? (
                             <div className="relative" ref={userMenuRef}>
@@ -175,7 +179,7 @@ export const Navbar = () => {
                                             className="block px-4 py-2 text-sm text-gray-300 hover:bg-elvion-primary hover:text-black transition-colors"
                                             onClick={() => setShowUserMenu(false)}
                                         >
-                                            <User size={16} className="inline mr-2" /> My Dashboard
+                                            <User size={16} className="inline mr-2" /> {t("nav.myDashboard")}
                                         </Link>
                                         {user.is_admin && (
                                             <Link
@@ -183,7 +187,7 @@ export const Navbar = () => {
                                                 className="block px-4 py-2 text-sm text-gray-300 hover:bg-elvion-primary hover:text-black transition-colors"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
-                                                Admin Panel
+                                                {t("nav.adminPanel")}
                                             </Link>
                                         )}
                                         <button
@@ -193,14 +197,14 @@ export const Navbar = () => {
                                             }}
                                             className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 transition-colors flex items-center gap-2"
                                         >
-                                            <LogOut size={16} /> Logout
+                                            <LogOut size={16} /> {t("nav.logout")}
                                         </button>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <Link href="/login" className="text-sm font-semibold text-white hover:text-elvion-primary">
-                                Login
+                                {t("nav.login")}
                             </Link>
                         )}
                     </div>
@@ -216,6 +220,9 @@ export const Navbar = () => {
             {/* Mobile Menu */}
             {isOpen && (
                 <div className="h-screen overflow-y-auto border-b border-white/10 bg-elvion-card pb-4 lg:hidden">
+                    <div className="px-4 py-3 border-b border-white/10">
+                        <LanguageSwitcher />
+                    </div>
                     {navLinks.map((link) => (
                         <div key={link.name} className="px-4 py-2">
                             {link.submenu ? (
@@ -226,29 +233,29 @@ export const Navbar = () => {
                                             className="mb-2 block font-semibold text-elvion-primary"
                                             onClick={() => setIsOpen(false)}
                                         >
-                                            {link.name}
+                                            {t(link.name)}
                                         </Link>
                                     ) : (
-                                        <div className="mb-2 font-semibold text-elvion-primary">{link.name}</div>
+                                        <div className="mb-2 font-semibold text-elvion-primary">{t(link.name)}</div>
                                     )}
                                     <div className="space-y-2 border-l border-white/10 pl-4">
                                         {link.submenu.map((sub) => (
                                             <Link key={sub.name} href={sub.href} className="block text-sm text-gray-400" onClick={() => setIsOpen(false)}>
-                                                {sub.name}
+                                                {t(sub.name)}
                                             </Link>
                                         ))}
                                     </div>
                                 </div>
                             ) : (
                                 <Link href={link.href} className="block text-white" onClick={() => setIsOpen(false)}>
-                                    {link.name}
+                                    {t(link.name)}
                                 </Link>
                             )}
                         </div>
                     ))}
                     <div className="mt-4 flex flex-col gap-2 px-4">
                         <Link href="/appointment" onClick={() => setIsOpen(false)}>
-                            <Button className="w-full">Get Appointment</Button>
+                            <Button className="w-full">{t("nav.getAppointment")}</Button>
                         </Link>
                         {isAuthenticated && user ? (
                             <div className="space-y-2">
@@ -261,7 +268,7 @@ export const Navbar = () => {
                                     className="block py-2 text-center text-elvion-primary hover:bg-elvion-primary/10 rounded-lg transition-colors"
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    My Dashboard
+                                    {t("nav.myDashboard")}
                                 </Link>
                                 {user.is_admin && (
                                     <Link
@@ -269,7 +276,7 @@ export const Navbar = () => {
                                         className="block py-2 text-center text-elvion-primary hover:bg-elvion-primary/10 rounded-lg transition-colors"
                                         onClick={() => setIsOpen(false)}
                                     >
-                                        Admin Panel
+                                        {t("nav.adminPanel")}
                                     </Link>
                                 )}
                                 <button
@@ -279,12 +286,12 @@ export const Navbar = () => {
                                     }}
                                     className="w-full py-2 text-center text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
                                 >
-                                    Logout
+                                    {t("nav.logout")}
                                 </button>
                             </div>
                         ) : (
                             <Link href="/login" className="block py-2 text-center text-white" onClick={() => setIsOpen(false)}>
-                                Login / Signup
+                                {t("nav.loginSignup")}
                             </Link>
                         )}
                     </div>

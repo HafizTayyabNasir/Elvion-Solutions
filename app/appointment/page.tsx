@@ -5,6 +5,7 @@ import { fetchAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Slot {
     id: number;
@@ -18,6 +19,7 @@ interface Slot {
 export default function Appointment() {
     const { user, isAuthenticated, isLoading } = useAuth();
     const router = useRouter();
+    const { t } = useLanguage();
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
     const [slots, setSlots] = useState<Slot[]>([]);
@@ -78,7 +80,7 @@ export default function Appointment() {
             setMyBookings(myBookingsData);
         } catch (error) {
             console.error("Booking failed:", error);
-            alert("Failed to book slot. It might be taken or you need to login again.");
+            alert(t("appointment.bookingFailed"));
         }
     };
 
@@ -86,9 +88,9 @@ export default function Appointment() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-elvion-dark px-4">
                 <div className="text-center p-8 bg-elvion-card rounded-2xl border border-elvion-primary animate-in fade-in zoom-in">
-                    <h2 className="text-2xl font-bold text-white mb-2">Booking Confirmed!</h2>
-                    <p className="text-elvion-gray">We have notified our team. Check your dashboard for details.</p>
-                    <Button onClick={() => { setSubmitted(false); setSelectedSlotId(null); }} className="mt-4">Book Another</Button>
+                    <h2 className="text-2xl font-bold text-white mb-2">{t("appointment.confirmed.title")}</h2>
+                    <p className="text-elvion-gray">{t("appointment.confirmed.desc")}</p>
+                    <Button onClick={() => { setSubmitted(false); setSelectedSlotId(null); }} className="mt-4">{t("appointment.confirmed.bookAnother")}</Button>
                 </div>
             </div>
         );
@@ -97,19 +99,19 @@ export default function Appointment() {
     return (
         <div className="min-h-screen py-10 px-4 max-w-3xl mx-auto">
             <div className="text-center mb-10">
-                <h1 className="text-4xl font-bold text-white">Book a Free Consultation</h1>
-                <p className="text-elvion-gray mt-2">Select a time slot that works for you.</p>
+                <h1 className="text-4xl font-bold text-white">{t("appointment.title")}</h1>
+                <p className="text-elvion-gray mt-2">{t("appointment.description")}</p>
             </div>
 
             {/* My Bookings Section */}
             {isAuthenticated && (
                 <div className="bg-elvion-card p-6 rounded-2xl border border-white/10 shadow-2xl mb-6">
-                    <h2 className="text-2xl font-bold text-white mb-4">My Bookings</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4">{t("appointment.myBookings")}</h2>
                     {loadingMyBookings ? (
-                        <div className="text-center text-gray-400 py-4">Loading your bookings...</div>
+                        <div className="text-center text-gray-400 py-4">{t("appointment.loadingBookings")}</div>
                     ) : myBookings.length === 0 ? (
                         <div className="text-center py-6 text-gray-400">
-                            <p>You haven't booked any appointments yet.</p>
+                            <p>{t("appointment.noBookings")}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,18 +135,18 @@ export default function Appointment() {
 
             <div className="bg-elvion-card p-8 rounded-2xl border border-white/10 shadow-2xl">
                 {isLoading ? (
-                    <div className="text-center text-gray-400 py-8">Checking authentication...</div>
+                    <div className="text-center text-gray-400 py-8">{t("appointment.checkingAuth")}</div>
                 ) : !isAuthenticated ? (
                     <div className="text-center py-8">
-                        <p className="text-white text-lg mb-4">You must be logged in to book an appointment.</p>
+                        <p className="text-white text-lg mb-4">{t("appointment.loginRequired")}</p>
                         <Link href="/login">
-                            <Button className="w-full md:w-auto">Login to Book</Button>
+                            <Button className="w-full md:w-auto">{t("appointment.loginButton")}</Button>
                         </Link>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-white mb-2 font-medium">Select Date</label>
+                            <label className="block text-white mb-2 font-medium">{t("appointment.selectDate")}</label>
                             <input
                                 type="date"
                                 required
@@ -157,11 +159,11 @@ export default function Appointment() {
                         </div>
 
                         <div>
-                            <label className="block text-white mb-2 font-medium">Available Slots</label>
+                            <label className="block text-white mb-2 font-medium">{t("appointment.availableSlots")}</label>
                             {loadingSlots ? (
-                                <p className="text-gray-400">Loading slots...</p>
+                                <p className="text-gray-400">{t("appointment.loadingSlots")}</p>
                             ) : availableSlots.length === 0 ? (
-                                <p className="text-gray-400">{selectedDate ? "No slots available for this date." : "Please select a date first."}</p>
+                                <p className="text-gray-400">{selectedDate ? t("appointment.noSlots") : t("appointment.selectDateFirst")}</p>
                             ) : (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                     {availableSlots.map((slot) => (
@@ -182,11 +184,11 @@ export default function Appointment() {
 
                         <div className="pt-4 border-t border-white/10">
                             <p className="text-sm text-gray-400 mb-4">
-                                Booking as: <span className="text-white font-semibold">{user?.name || user?.email}</span>
+                                {t("appointment.bookingAs")} <span className="text-white font-semibold">{user?.name || user?.email}</span>
                             </p>
 
                             <Button type="submit" disabled={!selectedSlotId || !selectedDate} className="w-full disabled:opacity-50">
-                                Confirm Appointment
+                                {t("appointment.confirmButton")}
                             </Button>
                         </div>
                     </form>
