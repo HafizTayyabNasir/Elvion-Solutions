@@ -14,10 +14,16 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  ListTodo,
+  FolderOpen,
+  BadgeCheck,
 } from "lucide-react";
 
 const menuItems = [
   { name: "Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
+  { name: "My Tasks", href: "/employee/tasks", icon: ListTodo },
+  { name: "My Projects", href: "/employee/projects", icon: FolderOpen },
+  { name: "My Designation", href: "/employee/designation", icon: BadgeCheck },
   { name: "My Attendance", href: "/employee/attendance", icon: Clock },
   { name: "My Leaves", href: "/employee/leaves", icon: CalendarDays },
   { name: "My Payroll", href: "/employee/payroll", icon: Wallet },

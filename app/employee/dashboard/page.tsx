@@ -16,6 +16,9 @@ import {
   Timer,
   LogIn,
   LogOut,
+  ListTodo,
+  FolderOpen,
+  Circle,
 } from "lucide-react";
 
 interface DashboardData {
@@ -76,6 +79,34 @@ interface DashboardData {
     status: string;
     paidDate: string | null;
   }[];
+  tasks: {
+    summary: {
+      total: number;
+      todo: number;
+      inProgress: number;
+      review: number;
+      done: number;
+      overdue: number;
+    };
+    recent: {
+      id: number;
+      title: string;
+      status: string;
+      priority: string;
+      dueDate: string | null;
+      project: { id: number; name: string } | null;
+    }[];
+  };
+  projects: {
+    summary: { total: number; active: number; completed: number };
+    list: {
+      id: number;
+      name: string;
+      status: string;
+      progress: number;
+      _count: { tasks: number };
+    }[];
+  };
 }
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -154,7 +185,7 @@ export default function EmployeeDashboard() {
     );
   }
 
-  const { employee, attendance, leaves, payroll } = data;
+  const { employee, attendance, leaves, payroll, tasks: taskData, projects: projectData } = data;
   const todayAttendance = attendance.today;
   const canClockIn = !todayAttendance;
   const canClockOut = todayAttendance && !todayAttendance.clockOut;
@@ -272,7 +303,7 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
         <Link
           href="/employee/attendance"
           className="bg-elvion-card rounded-xl p-6 border border-white/10 hover:border-elvion-primary/30 transition-colors"
@@ -329,12 +360,47 @@ export default function EmployeeDashboard() {
         </Link>
 
         <Link
-          href="/employee/attendance"
+          href="/employee/tasks"
+          className="bg-elvion-card rounded-xl p-6 border border-white/10 hover:border-elvion-primary/30 transition-colors"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center">
+              <ListTodo className="w-6 h-6 text-orange-500" />
+            </div>
+            {taskData.summary.overdue > 0 && (
+              <span className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">
+                {taskData.summary.overdue} overdue
+              </span>
+            )}
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold text-white">{taskData.summary.total - taskData.summary.done}</p>
+            <p className="text-sm text-gray-400 mt-1">Pending Tasks</p>
+          </div>
+        </Link>
+
+        <Link
+          href="/employee/projects"
           className="bg-elvion-card rounded-xl p-6 border border-white/10 hover:border-elvion-primary/30 transition-colors"
         >
           <div className="flex items-start justify-between">
             <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-purple-500" />
+              <FolderOpen className="w-6 h-6 text-purple-500" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-3xl font-bold text-white">{projectData.summary.active}</p>
+            <p className="text-sm text-gray-400 mt-1">Active Projects</p>
+          </div>
+        </Link>
+
+        <Link
+          href="/employee/attendance"
+          className="bg-elvion-card rounded-xl p-6 border border-white/10 hover:border-elvion-primary/30 transition-colors"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-cyan-500" />
             </div>
           </div>
           <div className="mt-4">
@@ -346,6 +412,92 @@ export default function EmployeeDashboard() {
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Active Tasks */}
+        <div className="bg-elvion-card rounded-xl border border-white/10">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">Active Tasks</h2>
+            <Link href="/employee/tasks"
+              className="text-sm text-elvion-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="p-4">
+            {taskData.recent.length === 0 ? (
+              <p className="text-center py-8 text-gray-400">No pending tasks</p>
+            ) : (
+              <div className="space-y-2">
+                {taskData.recent.map((task) => (
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{task.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {task.project && (
+                          <span className="text-xs text-purple-400">
+                            <FolderOpen size={10} className="inline mr-0.5" />{task.project.name}
+                          </span>
+                        )}
+                        {task.dueDate && (
+                          <span className={`text-xs ${new Date(task.dueDate) < new Date() ? "text-red-400" : "text-gray-500"}`}>
+                            Due {new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      task.status === "in_progress" ? "bg-blue-500/20 text-blue-400" :
+                      task.status === "review" ? "bg-yellow-500/20 text-yellow-400" :
+                      "bg-gray-500/20 text-gray-400"
+                    }`}>
+                      {task.status === "in_progress" ? "In Progress" : task.status === "review" ? "Review" : "To Do"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* My Projects */}
+        <div className="bg-elvion-card rounded-xl border border-white/10">
+          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">My Projects</h2>
+            <Link href="/employee/projects"
+              className="text-sm text-elvion-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="p-4">
+            {projectData.list.length === 0 ? (
+              <p className="text-center py-8 text-gray-400">No projects assigned</p>
+            ) : (
+              <div className="space-y-3">
+                {projectData.list.map((p) => (
+                  <div key={p.id} className="p-3 rounded-lg bg-white/5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium text-white">{p.name}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        p.status === "active" ? "bg-green-500/20 text-green-400" :
+                        p.status === "completed" ? "bg-blue-500/20 text-blue-400" :
+                        p.status === "on_hold" ? "bg-yellow-500/20 text-yellow-400" :
+                        "bg-gray-500/20 text-gray-400"
+                      }`}>
+                        {p.status.replace("_", " ")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-full bg-elvion-primary rounded-full" style={{ width: `${p.progress}%` }} />
+                      </div>
+                      <span className="text-xs text-gray-400 shrink-0">{p.progress}%</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">{p._count.tasks} tasks</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Leave Balance */}
         <div className="bg-elvion-card rounded-xl border border-white/10">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">

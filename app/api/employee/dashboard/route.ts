@@ -36,6 +36,8 @@ export async function GET(request: Request) {
       yearLeaves,
       recentPayroll,
       leaveTypes,
+      myTasks,
+      myProjects,
     ] = await Promise.all([
       // Today's attendance
       prisma.attendance.findUnique({
@@ -85,6 +87,36 @@ export async function GET(request: Request) {
         where: { isActive: true },
         select: { id: true, name: true, defaultDays: true },
       }),
+      // Tasks assigned to or created by this employee
+      employee.userId ? prisma.task.findMany({
+        where: {
+          OR: [
+            { assigneeId: employee.userId },
+            { creatorId: employee.userId },
+          ],
+        },
+        include: {
+          project: { select: { id: true, name: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }) : Promise.resolve([]),
+      // Projects the employee is a member of
+      employee.userId ? prisma.project.findMany({
+        where: {
+          OR: [
+            { ownerId: employee.userId },
+            { members: { some: { userId: employee.userId } } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          progress: true,
+          _count: { select: { tasks: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }) : Promise.resolve([]),
     ]);
 
     // Calculate attendance stats for this month
@@ -107,6 +139,36 @@ export async function GET(request: Request) {
     });
 
     const totalLeaveUsed = approvedLeaves.reduce((sum: number, l: { totalDays: number }) => sum + l.totalDays, 0);
+
+    // Task summary
+    const taskSummary = {
+      total: myTasks.length,
+      todo: myTasks.filter((t: { status: string }) => t.status === 'todo').length,
+      inProgress: myTasks.filter((t: { status: string }) => t.status === 'in_progress').length,
+      review: myTasks.filter((t: { status: string }) => t.status === 'review').length,
+      done: myTasks.filter((t: { status: string }) => t.status === 'done').length,
+      overdue: myTasks.filter((t: { status: string; dueDate: Date | null }) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done').length,
+    };
+
+    // Recent tasks (top 5 non-done)
+    const recentTasks = myTasks
+      .filter((t: { status: string }) => t.status !== 'done')
+      .slice(0, 5)
+      .map((t: { id: number; title: string; status: string; priority: string; dueDate: Date | null; project: { id: number; name: string } | null }) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        priority: t.priority,
+        dueDate: t.dueDate,
+        project: t.project,
+      }));
+
+    // Project summary
+    const projectSummary = {
+      total: myProjects.length,
+      active: myProjects.filter((p: { status: string }) => p.status === 'active').length,
+      completed: myProjects.filter((p: { status: string }) => p.status === 'completed').length,
+    };
 
     return NextResponse.json({
       employee: {
@@ -140,6 +202,14 @@ export async function GET(request: Request) {
         recent: yearLeaves,
       },
       payroll: recentPayroll,
+      tasks: {
+        summary: taskSummary,
+        recent: recentTasks,
+      },
+      projects: {
+        summary: projectSummary,
+        list: myProjects.slice(0, 5),
+      },
     });
   } catch (error) {
     console.error('Employee dashboard error:', error);
