@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuth, isAdmin } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 // GET single employee
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -54,6 +55,74 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await request.json();
 
+    // Handle login credentials
+    const { loginEmail, loginPassword, removeCredentials } = body;
+    const employeeRecord = await prisma.employee.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true },
+    });
+
+    if (!employeeRecord) {
+      return NextResponse.json({ message: 'Employee not found' }, { status: 404 });
+    }
+
+    let newUserId: number | null | undefined = undefined; // undefined = don't change
+
+    if (removeCredentials && employeeRecord.userId) {
+      // Unlink and delete the user account
+      await prisma.employee.update({
+        where: { id: parseInt(id) },
+        data: { userId: null },
+      });
+      await prisma.user.delete({ where: { id: employeeRecord.userId } });
+      newUserId = null;
+    } else if (loginEmail) {
+      if (employeeRecord.userId) {
+        // Update existing linked user
+        const updateData: Record<string, unknown> = { email: loginEmail, isVerified: true };
+        if (loginPassword && loginPassword.length >= 6) {
+          updateData.password = await bcrypt.hash(loginPassword, 10);
+        }
+        if (body.firstName || body.lastName) {
+          const emp = await prisma.employee.findUnique({ where: { id: parseInt(id) }, select: { firstName: true, lastName: true } });
+          updateData.name = `${body.firstName || emp?.firstName} ${body.lastName || emp?.lastName}`;
+        }
+        try {
+          await prisma.user.update({
+            where: { id: employeeRecord.userId },
+            data: updateData,
+          });
+        } catch (err: unknown) {
+          const prismaErr = err as { code?: string };
+          if (prismaErr?.code === 'P2002') {
+            return NextResponse.json({ message: 'A user with this login email already exists' }, { status: 409 });
+          }
+          throw err;
+        }
+      } else {
+        // Create new user account for this employee
+        if (!loginPassword || loginPassword.length < 6) {
+          return NextResponse.json({ message: 'Password (min 6 chars) is required when adding login credentials' }, { status: 400 });
+        }
+        const existingUser = await prisma.user.findUnique({ where: { email: loginEmail } });
+        if (existingUser) {
+          return NextResponse.json({ message: `A user account with email ${loginEmail} already exists` }, { status: 409 });
+        }
+        const emp = await prisma.employee.findUnique({ where: { id: parseInt(id) }, select: { firstName: true, lastName: true } });
+        const hashedPassword = await bcrypt.hash(loginPassword, 10);
+        const newUser = await prisma.user.create({
+          data: {
+            email: loginEmail,
+            name: `${body.firstName || emp?.firstName} ${body.lastName || emp?.lastName}`,
+            password: hashedPassword,
+            isVerified: true,
+            isAdmin: false,
+          },
+        });
+        newUserId = newUser.id;
+      }
+    }
+
     const data: any = {};
     const fields = [
       'firstName', 'lastName', 'email', 'phone', 'gender',
@@ -73,7 +142,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (body.salary !== undefined) data.salary = body.salary ? parseFloat(body.salary) : null;
     if (body.hireDate !== undefined) data.hireDate = new Date(body.hireDate);
     if (body.terminationDate !== undefined) data.terminationDate = body.terminationDate ? new Date(body.terminationDate) : null;
-    if (body.userId !== undefined) data.userId = body.userId ? parseInt(body.userId) : null;
+    if (newUserId !== undefined) data.userId = newUserId;
+    else if (body.userId !== undefined && !loginEmail && !removeCredentials) data.userId = body.userId ? parseInt(body.userId) : null;
 
     const employee = await prisma.employee.update({
       where: { id: parseInt(id) },
@@ -105,7 +175,22 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
+    
+    // Get employee to check for linked user
+    const employee = await prisma.employee.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true },
+    });
+
     await prisma.employee.delete({ where: { id: parseInt(id) } });
+
+    // Also delete the linked user account if one exists
+    if (employee?.userId) {
+      await prisma.user.delete({ where: { id: employee.userId } }).catch(() => {
+        // User may already be deleted or have other references
+      });
+    }
+
     return NextResponse.json({ message: 'Employee deleted successfully' });
   } catch (error) {
     console.error('Error deleting employee:', error);

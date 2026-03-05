@@ -50,6 +50,7 @@ export async function POST(request: Request) {
     // Regular user login
     const user = await prisma.user.findUnique({
       where: { email },
+      include: { employee: { select: { id: true } } },
     });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
@@ -65,8 +66,10 @@ export async function POST(request: Request) {
       }, { status: 403 });
     }
 
+    const isEmployee = !!user.employee;
+
     const token = jwt.sign(
-      { userId: user.id, email: user.email, is_admin: user.isAdmin, name: user.name },
+      { userId: user.id, email: user.email, is_admin: user.isAdmin, name: user.name, is_employee: isEmployee },
       JWT_SECRET,
       { expiresIn: '24h' }
     );

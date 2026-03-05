@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, Plus, Search, Edit2, Trash2, X, ChevronDown,
-  AlertCircle
+  AlertCircle, KeyRound, Eye, EyeOff
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 
@@ -16,6 +16,7 @@ interface Employee {
   emergencyName: string | null; emergencyPhone: string | null; emergencyRelation: string | null;
   departments: { id: number; name: string }[];
   userId: number | null;
+  user: { id: number; name: string | null; email: string } | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -76,6 +77,7 @@ const emptyForm = {
   departmentIds: [] as number[], positions: [] as string[], employmentType: "full_time",
   salary: "", currency: "USD", hireDate: new Date().toISOString().split("T")[0],
   emergencyName: "", emergencyPhone: "", emergencyRelation: "", userId: "",
+  loginEmail: "", loginPassword: "",
 };
 
 export default function EmployeesPage() {
@@ -93,6 +95,7 @@ export default function EmployeesPage() {
   const [posSearch, setPosSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -120,6 +123,7 @@ export default function EmployeesPage() {
     setShowDeptDropdown(false);
     setShowPosDropdown(false);
     setPosSearch("");
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -135,11 +139,13 @@ export default function EmployeesPage() {
       hireDate: emp.hireDate.split("T")[0],
       emergencyName: emp.emergencyName || "", emergencyPhone: emp.emergencyPhone || "",
       emergencyRelation: emp.emergencyRelation || "", userId: emp.userId?.toString() || "",
+      loginEmail: emp.user?.email || "", loginPassword: "",
     });
     setError("");
     setShowDeptDropdown(false);
     setShowPosDropdown(false);
     setPosSearch("");
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -168,7 +174,7 @@ export default function EmployeesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this employee?")) return;
+    if (!confirm("Are you sure you want to delete this employee? This will also delete their login account if one exists.")) return;
     try {
       await fetchAPI(`/hr/employees/${id}`, { method: "DELETE" });
       fetchEmployees();
@@ -183,6 +189,19 @@ export default function EmployeesPage() {
       });
       fetchEmployees();
     } catch (e: any) { alert(e.message); }
+  };
+
+  const handleRemoveCredentials = async (emp: Employee) => {
+    if (!confirm(`Remove login credentials for ${emp.firstName} ${emp.lastName}? They will no longer be able to log in.`)) return;
+    try {
+      await fetchAPI(`/hr/employees/${emp.id}`, {
+        method: "PUT", body: JSON.stringify({ removeCredentials: true }),
+      });
+      fetchEmployees();
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      alert(err.message || "Failed to remove credentials");
+    }
   };
 
   return (
@@ -252,6 +271,7 @@ export default function EmployeesPage() {
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Position</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Type</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Login</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase">Hire Date</th>
                   <th className="text-right px-4 py-3 text-xs font-medium text-gray-400 uppercase">Actions</th>
                 </tr>
@@ -296,6 +316,19 @@ export default function EmployeesPage() {
                         <option value="terminated">Terminated</option>
                         <option value="resigned">Resigned</option>
                       </select>
+                    </td>
+                    <td className="px-4 py-3">
+                      {emp.user ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-green-400"></span>
+                          <span className="text-xs text-green-400">Active</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-gray-500"></span>
+                          <span className="text-xs text-gray-500">None</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">{new Date(emp.hireDate).toLocaleDateString()}</td>
                     <td className="px-4 py-3 text-right">
@@ -538,6 +571,50 @@ export default function EmployeesPage() {
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                 </div>
               </div>
+
+              {/* Login Credentials */}
+              <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider pt-2 flex items-center gap-2">
+                <KeyRound size={12} /> Login Credentials
+              </p>
+              {editingEmployee?.user && (
+                <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-2">
+                  <div>
+                    <p className="text-xs text-green-400">This employee has an active login account</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{editingEmployee.user.email}</p>
+                  </div>
+                  <button type="button" onClick={() => { handleRemoveCredentials(editingEmployee); setShowModal(false); }}
+                    className="text-xs px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition">
+                    Remove Login
+                  </button>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Login Email {!editingEmployee?.user && "(leave empty to skip)"}
+                  </label>
+                  <input type="email" value={form.loginEmail}
+                    onChange={(e) => setForm({ ...form, loginEmail: e.target.value })}
+                    placeholder={editingEmployee?.user ? "Update login email" : "employee@company.com"}
+                    className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    {editingEmployee?.user ? "New Password (leave empty to keep current)" : "Password"}
+                  </label>
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={form.loginPassword}
+                      onChange={(e) => setForm({ ...form, loginPassword: e.target.value })}
+                      placeholder={editingEmployee?.user ? "••••••••" : "Min 6 characters"}
+                      className="w-full px-3 py-2 pr-10 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">Employee accounts are auto-verified — no email verification needed.</p>
             </div>
             <div className="flex justify-end gap-3 p-6 border-t border-white/10">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-400 hover:text-white text-sm transition">Cancel</button>

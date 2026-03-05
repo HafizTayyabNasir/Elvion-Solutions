@@ -8,6 +8,7 @@ interface User {
   email: string;
   name: string;
   is_admin: boolean;
+  is_employee: boolean;
   exp: number;
 }
 
@@ -61,8 +62,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(decoded);
     if (decoded.is_admin) {
         router.push("/admin/dashboard");
+    } else if (decoded.is_employee) {
+        router.push("/employee/dashboard");
     } else {
-        router.push("/");
+        router.push("/customer/dashboard");
     }
   };
 

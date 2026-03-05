@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuth, isAdmin } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 // GET all employees
 export async function GET(request: Request) {
@@ -64,10 +65,35 @@ export async function POST(request: Request) {
       address, city, country, departmentIds, positions,
       employmentType, salary, currency, hireDate,
       emergencyName, emergencyPhone, emergencyRelation, userId,
+      loginEmail, loginPassword,
     } = body;
 
     if (!firstName || !lastName || !email) {
       return NextResponse.json({ message: 'First name, last name, and email are required' }, { status: 400 });
+    }
+
+    // If login credentials provided, create a User account (no email verification needed)
+    let linkedUserId = userId ? parseInt(userId) : null;
+    if (loginEmail && loginPassword) {
+      if (loginPassword.length < 6) {
+        return NextResponse.json({ message: 'Password must be at least 6 characters' }, { status: 400 });
+      }
+      // Check if user with this email already exists
+      const existingUser = await prisma.user.findUnique({ where: { email: loginEmail } });
+      if (existingUser) {
+        return NextResponse.json({ message: `A user account with email ${loginEmail} already exists` }, { status: 409 });
+      }
+      const hashedPassword = await bcrypt.hash(loginPassword, 10);
+      const newUser = await prisma.user.create({
+        data: {
+          email: loginEmail,
+          name: `${firstName} ${lastName}`,
+          password: hashedPassword,
+          isVerified: true, // Employee accounts skip email verification
+          isAdmin: false,
+        },
+      });
+      linkedUserId = newUser.id;
     }
 
     // Generate employee ID
@@ -101,7 +127,7 @@ export async function POST(request: Request) {
         emergencyName,
         emergencyPhone,
         emergencyRelation,
-        userId: userId ? parseInt(userId) : null,
+        userId: linkedUserId,
       },
       include: {
         departments: { select: { id: true, name: true } },
