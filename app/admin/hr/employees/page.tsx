@@ -29,6 +29,47 @@ const typeLabels: Record<string, string> = {
   full_time: "Full Time", part_time: "Part Time", contract: "Contract", intern: "Intern",
 };
 
+const positions = [
+  // Leadership & Management
+  "CEO", "CTO", "CFO", "COO", "CMO", "VP of Engineering", "VP of Marketing", "VP of Sales",
+  "Director of Operations", "Director of Engineering", "Director of Marketing", "Director of HR",
+  "Project Manager", "Product Manager", "Engineering Manager", "Marketing Manager", "HR Manager",
+  "Team Lead", "Scrum Master",
+  // Software & Engineering
+  "Software Engineer", "Senior Software Engineer", "Staff Engineer", "Principal Engineer",
+  "Frontend Developer", "Backend Developer", "Full Stack Developer",
+  "Mobile Developer", "iOS Developer", "Android Developer",
+  "DevOps Engineer", "Cloud Engineer", "Site Reliability Engineer",
+  "Data Engineer", "Data Scientist", "Machine Learning Engineer", "AI Engineer",
+  "QA Engineer", "Automation Engineer", "Security Engineer",
+  "Systems Architect", "Solutions Architect", "Technical Lead",
+  "UI/UX Designer", "UX Researcher", "Product Designer",
+  // Marketing & Creative
+  "Marketing Specialist", "Digital Marketing Specialist", "SEO Specialist",
+  "Content Strategist", "Content Writer", "Copywriter",
+  "Social Media Manager", "Social Media Specialist",
+  "Brand Manager", "Creative Director", "Art Director",
+  "Graphic Designer", "Video Editor", "Motion Designer",
+  "Performance Marketing Specialist", "Growth Marketing Manager",
+  "Email Marketing Specialist", "PPC Specialist",
+  // Sales & Business Development
+  "Sales Representative", "Senior Sales Executive", "Account Manager", "Account Executive",
+  "Business Development Manager", "Business Development Representative",
+  "Sales Manager", "Regional Sales Manager",
+  // HR & Admin
+  "HR Specialist", "Recruiter", "Talent Acquisition Specialist",
+  "Office Manager", "Administrative Assistant", "Executive Assistant",
+  "Payroll Specialist", "Benefits Coordinator",
+  // Finance & Accounting
+  "Accountant", "Senior Accountant", "Financial Analyst", "Controller",
+  "Bookkeeper", "Tax Specialist", "Billing Specialist",
+  // Customer Support
+  "Customer Support Representative", "Customer Success Manager",
+  "Technical Support Engineer", "Support Team Lead",
+  // Other
+  "Intern", "Trainee", "Consultant", "Contractor", "Freelancer",
+];
+
 const emptyForm = {
   firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "",
   gender: "", address: "", city: "", country: "",
@@ -330,8 +371,11 @@ export default function EmployeesPage() {
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Position</label>
-                  <input value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
-                    className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
+                  <select value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
+                    className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary">
+                    <option value="">Select Position</option>
+                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Employment Type</label>
