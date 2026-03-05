@@ -151,7 +151,6 @@ export const Navbar = () => {
                     </div>
 
                     <div className="hidden items-center gap-4 lg:flex">
-                        <LanguageSwitcher />
                         <Link href="/contact">
                             <Button variant="outline" className="px-4 py-2 text-sm">{t("nav.contactUs")}</Button>
                         </Link>
