@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       where,
       include: {
         employee: {
-          select: { id: true, employeeId: true, firstName: true, lastName: true, position: true, department: { select: { name: true } } },
+          select: { id: true, employeeId: true, firstName: true, lastName: true, positions: true, departments: { select: { name: true } } },
         },
       },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],

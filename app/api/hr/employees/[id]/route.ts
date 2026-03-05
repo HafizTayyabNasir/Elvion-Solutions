@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const employee = await prisma.employee.findUnique({
       where: { id: parseInt(id) },
       include: {
-        department: { select: { id: true, name: true } },
+        departments: { select: { id: true, name: true } },
         user: { select: { id: true, name: true, email: true } },
         attendances: { orderBy: { date: 'desc' }, take: 30 },
         leaveRequests: {
@@ -57,14 +57,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const data: any = {};
     const fields = [
       'firstName', 'lastName', 'email', 'phone', 'gender',
-      'address', 'city', 'country', 'position',
+      'address', 'city', 'country',
       'employmentType', 'status', 'currency',
       'emergencyName', 'emergencyPhone', 'emergencyRelation',
     ];
 
     fields.forEach((f: string) => { if (body[f] !== undefined) data[f] = body[f]; });
+    if (body.positions !== undefined) data.positions = body.positions || [];
+    if (body.departmentIds !== undefined) {
+      data.departments = {
+        set: (body.departmentIds || []).map((id: number) => ({ id: Number(id) })),
+      };
+    }
     if (body.dateOfBirth !== undefined) data.dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
-    if (body.departmentId !== undefined) data.departmentId = body.departmentId ? parseInt(body.departmentId) : null;
     if (body.salary !== undefined) data.salary = body.salary ? parseFloat(body.salary) : null;
     if (body.hireDate !== undefined) data.hireDate = new Date(body.hireDate);
     if (body.terminationDate !== undefined) data.terminationDate = body.terminationDate ? new Date(body.terminationDate) : null;
@@ -74,7 +79,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id: parseInt(id) },
       data,
       include: {
-        department: { select: { id: true, name: true } },
+        departments: { select: { id: true, name: true } },
       },
     });
 

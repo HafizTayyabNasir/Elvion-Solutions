@@ -293,6 +293,8 @@ model Department {
   updatedAt   DateTime   @updatedAt
 }
 
+// NOTE: Prisma implicit many-to-many creates _DepartmentToEmployee join table automatically
+
 model Employee {
   id              Int       @id @default(autoincrement())
   employeeId      String    @unique  // e.g. ELV-001
@@ -310,9 +312,8 @@ model Employee {
   avatar          String?
 
   // Employment Details
-  departmentId    Int?
-  department      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  position        String?
+  departments     Department[]
+  positions       String[]
   employmentType  String    @default("full_time") // full_time, part_time, contract, intern
   status          String    @default("active")     // active, on_leave, terminated, resigned
   hireDate        DateTime  @default(now())

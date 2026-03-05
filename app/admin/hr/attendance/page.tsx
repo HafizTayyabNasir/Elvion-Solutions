@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 
-interface Employee { id: number; employeeId: string; firstName: string; lastName: string; position: string | null; department: { name: string } | null; }
+interface Employee { id: number; employeeId: string; firstName: string; lastName: string; positions: string[]; departments: { name: string }[]; }
 interface Attendance {
   id: number;
   employeeId: number;

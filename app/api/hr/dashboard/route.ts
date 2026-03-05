@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       }),
       prisma.employee.findMany({
         where: { hireDate: { gte: new Date(today.getFullYear(), today.getMonth() - 3, 1) } },
-        select: { id: true, employeeId: true, firstName: true, lastName: true, position: true, hireDate: true, department: { select: { name: true } } },
+        select: { id: true, employeeId: true, firstName: true, lastName: true, positions: true, hireDate: true, departments: { select: { name: true } } },
         orderBy: { hireDate: 'desc' },
         take: 5,
       }),

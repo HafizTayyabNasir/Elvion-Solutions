@@ -218,7 +218,7 @@ export default function DepartmentsPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm text-white truncate">{emp.firstName} {emp.lastName}</p>
-                              <p className="text-xs text-gray-500 truncate">{emp.position || "N/A"} • {emp.employeeId}</p>
+                              <p className="text-xs text-gray-500 truncate">{emp.positions?.length > 0 ? emp.positions.join(", ") : "N/A"} • {emp.employeeId}</p>
                             </div>
                             <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${emp.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-gray-500/10 text-gray-400'}`}>
                               {emp.status}

@@ -31,7 +31,7 @@ export async function GET(request: Request) {
         employee: {
           select: {
             id: true, employeeId: true, firstName: true, lastName: true,
-            position: true, department: { select: { name: true } },
+            positions: true, departments: { select: { name: true } },
           },
         },
       },

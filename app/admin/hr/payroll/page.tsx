@@ -9,7 +9,7 @@ import { fetchAPI } from "@/lib/api";
 
 interface Employee {
   id: number; employeeId: string; firstName: string; lastName: string;
-  position: string | null; department: { name: string } | null;
+  positions: string[]; departments: { name: string }[];
 }
 interface Payroll {
   id: number; employeeId: number;
@@ -323,7 +323,7 @@ export default function PayrollPage() {
                       <td className="p-4">
                         <div>
                           <p className="text-white font-medium">{p.employee.firstName} {p.employee.lastName}</p>
-                          <p className="text-gray-500 text-xs">{p.employee.position} {p.employee.department ? `• ${p.employee.department.name}` : ""}</p>
+                          <p className="text-gray-500 text-xs">{p.employee.positions?.join(", ") || "N/A"} {p.employee.departments?.length > 0 ? `• ${p.employee.departments.map((d: { name: string }) => d.name).join(", ")}` : ""}</p>
                         </div>
                       </td>
                       <td className="p-4 text-right text-white">${p.baseSalary.toLocaleString()}</td>

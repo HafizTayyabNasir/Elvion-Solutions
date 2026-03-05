@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
 
     const where: any = {};
-    if (departmentId) where.departmentId = parseInt(departmentId);
+    if (departmentId) where.departments = { some: { id: parseInt(departmentId) } };
     if (status) where.status = status;
     if (search) {
       where.OR = [
@@ -27,14 +27,14 @@ export async function GET(request: Request) {
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { employeeId: { contains: search, mode: 'insensitive' } },
-        { position: { contains: search, mode: 'insensitive' } },
+        { positions: { hasSome: [search] } },
       ];
     }
 
     const employees = await prisma.employee.findMany({
       where,
       include: {
-        department: { select: { id: true, name: true } },
+        departments: { select: { id: true, name: true } },
         user: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       firstName, lastName, email, phone, dateOfBirth, gender,
-      address, city, country, departmentId, position,
+      address, city, country, departmentIds, positions,
       employmentType, salary, currency, hireDate,
       emergencyName, emergencyPhone, emergencyRelation, userId,
     } = body;
@@ -90,8 +90,10 @@ export async function POST(request: Request) {
         address,
         city,
         country,
-        departmentId: departmentId ? parseInt(departmentId) : null,
-        position,
+        departments: departmentIds && departmentIds.length > 0
+          ? { connect: departmentIds.map((id: number) => ({ id: Number(id) })) }
+          : undefined,
+        positions: positions || [],
         employmentType: employmentType || 'full_time',
         salary: salary ? parseFloat(salary) : null,
         currency: currency || 'USD',
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
         userId: userId ? parseInt(userId) : null,
       },
       include: {
-        department: { select: { id: true, name: true } },
+        departments: { select: { id: true, name: true } },
       },
     });
 

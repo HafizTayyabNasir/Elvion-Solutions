@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, Building2, Clock, CalendarCheck, DollarSign, UserPlus,
-  TrendingUp, Briefcase, ArrowRight, AlertCircle, UserCheck
+  Briefcase, ArrowRight, UserCheck
 } from "lucide-react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
@@ -16,7 +16,7 @@ interface HRStats {
   attendanceBreakdown: { present: number; absent: number; late: number; remote: number; halfDay: number };
   recentHires: Array<{
     id: number; employeeId: string; firstName: string; lastName: string;
-    position: string; hireDate: string; department: { name: string } | null;
+    positions: string[]; hireDate: string; departments: { name: string }[];
   }>;
   departmentStats: Array<{ name: string; employees: number }>;
   employmentTypeStats: Array<{ type: string; count: number }>;
@@ -185,7 +185,7 @@ export default function HRDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{emp.firstName} {emp.lastName}</p>
-                    <p className="text-xs text-gray-400 truncate">{emp.position || "N/A"} • {emp.department?.name || "Unassigned"}</p>
+                    <p className="text-xs text-gray-400 truncate">{emp.positions?.length > 0 ? emp.positions[0] : "N/A"} • {emp.departments?.length > 0 ? emp.departments.map((d: { name: string }) => d.name).join(", ") : "Unassigned"}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500">{new Date(emp.hireDate).toLocaleDateString()}</p>

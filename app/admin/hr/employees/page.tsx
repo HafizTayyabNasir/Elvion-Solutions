@@ -1,21 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 import {
-  Users, Plus, Search, Filter, Edit2, Trash2, X, ChevronDown,
-  Mail, Phone, Building2, Calendar, DollarSign, Briefcase, UserCheck, AlertCircle
+  Users, Plus, Search, Edit2, Trash2, X, ChevronDown,
+  AlertCircle
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 
 interface Department { id: number; name: string; }
 interface Employee {
   id: number; employeeId: string; firstName: string; lastName: string;
-  email: string; phone: string | null; gender: string | null; position: string | null;
+  email: string; phone: string | null; gender: string | null; positions: string[];
   employmentType: string; status: string; salary: number | null; currency: string;
   hireDate: string; dateOfBirth: string | null; address: string | null;
   city: string | null; country: string | null;
   emergencyName: string | null; emergencyPhone: string | null; emergencyRelation: string | null;
-  department: { id: number; name: string } | null;
-  departmentId: number | null; userId: number | null;
+  departments: { id: number; name: string }[];
+  userId: number | null;
 }
 
 const statusColors: Record<string, string> = {
@@ -73,7 +73,7 @@ const positions = [
 const emptyForm = {
   firstName: "", lastName: "", email: "", phone: "", dateOfBirth: "",
   gender: "", address: "", city: "", country: "",
-  departmentId: "", position: "", employmentType: "full_time",
+  departmentIds: [] as number[], positions: [] as string[], employmentType: "full_time",
   salary: "", currency: "USD", hireDate: new Date().toISOString().split("T")[0],
   emergencyName: "", emergencyPhone: "", emergencyRelation: "", userId: "",
 };
@@ -88,6 +88,9 @@ export default function EmployeesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
+  const [showPosDropdown, setShowPosDropdown] = useState(false);
+  const [posSearch, setPosSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -114,6 +117,9 @@ export default function EmployeesPage() {
     setEditingEmployee(null);
     setForm(emptyForm);
     setError("");
+    setShowDeptDropdown(false);
+    setShowPosDropdown(false);
+    setPosSearch("");
     setShowModal(true);
   };
 
@@ -123,14 +129,17 @@ export default function EmployeesPage() {
       firstName: emp.firstName, lastName: emp.lastName, email: emp.email,
       phone: emp.phone || "", dateOfBirth: emp.dateOfBirth ? emp.dateOfBirth.split("T")[0] : "",
       gender: emp.gender || "", address: emp.address || "", city: emp.city || "",
-      country: emp.country || "", departmentId: emp.departmentId?.toString() || "",
-      position: emp.position || "", employmentType: emp.employmentType,
+      country: emp.country || "", departmentIds: emp.departments.map(d => d.id),
+      positions: emp.positions || [], employmentType: emp.employmentType,
       salary: emp.salary?.toString() || "", currency: emp.currency,
       hireDate: emp.hireDate.split("T")[0],
       emergencyName: emp.emergencyName || "", emergencyPhone: emp.emergencyPhone || "",
       emergencyRelation: emp.emergencyRelation || "", userId: emp.userId?.toString() || "",
     });
     setError("");
+    setShowDeptDropdown(false);
+    setShowPosDropdown(false);
+    setPosSearch("");
     setShowModal(true);
   };
 
@@ -261,8 +270,20 @@ export default function EmployeesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{emp.department?.name || "—"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{emp.position || "—"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {emp.departments.length > 0 ? emp.departments.map(d => (
+                          <span key={d.id} className="text-xs px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full">{d.name}</span>
+                        )) : <span className="text-sm text-gray-500">—</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {emp.positions.length > 0 ? emp.positions.map(p => (
+                          <span key={p} className="text-xs px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full">{p}</span>
+                        )) : <span className="text-sm text-gray-500">—</span>}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-300">{typeLabels[emp.employmentType] || emp.employmentType}</td>
                     <td className="px-4 py-3">
                       <select
@@ -361,22 +382,109 @@ export default function EmployeesPage() {
               {/* Employment */}
               <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider pt-2">Employment Details</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Department</label>
-                  <select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-                    className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary">
-                    <option value="">Select Department</option>
-                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
+                {/* Multi-Select Departments */}
+                <div className="relative">
+                  <label className="text-xs text-gray-400 mb-1 block">Departments</label>
+                  <div
+                    onClick={() => { setShowDeptDropdown(!showDeptDropdown); setShowPosDropdown(false); }}
+                    className="w-full min-h-[38px] px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus-within:border-elvion-primary cursor-pointer flex flex-wrap gap-1 items-center"
+                  >
+                    {form.departmentIds.length === 0 && <span className="text-gray-500">Select Departments</span>}
+                    {form.departmentIds.map(id => {
+                      const dept = departments.find(d => d.id === id);
+                      return dept ? (
+                        <span key={id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full text-xs">
+                          {dept.name}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setForm({ ...form, departmentIds: form.departmentIds.filter(did => did !== id) }); }} className="hover:text-white">
+                            <X size={10} />
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                    <ChevronDown size={14} className="ml-auto text-gray-500 shrink-0" />
+                  </div>
+                  {showDeptDropdown && (
+                    <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-elvion-dark border border-white/10 rounded-lg shadow-xl">
+                      {departments.map(d => (
+                        <button key={d.id} type="button"
+                          onClick={() => {
+                            setForm({
+                              ...form,
+                              departmentIds: form.departmentIds.includes(d.id)
+                                ? form.departmentIds.filter(id => id !== d.id)
+                                : [...form.departmentIds, d.id]
+                            });
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-white/5 flex items-center gap-2 ${form.departmentIds.includes(d.id) ? 'text-elvion-primary' : 'text-gray-300'}`}
+                        >
+                          <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${form.departmentIds.includes(d.id) ? 'bg-elvion-primary border-elvion-primary' : 'border-white/20'}`}>
+                            {form.departmentIds.includes(d.id) && <span className="text-black text-xs">✓</span>}
+                          </span>
+                          {d.name}
+                        </button>
+                      ))}
+                      {departments.length === 0 && <p className="px-3 py-2 text-xs text-gray-500">No departments available</p>}
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Position</label>
-                  <select value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
-                    className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary">
-                    <option value="">Select Position</option>
-                    {positions.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+
+                {/* Multi-Select Positions */}
+                <div className="relative">
+                  <label className="text-xs text-gray-400 mb-1 block">Positions / Roles</label>
+                  <div
+                    onClick={() => { setShowPosDropdown(!showPosDropdown); setShowDeptDropdown(false); }}
+                    className="w-full min-h-[38px] px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus-within:border-elvion-primary cursor-pointer flex flex-wrap gap-1 items-center"
+                  >
+                    {form.positions.length === 0 && <span className="text-gray-500">Select Positions</span>}
+                    {form.positions.map(p => (
+                      <span key={p} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full text-xs">
+                        {p}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setForm({ ...form, positions: form.positions.filter(pos => pos !== p) }); }} className="hover:text-white">
+                          <X size={10} />
+                        </button>
+                      </span>
+                    ))}
+                    <ChevronDown size={14} className="ml-auto text-gray-500 shrink-0" />
+                  </div>
+                  {showPosDropdown && (
+                    <div className="absolute z-50 mt-1 w-full bg-elvion-dark border border-white/10 rounded-lg shadow-xl">
+                      <div className="p-2 border-b border-white/10">
+                        <input
+                          type="text" placeholder="Search positions..." value={posSearch}
+                          onChange={(e) => setPosSearch(e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded text-white text-xs outline-none focus:border-elvion-primary"
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {positions
+                          .filter(p => p.toLowerCase().includes(posSearch.toLowerCase()))
+                          .map(p => (
+                          <button key={p} type="button"
+                            onClick={() => {
+                              setForm({
+                                ...form,
+                                positions: form.positions.includes(p)
+                                  ? form.positions.filter(pos => pos !== p)
+                                  : [...form.positions, p]
+                              });
+                            }}
+                            className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 flex items-center gap-2 ${form.positions.includes(p) ? 'text-elvion-primary' : 'text-gray-300'}`}
+                          >
+                            <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${form.positions.includes(p) ? 'bg-elvion-primary border-elvion-primary' : 'border-white/20'}`}>
+                              {form.positions.includes(p) && <span className="text-black text-[9px]">✓</span>}
+                            </span>
+                            {p}
+                          </button>
+                        ))}
+                        {positions.filter(p => p.toLowerCase().includes(posSearch.toLowerCase())).length === 0 && (
+                          <p className="px-3 py-2 text-xs text-gray-500">No matching positions</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Employment Type</label>
                   <select value={form.employmentType} onChange={(e) => setForm({ ...form, employmentType: e.target.value })}

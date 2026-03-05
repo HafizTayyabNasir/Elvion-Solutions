@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       where: { id: parseInt(id) },
       include: {
         employees: {
-          select: { id: true, employeeId: true, firstName: true, lastName: true, position: true, status: true },
+          select: { id: true, employeeId: true, firstName: true, lastName: true, positions: true, status: true },
         },
         _count: { select: { employees: true } },
       },
@@ -87,7 +87,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
 
     // Check for employees in department
-    const employeeCount = await prisma.employee.count({ where: { departmentId: parseInt(id) } });
+    const employeeCount = await prisma.employee.count({ where: { departments: { some: { id: parseInt(id) } } } });
     if (employeeCount > 0) {
       return NextResponse.json(
         { message: `Cannot delete department with ${employeeCount} employees. Reassign them first.` },

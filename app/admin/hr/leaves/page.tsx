@@ -9,7 +9,7 @@ import { fetchAPI } from "@/lib/api";
 
 interface Employee {
   id: number; employeeId: string; firstName: string; lastName: string;
-  position: string | null; department: { name: string } | null;
+  positions: string[]; departments: { name: string }[];
 }
 interface LeaveType { id: number; name: string; description: string | null; defaultDays: number; isPaid: boolean; isActive: boolean; }
 interface LeaveRequest {
@@ -265,7 +265,7 @@ export default function LeavesPage() {
                           <td className="p-4">
                             <div>
                               <p className="text-white font-medium">{req.employee.firstName} {req.employee.lastName}</p>
-                              <p className="text-gray-500 text-xs">{req.employee.position} {req.employee.department ? `• ${req.employee.department.name}` : ""}</p>
+                              <p className="text-gray-500 text-xs">{req.employee.positions?.join(", ") || "N/A"} {req.employee.departments?.length > 0 ? `• ${req.employee.departments.map((d: { name: string }) => d.name).join(", ")}` : ""}</p>
                             </div>
                           </td>
                           <td className="p-4">
@@ -469,7 +469,7 @@ export default function LeavesPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Department</p>
-                  <p className="text-white">{showDetailModal.employee.department?.name || "Unassigned"}</p>
+                  <p className="text-white">{showDetailModal.employee.departments?.length > 0 ? showDetailModal.employee.departments.map((d: { name: string }) => d.name).join(", ") : "Unassigned"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Leave Type</p>
