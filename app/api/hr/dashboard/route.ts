@@ -86,8 +86,8 @@ export async function GET(request: Request) {
       todayAttendance,
       attendanceBreakdown,
       recentHires,
-      departmentStats: departmentStats.map(d => ({ name: d.name, employees: d._count.employees })),
-      employmentTypeStats: employmentTypeStats.map(e => ({ type: e.employmentType, count: e._count })),
+      departmentStats: departmentStats.map((d: { name: string; _count: { employees: number } }) => ({ name: d.name, employees: d._count.employees })),
+      employmentTypeStats: employmentTypeStats.map((e: { employmentType: string; _count: number }) => ({ type: e.employmentType, count: e._count })),
       monthlyPayrollTotal: monthlyPayroll._sum.netPay || 0,
     });
   } catch (error) {
