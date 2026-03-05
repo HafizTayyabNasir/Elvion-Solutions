@@ -71,11 +71,11 @@ export async function GET(request: Request) {
 
     // Attendance breakdown this month
     const attendanceBreakdown = {
-      present: monthAttendance.filter(a => a.status === 'present').length,
-      absent: monthAttendance.filter(a => a.status === 'absent').length,
-      late: monthAttendance.filter(a => a.status === 'late').length,
-      remote: monthAttendance.filter(a => a.status === 'remote').length,
-      halfDay: monthAttendance.filter(a => a.status === 'half_day').length,
+      present: monthAttendance.filter((a: { status: string }) => a.status === 'present').length,
+      absent: monthAttendance.filter((a: { status: string }) => a.status === 'absent').length,
+      late: monthAttendance.filter((a: { status: string }) => a.status === 'late').length,
+      remote: monthAttendance.filter((a: { status: string }) => a.status === 'remote').length,
+      halfDay: monthAttendance.filter((a: { status: string }) => a.status === 'half_day').length,
     };
 
     return NextResponse.json({
