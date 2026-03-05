@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description, status, priority, dueDate, projectId, assigneeId } = await request.json();
+    const { title, description, status, priority, dueDate, startDate, projectId, assigneeId, estimatedHours, actualHours, budget } = await request.json();
 
     if (!title) {
       return NextResponse.json({ message: 'Task title is required' }, { status: 400 });
@@ -77,9 +77,13 @@ export async function POST(request: Request) {
         status: status || 'todo',
         priority: priority || 'medium',
         dueDate: dueDate ? new Date(dueDate) : null,
+        startDate: startDate ? new Date(startDate) : null,
         projectId: projectId ? parseInt(projectId) : null,
         assigneeId: assigneeId ? parseInt(assigneeId) : null,
         creatorId: userId,
+        estimatedHours: estimatedHours ? parseFloat(estimatedHours) : null,
+        actualHours: actualHours ? parseFloat(actualHours) : null,
+        budget: budget ? parseFloat(budget) : null,
       },
       include: {
         project: { select: { id: true, name: true } },

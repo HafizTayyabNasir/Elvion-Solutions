@@ -87,7 +87,7 @@ export async function PUT(
         startDate: data.startDate ? new Date(data.startDate) : null,
         endDate: data.endDate ? new Date(data.endDate) : null,
         budget: data.budget ? parseFloat(data.budget) : null,
-        progress: data.progress ? parseInt(data.progress) : undefined,
+        progress: data.progress !== undefined ? parseInt(data.progress) : undefined,
       },
       include: {
         owner: { select: { id: true, name: true, email: true } },
@@ -96,6 +96,21 @@ export async function PUT(
         },
       },
     });
+
+    // Update team members if provided
+    if (data.memberIds && Array.isArray(data.memberIds)) {
+      // Remove existing non-client members
+      await prisma.projectMember.deleteMany({
+        where: { projectId, role: { not: 'client' } },
+      });
+      // Add new members
+      const newMembers = data.memberIds
+        .filter((mid: number) => !project.members.some((m: { userId: number; role: string }) => m.userId === mid && m.role === 'client'))
+        .map((mid: number) => ({ projectId, userId: mid, role: 'member' as const }));
+      if (newMembers.length > 0) {
+        await prisma.projectMember.createMany({ data: newMembers, skipDuplicates: true });
+      }
+    }
 
     // Log activity
     await prisma.activity.create({

@@ -21,7 +21,10 @@ export async function GET(request: Request) {
           members: {
             include: { user: { select: { id: true, name: true, email: true } } }
           },
-          tasks: { select: { id: true, status: true } },
+          tasks: {
+            select: { id: true, title: true, status: true, priority: true, dueDate: true, startDate: true, budget: true, estimatedHours: true, actualHours: true, assignee: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+          },
           _count: { select: { tasks: true, invoices: true, files: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -40,7 +43,10 @@ export async function GET(request: Request) {
           members: {
             include: { user: { select: { id: true, name: true, email: true } } }
           },
-          tasks: { select: { id: true, status: true } },
+          tasks: {
+            select: { id: true, title: true, status: true, priority: true, dueDate: true, startDate: true, budget: true, estimatedHours: true, actualHours: true, assignee: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'desc' },
+          },
           _count: { select: { tasks: true, invoices: true, files: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -67,10 +73,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Only admins can create projects' }, { status: 403 });
     }
 
-    const { name, description, status, priority, startDate, endDate, budget, clientId } = await request.json();
+    const { name, description, status, priority, startDate, endDate, budget, clientId, memberIds } = await request.json();
 
     if (!name) {
       return NextResponse.json({ message: 'Project name is required' }, { status: 400 });
+    }
+
+    // Build members array: client + employee team members
+    const membersToCreate: { userId: number; role: string }[] = [];
+    if (clientId) membersToCreate.push({ userId: clientId, role: 'client' });
+    if (memberIds && Array.isArray(memberIds)) {
+      for (const mid of memberIds) {
+        if (!membersToCreate.some(m => m.userId === mid)) {
+          membersToCreate.push({ userId: mid, role: 'member' });
+        }
+      }
     }
 
     const project = await prisma.project.create({
@@ -83,8 +100,8 @@ export async function POST(request: Request) {
         endDate: endDate ? new Date(endDate) : null,
         budget: budget ? parseFloat(budget) : null,
         ownerId: userId,
-        members: clientId ? {
-          create: { userId: clientId, role: 'client' }
+        members: membersToCreate.length > 0 ? {
+          create: membersToCreate
         } : undefined,
       },
       include: {

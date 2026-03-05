@@ -64,7 +64,11 @@ export async function PUT(
         status: data.status,
         priority: data.priority,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
         assigneeId: data.assigneeId ? parseInt(data.assigneeId) : null,
+        estimatedHours: data.estimatedHours ? parseFloat(data.estimatedHours) : null,
+        actualHours: data.actualHours ? parseFloat(data.actualHours) : null,
+        budget: data.budget ? parseFloat(data.budget) : null,
         completedAt: data.status === 'done' && existingTask.status !== 'done' ? new Date() : existingTask.completedAt,
       },
       include: {
