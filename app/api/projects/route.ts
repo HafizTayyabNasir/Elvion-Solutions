@@ -25,6 +25,9 @@ export async function GET(request: Request) {
             select: { id: true, title: true, status: true, priority: true, dueDate: true, startDate: true, budget: true, estimatedHours: true, actualHours: true, assignee: { select: { id: true, name: true } } },
             orderBy: { createdAt: 'desc' },
           },
+          payments: {
+            orderBy: [{ paymentDate: 'desc' }, { createdAt: 'desc' }],
+          },
           _count: { select: { tasks: true, invoices: true, files: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -46,6 +49,9 @@ export async function GET(request: Request) {
           tasks: {
             select: { id: true, title: true, status: true, priority: true, dueDate: true, startDate: true, budget: true, estimatedHours: true, actualHours: true, assignee: { select: { id: true, name: true } } },
             orderBy: { createdAt: 'desc' },
+          },
+          payments: {
+            orderBy: [{ paymentDate: 'desc' }, { createdAt: 'desc' }],
           },
           _count: { select: { tasks: true, invoices: true, files: true } },
         },

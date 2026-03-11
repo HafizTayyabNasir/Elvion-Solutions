@@ -36,6 +36,9 @@ export async function GET(
         files: {
           orderBy: { createdAt: 'desc' },
         },
+        payments: {
+          orderBy: [{ paymentDate: 'desc' }, { createdAt: 'desc' }],
+        },
       },
     });
 

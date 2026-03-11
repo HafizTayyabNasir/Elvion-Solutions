@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
-import { Search, Plus, X, Edit2, Trash2, FolderOpen, Users, Calendar, DollarSign, ChevronDown, ChevronRight, Clock, CheckSquare, UserPlus, Timer, AlertCircle } from "lucide-react";
+import { Search, Plus, X, Edit2, Trash2, FolderOpen, Users, Calendar, DollarSign, ChevronDown, ChevronRight, CheckSquare, UserPlus, Timer, AlertCircle, CreditCard, TrendingUp, TrendingDown, Banknote } from "lucide-react";
 
 interface Employee {
   id: number; employeeId: string; firstName: string; lastName: string;
@@ -15,12 +15,26 @@ interface ProjectTask {
   assignee: { id: number; name: string } | null;
 }
 
+interface ProjectPayment {
+  id: number;
+  projectId: number;
+  amount: number;
+  status: string;   // received | pending
+  category: string; // monthly | task | module
+  label: string | null;
+  taskId: number | null;
+  description: string | null;
+  paymentDate: string | null;
+  createdAt: string;
+}
+
 interface Project {
   id: number; name: string; description: string; status: string; priority: string;
   startDate: string; endDate: string; budget: number; progress: number;
   owner: { id: number; name: string; email: string };
   members: { id: number; user: { id: number; name: string; email: string }; role: string }[];
   tasks: ProjectTask[];
+  payments: ProjectPayment[];
   _count: { tasks: number; invoices: number; files: number };
 }
 
@@ -40,6 +54,49 @@ export default function AdminProjectsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Record<number, string>>({});
   const [form, setForm] = useState({ name: "", description: "", status: "active", priority: "medium", startDate: "", endDate: "", budget: "", memberIds: [] as number[] });
+
+  // Payment state
+  const [showPaymentForm, setShowPaymentForm] = useState<number | null>(null); // projectId
+  const [editPaymentId, setEditPaymentId] = useState<number | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "",
+  });
+
+  const resetPaymentForm = () => setPaymentForm({ amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "" });
+
+  const handlePaymentSubmit = async (e: React.FormEvent, projectId: number) => {
+    e.preventDefault();
+    try {
+      if (editPaymentId) {
+        await fetchAPI(`/projects/${projectId}/payments/${editPaymentId}`, { method: "PUT", body: JSON.stringify(paymentForm) });
+      } else {
+        await fetchAPI(`/projects/${projectId}/payments`, { method: "POST", body: JSON.stringify(paymentForm) });
+      }
+      setShowPaymentForm(null);
+      setEditPaymentId(null);
+      resetPaymentForm();
+      fetchData();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed to save payment"); }
+  };
+
+  const handleDeletePayment = async (projectId: number, paymentId: number) => {
+    if (!confirm("Delete this payment entry?")) return;
+    try {
+      await fetchAPI(`/projects/${projectId}/payments/${paymentId}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const startEditPayment = (p: ProjectPayment, projectId: number) => {
+    setPaymentForm({
+      amount: p.amount.toString(), status: p.status, category: p.category,
+      label: p.label || "", taskId: p.taskId?.toString() || "",
+      description: p.description || "",
+      paymentDate: p.paymentDate ? p.paymentDate.split("T")[0] : "",
+    });
+    setEditPaymentId(p.id);
+    setShowPaymentForm(projectId);
+  };
 
   const fetchData = () => {
     Promise.all([
@@ -274,14 +331,15 @@ export default function AdminProjectsPage() {
               {isExpanded && (
                 <div className="border-t border-gray-200 dark:border-white/5">
                   {/* Tabs */}
-                  <div className="flex border-b border-gray-200 dark:border-white/5 px-5">
+                  <div className="flex border-b border-gray-200 dark:border-white/5 px-5 overflow-x-auto">
                     {[
                       { key: "tasks", label: `Tasks (${project.tasks.length})` },
                       { key: "team", label: `Team (${project.members.length})` },
                       { key: "budget", label: "Budget & Timeline" },
+                      { key: "payments", label: `Payments (${project.payments?.length || 0})` },
                     ].map(t => (
                       <button key={t.key} onClick={() => setActiveTab(prev => ({ ...prev, [project.id]: t.key }))}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t.key ? "border-elvion-primary text-elvion-primary" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>
+                        className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${tab === t.key ? "border-elvion-primary text-elvion-primary" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}>
                         {t.label}
                       </button>
                     ))}
@@ -426,6 +484,426 @@ export default function AdminProjectsPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Payments Tab */}
+                    {tab === "payments" && (() => {
+                      const payments: ProjectPayment[] = project.payments || [];
+                      const totalReceived = payments.filter(p => p.status === "received").reduce((s, p) => s + p.amount, 0);
+                      const totalPending = payments.filter(p => p.status === "pending").reduce((s, p) => s + p.amount, 0);
+                      const grandTotal = totalReceived + totalPending;
+
+                      // Category breakdowns
+                      const monthlyPayments = payments.filter(p => p.category === "monthly");
+                      const taskPayments = payments.filter(p => p.category === "task");
+                      const modulePayments = payments.filter(p => p.category === "module");
+
+                      const monthlyReceived = monthlyPayments.filter(p => p.status === "received").reduce((s, p) => s + p.amount, 0);
+                      const monthlyPending = monthlyPayments.filter(p => p.status === "pending").reduce((s, p) => s + p.amount, 0);
+                      const taskReceived = taskPayments.filter(p => p.status === "received").reduce((s, p) => s + p.amount, 0);
+                      const taskPending = taskPayments.filter(p => p.status === "pending").reduce((s, p) => s + p.amount, 0);
+                      const moduleReceived = modulePayments.filter(p => p.status === "received").reduce((s, p) => s + p.amount, 0);
+                      const modulePending = modulePayments.filter(p => p.status === "pending").reduce((s, p) => s + p.amount, 0);
+
+                      // Group monthly by label/month with individual payment entries
+                      const monthlyGroups: Record<string, { received: number; pending: number; entries: ProjectPayment[] }> = {};
+                      monthlyPayments.forEach(p => {
+                        const key = p.label || (p.paymentDate ? new Date(p.paymentDate).toLocaleString("default", { month: "long", year: "numeric" }) : "Unknown");
+                        if (!monthlyGroups[key]) monthlyGroups[key] = { received: 0, pending: 0, entries: [] };
+                        monthlyGroups[key][p.status as "received" | "pending"] += p.amount;
+                        monthlyGroups[key].entries.push(p);
+                      });
+
+                      // Group task payments by label
+                      const taskGroups: Record<string, { received: number; pending: number; entries: ProjectPayment[] }> = {};
+                      taskPayments.forEach(p => {
+                        const key = p.label || "Untitled Task";
+                        if (!taskGroups[key]) taskGroups[key] = { received: 0, pending: 0, entries: [] };
+                        taskGroups[key][p.status as "received" | "pending"] += p.amount;
+                        taskGroups[key].entries.push(p);
+                      });
+
+                      // Group module payments by label
+                      const moduleGroups: Record<string, { received: number; pending: number; entries: ProjectPayment[] }> = {};
+                      modulePayments.forEach(p => {
+                        const key = p.label || "Untitled Module";
+                        if (!moduleGroups[key]) moduleGroups[key] = { received: 0, pending: 0, entries: [] };
+                        moduleGroups[key][p.status as "received" | "pending"] += p.amount;
+                        moduleGroups[key].entries.push(p);
+                      });
+
+                      const receivedPercent = grandTotal > 0 ? Math.round((totalReceived / grandTotal) * 100) : 0;
+                      const budgetReceivedPercent = project.budget ? Math.round((totalReceived / project.budget) * 100) : 0;
+
+                      return (
+                        <div className="space-y-6">
+                          {/* ── Grand Total Payment Received Banner ── */}
+                          <div className="p-5 rounded-xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border border-green-300 dark:border-green-500/30">
+                            <div className="flex items-center justify-between flex-wrap gap-4">
+                              <div>
+                                <p className="text-xs text-green-600 dark:text-green-400 font-semibold uppercase tracking-wider flex items-center gap-2"><Banknote size={14} /> Total Payment Received</p>
+                                <p className="text-4xl font-extrabold text-green-600 dark:text-green-400 mt-1">${totalReceived.toLocaleString()}</p>
+                                <p className="text-xs text-gray-500 mt-1">{payments.filter(p => p.status === "received").length} received payment(s) of {payments.length} total</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500">Budget: <span className="font-semibold text-gray-700 dark:text-gray-300">${(project.budget || 0).toLocaleString()}</span></p>
+                                <p className="text-xs text-gray-500 mt-0.5">Collected: <span className="font-bold text-green-600 dark:text-green-400">{budgetReceivedPercent}%</span></p>
+                                <div className="w-40 h-2 bg-gray-200 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
+                                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.min(budgetReceivedPercent, 100)}%` }}></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ── Summary Cards ── */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+                              <div className="flex items-center gap-1.5 mb-1"><TrendingUp size={14} className="text-green-500" /><span className="text-[10px] text-green-600 dark:text-green-400 font-medium uppercase">Total Received</span></div>
+                              <p className="text-xl font-bold text-green-600 dark:text-green-400">${totalReceived.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+                              <div className="flex items-center gap-1.5 mb-1"><TrendingDown size={14} className="text-orange-500" /><span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium uppercase">Total Pending</span></div>
+                              <p className="text-xl font-bold text-orange-500">${totalPending.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                              <div className="flex items-center gap-1.5 mb-1"><DollarSign size={14} className="text-blue-500" /><span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">Grand Total</span></div>
+                              <p className="text-xl font-bold text-blue-600 dark:text-blue-400">${grandTotal.toLocaleString()}</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-elvion-primary/5 border border-elvion-primary/20">
+                              <div className="flex items-center gap-1.5 mb-1"><Banknote size={14} className="text-elvion-primary" /><span className="text-[10px] text-elvion-primary font-medium uppercase">Collection Rate</span></div>
+                              <p className="text-xl font-bold text-elvion-primary">{receivedPercent}%</p>
+                            </div>
+                          </div>
+
+                          {/* ── Category Breakdown ── */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><Calendar size={10} /> Monthly</p>
+                              <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-sm font-bold text-green-500">${monthlyReceived.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">received</span>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-sm font-bold text-orange-500">${monthlyPending.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">pending</span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><CheckSquare size={10} /> Task</p>
+                              <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-sm font-bold text-green-500">${taskReceived.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">received</span>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-sm font-bold text-orange-500">${taskPending.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">pending</span>
+                              </div>
+                            </div>
+                            <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
+                              <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><FolderOpen size={10} /> Module</p>
+                              <div className="flex items-baseline gap-2 mt-1">
+                                <span className="text-sm font-bold text-green-500">${moduleReceived.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">received</span>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-sm font-bold text-orange-500">${modulePending.toLocaleString()}</span>
+                                <span className="text-[10px] text-gray-400">pending</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Add Payment Button */}
+                          <div className="flex justify-end">
+                            <button onClick={() => { resetPaymentForm(); setEditPaymentId(null); setShowPaymentForm(project.id); }}
+                              className="flex items-center gap-2 px-3 py-2 text-sm bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90">
+                              <Plus size={14} /> Add Payment
+                            </button>
+                          </div>
+
+                          {/* Add/Edit Payment Form */}
+                          {showPaymentForm === project.id && (
+                            <div className="p-4 rounded-xl border border-elvion-primary/30 bg-elvion-primary/5">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><CreditCard size={14} />{editPaymentId ? "Edit Payment" : "Add Payment"}</h4>
+                                <button onClick={() => { setShowPaymentForm(null); setEditPaymentId(null); resetPaymentForm(); }} className="p-1 hover:bg-white/10 rounded"><X size={14} className="text-gray-400" /></button>
+                              </div>
+                              <form onSubmit={e => handlePaymentSubmit(e, project.id)} className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Amount ($) *</label>
+                                  <input required type="number" step="0.01" min="0.01" value={paymentForm.amount}
+                                    onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                                    placeholder="0.00"
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Status</label>
+                                  <select value={paymentForm.status} onChange={e => setPaymentForm({ ...paymentForm, status: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm">
+                                    <option value="received">Received</option>
+                                    <option value="pending">Pending</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Category</label>
+                                  <select value={paymentForm.category} onChange={e => setPaymentForm({ ...paymentForm, category: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="task">Task</option>
+                                    <option value="module">Module</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Label / Month</label>
+                                  <input type="text" value={paymentForm.label}
+                                    onChange={e => setPaymentForm({ ...paymentForm, label: e.target.value })}
+                                    placeholder={paymentForm.category === "monthly" ? "e.g. January 2026" : paymentForm.category === "module" ? "e.g. Module 1 – UI" : "e.g. Homepage Task"}
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Payment Date</label>
+                                  <input type="date" value={paymentForm.paymentDate}
+                                    onChange={e => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm" />
+                                </div>
+                                {paymentForm.category === "task" && (
+                                  <div>
+                                    <label className="block text-[10px] text-gray-500 uppercase mb-1">Link to Task</label>
+                                    <select value={paymentForm.taskId} onChange={e => setPaymentForm({ ...paymentForm, taskId: e.target.value })}
+                                      className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm">
+                                      <option value="">None</option>
+                                      {project.tasks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                                    </select>
+                                  </div>
+                                )}
+                                <div className="col-span-full">
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Description</label>
+                                  <input type="text" value={paymentForm.description}
+                                    onChange={e => setPaymentForm({ ...paymentForm, description: e.target.value })}
+                                    placeholder="Optional notes…"
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm" />
+                                </div>
+                                <div className="col-span-full flex gap-2 justify-end">
+                                  <button type="button" onClick={() => { setShowPaymentForm(null); setEditPaymentId(null); resetPaymentForm(); }}
+                                    className="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">Cancel</button>
+                                  <button type="submit" className="px-4 py-2 text-sm bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90">
+                                    {editPaymentId ? "Update" : "Save Payment"}
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          )}
+
+                          {/* ══════ MONTHLY PAYMENTS ══════ */}
+                          <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                            <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><Calendar size={14} className="text-blue-500" /> Monthly Payments</h4>
+                              <div className="flex items-center gap-3 text-xs">
+                                <span className="text-green-500 font-semibold">${monthlyReceived.toLocaleString()} received</span>
+                                <span className="text-orange-500 font-semibold">${monthlyPending.toLocaleString()} pending</span>
+                              </div>
+                            </div>
+                            {Object.keys(monthlyGroups).length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead><tr className="text-left text-xs text-gray-500 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-elvion-dark/30">
+                                    <th className="px-4 py-2 font-medium">Month</th>
+                                    <th className="px-4 py-2 font-medium text-green-500">Received</th>
+                                    <th className="px-4 py-2 font-medium text-orange-500">Pending</th>
+                                    <th className="px-4 py-2 font-medium">Total</th>
+                                    <th className="px-4 py-2 font-medium">Date</th>
+                                    <th className="px-4 py-2 font-medium">Description</th>
+                                    <th className="px-4 py-2"></th>
+                                  </tr></thead>
+                                  <tbody>
+                                    {Object.entries(monthlyGroups).map(([month, group]) => (
+                                      group.entries.map((p, idx) => (
+                                        <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                          {idx === 0 && (
+                                            <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white align-top" rowSpan={group.entries.length}>
+                                              <div>{month}</div>
+                                              <div className="text-[10px] text-gray-400 font-normal mt-0.5">{group.entries.length} entry(s)</div>
+                                            </td>
+                                          )}
+                                          <td className="px-4 py-2.5 text-green-600 dark:text-green-400 font-medium">{p.status === "received" ? `$${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                                          <td className="px-4 py-2.5 text-orange-500 font-medium">{p.status === "pending" ? `$${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                                          {idx === 0 && (
+                                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white align-top" rowSpan={group.entries.length}>
+                                              ${(group.received + group.pending).toLocaleString()}
+                                            </td>
+                                          )}
+                                          <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
+                                          <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                          <td className="px-4 py-2.5">
+                                            <div className="hidden group-hover/row:flex gap-1 justify-end">
+                                              <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
+                                              <button onClick={() => handleDeletePayment(project.id, p.id)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded"><Trash2 size={12} /></button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      ))
+                                    ))}
+                                    <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
+                                      <td className="px-4 py-2 text-gray-500">Total</td>
+                                      <td className="px-4 py-2 text-green-600 dark:text-green-400">${monthlyReceived.toLocaleString()}</td>
+                                      <td className="px-4 py-2 text-orange-500">${monthlyPending.toLocaleString()}</td>
+                                      <td className="px-4 py-2 text-gray-900 dark:text-white">${(monthlyReceived + monthlyPending).toLocaleString()}</td>
+                                      <td colSpan={3}></td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="px-4 py-6 text-center text-gray-400 text-sm">No monthly payments recorded yet.</p>
+                            )}
+                          </div>
+
+                          {/* ══════ TASK PAYMENTS ══════ */}
+                          <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                            <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><CheckSquare size={14} className="text-purple-500" /> Task Payments</h4>
+                              <div className="flex items-center gap-3 text-xs">
+                                <span className="text-green-500 font-semibold">${taskReceived.toLocaleString()} received</span>
+                                <span className="text-orange-500 font-semibold">${taskPending.toLocaleString()} pending</span>
+                              </div>
+                            </div>
+                            {taskPayments.length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead><tr className="text-left text-xs text-gray-500 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-elvion-dark/30">
+                                    <th className="px-4 py-2 font-medium">Task / Label</th>
+                                    <th className="px-4 py-2 font-medium">Amount</th>
+                                    <th className="px-4 py-2 font-medium">Status</th>
+                                    <th className="px-4 py-2 font-medium">Date</th>
+                                    <th className="px-4 py-2 font-medium">Description</th>
+                                    <th className="px-4 py-2"></th>
+                                  </tr></thead>
+                                  <tbody>
+                                    {taskPayments.map(p => (
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                        <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Task Payment"}</td>
+                                        <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                        <td className="px-4 py-2.5">
+                                          <div className="hidden group-hover/row:flex gap-1 justify-end">
+                                            <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeletePayment(project.id, p.id)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded"><Trash2 size={12} /></button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                    <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
+                                      <td className="px-4 py-2 text-gray-500">Total</td>
+                                      <td className="px-4 py-2 text-gray-900 dark:text-white">${(taskReceived + taskPending).toLocaleString()}</td>
+                                      <td className="px-4 py-2"><span className="text-green-500">${taskReceived.toLocaleString()}</span> / <span className="text-orange-500">${taskPending.toLocaleString()}</span></td>
+                                      <td colSpan={3}></td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="px-4 py-6 text-center text-gray-400 text-sm">No task payments recorded yet.</p>
+                            )}
+                          </div>
+
+                          {/* ══════ MODULE PAYMENTS ══════ */}
+                          <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                            <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><FolderOpen size={14} className="text-indigo-500" /> Module Payments</h4>
+                              <div className="flex items-center gap-3 text-xs">
+                                <span className="text-green-500 font-semibold">${moduleReceived.toLocaleString()} received</span>
+                                <span className="text-orange-500 font-semibold">${modulePending.toLocaleString()} pending</span>
+                              </div>
+                            </div>
+                            {modulePayments.length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead><tr className="text-left text-xs text-gray-500 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-elvion-dark/30">
+                                    <th className="px-4 py-2 font-medium">Module</th>
+                                    <th className="px-4 py-2 font-medium">Amount</th>
+                                    <th className="px-4 py-2 font-medium">Status</th>
+                                    <th className="px-4 py-2 font-medium">Date</th>
+                                    <th className="px-4 py-2 font-medium">Description</th>
+                                    <th className="px-4 py-2"></th>
+                                  </tr></thead>
+                                  <tbody>
+                                    {modulePayments.map(p => (
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                        <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Module Payment"}</td>
+                                        <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                        <td className="px-4 py-2.5">
+                                          <div className="hidden group-hover/row:flex gap-1 justify-end">
+                                            <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeletePayment(project.id, p.id)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded"><Trash2 size={12} /></button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                    <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
+                                      <td className="px-4 py-2 text-gray-500">Total</td>
+                                      <td className="px-4 py-2 text-gray-900 dark:text-white">${(moduleReceived + modulePending).toLocaleString()}</td>
+                                      <td className="px-4 py-2"><span className="text-green-500">${moduleReceived.toLocaleString()}</span> / <span className="text-orange-500">${modulePending.toLocaleString()}</span></td>
+                                      <td colSpan={3}></td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <p className="px-4 py-6 text-center text-gray-400 text-sm">No module payments recorded yet.</p>
+                            )}
+                          </div>
+
+                          {/* ══════ ALL PAYMENTS — EXPANDABLE ══════ */}
+                          {payments.length > 0 && (
+                            <details className="group rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+                              <summary className="cursor-pointer px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 flex items-center gap-2 select-none">
+                                <ChevronRight size={14} className="group-open:rotate-90 transition-transform" /> View All {payments.length} Payment Entries
+                              </summary>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead><tr className="text-left text-xs text-gray-500 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-elvion-dark/30">
+                                    <th className="px-4 py-2 font-medium">Label</th>
+                                    <th className="px-4 py-2 font-medium">Category</th>
+                                    <th className="px-4 py-2 font-medium">Date</th>
+                                    <th className="px-4 py-2 font-medium">Amount</th>
+                                    <th className="px-4 py-2 font-medium">Status</th>
+                                    <th className="px-4 py-2"></th>
+                                  </tr></thead>
+                                  <tbody>
+                                    {payments.map(p => (
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                        <td className="px-4 py-2 text-gray-900 dark:text-white">{p.label || "—"}</td>
+                                        <td className="px-4 py-2 capitalize text-gray-500 text-xs">{p.category}</td>
+                                        <td className="px-4 py-2 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
+                                        <td className="px-4 py-2 font-bold">${p.amount.toLocaleString()}</td>
+                                        <td className="px-4 py-2"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
+                                        <td className="px-4 py-2">
+                                          <div className="hidden group-hover/row:flex gap-1 justify-end">
+                                            <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 rounded hover:bg-blue-50 dark:hover:bg-blue-500/10"><Edit2 size={12} /></button>
+                                            <button onClick={() => handleDeletePayment(project.id, p.id)} className="p-1 text-red-500 rounded hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 size={12} /></button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </details>
+                          )}
+
+                          {payments.length === 0 && showPaymentForm !== project.id && (
+                            <div className="text-center py-8 text-gray-400">
+                              <CreditCard size={32} className="mx-auto mb-2 opacity-40" />
+                              <p className="text-sm">No payments recorded yet.</p>
+                              <p className="text-xs mt-1">Click &quot;Add Payment&quot; to track received or pending payments.</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               )}
