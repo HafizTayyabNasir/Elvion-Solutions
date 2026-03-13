@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
-  FolderKanban,
   Ticket,
   FileText,
   Users,
@@ -38,7 +37,6 @@ const menuItems = [
     { name: "Leaves", href: "/admin/hr/leaves" },
     { name: "Payroll", href: "/admin/hr/payroll" },
   ]},
-  { name: "Projects", href: "/admin/projects", icon: FolderKanban },
   { name: "Clients", href: "/admin/clients", icon: Users },
   { name: "Tasks", href: "/admin/tasks", icon: FileText },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
