@@ -64,7 +64,7 @@ export default function AdminProjectsPage() {
     endDate: "",
     budget: "",
     memberIds: [] as number[],
-    clientId: null,
+    clientId: "",
     newClient: { name: "", email: "" }
   });
 
@@ -140,7 +140,7 @@ export default function AdminProjectsPage() {
     endDate: "",
     budget: "",
     memberIds: [],
-    clientId: null,
+    clientId: "",
     newClient: { name: "", email: "" }
   });
 
@@ -166,7 +166,7 @@ export default function AdminProjectsPage() {
     const body = {
       ...form,
       budget: form.budget ? parseFloat(form.budget) : null,
-      clientId: clientId || null,
+      clientId: clientId ? Number(clientId) : null,
       memberIds: form.memberIds
     };
     try {
@@ -196,7 +196,7 @@ export default function AdminProjectsPage() {
       endDate: p.endDate ? p.endDate.split("T")[0] : "",
       budget: p.budget?.toString() || "",
       memberIds: p.members.filter((m: { role: string }) => m.role !== "client").map((m: { user: { id: number } }) => m.user.id),
-      clientId: null,
+      clientId: "",
       newClient: { name: "", email: "" }
     });
     setEditId(p.id); setShowForm(true);
@@ -305,10 +305,10 @@ export default function AdminProjectsPage() {
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <select
-                      value={form.clientId === null ? "" : String(form.clientId)}
+                      value={form.clientId}
                       onChange={e => {
                         const val = e.target.value;
-                        setForm({ ...form, clientId: val ? Number(val) : null, newClient: { name: "", email: "" } });
+                        setForm({ ...form, clientId: val, newClient: { name: "", email: "" } });
                       }}
                       className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white">
                       <option value="">Select existing client...</option>
@@ -317,10 +317,10 @@ export default function AdminProjectsPage() {
                       ))}
                     </select>
                   </div>
-                  <button type="button" className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium" onClick={() => setForm({ ...form, clientId: null })}>Add New</button>
+                  <button type="button" className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium" onClick={() => setForm({ ...form, clientId: "" })}>Add New</button>
                 </div>
                 {/* New Client Fields */}
-                {form.clientId === null && (
+                {form.clientId === "" && (
                   <div className="mt-2 grid grid-cols-2 gap-2">
                     <input
                       type="text"
