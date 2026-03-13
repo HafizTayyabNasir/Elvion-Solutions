@@ -39,6 +39,7 @@ const menuItems = [
     { name: "Payroll", href: "/admin/hr/payroll" },
   ]},
   { name: "Projects", href: "/admin/projects", icon: FolderKanban },
+  { name: "Clients", href: "/admin/clients", icon: Users },
   { name: "Tasks", href: "/admin/tasks", icon: FileText },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
   { name: "Invoices", href: "/admin/invoices", icon: Receipt },
