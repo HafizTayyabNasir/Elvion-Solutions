@@ -404,8 +404,21 @@ export default function AdminProjectsPage() {
                           {/* Task count for owner */}
                           <p className="text-[10px] text-gray-500 mt-1">{project.tasks.filter(t => t.assignee?.id === project.owner.id).length} tasks assigned</p>
                         </div>
+                        {/* Client */}
+                        {project.members.filter(m => m.role === "client").map(m => (
+                          <div key={m.id} className="p-3 rounded-lg border border-green-400 bg-green-50 dark:bg-green-500/10">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-green-400/20 flex items-center justify-center text-green-600 text-xs font-bold">{m.user.name?.charAt(0) || "C"}</div>
+                              <div>
+                                <p className="text-sm font-medium text-green-700 dark:text-green-400">{m.user.name}</p>
+                                <p className="text-[10px] text-green-600 font-medium">Client</p>
+                              </div>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">{m.user.email}</p>
+                          </div>
+                        ))}
                         {/* Members */}
-                        {project.members.map(m => (
+                        {project.members.filter(m => m.role !== "client").map(m => (
                           <div key={m.id} className="p-3 rounded-lg border border-gray-200 dark:border-white/10 hover:border-elvion-primary/20 transition-colors">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs font-bold">{m.user.name?.charAt(0) || "?"}</div>
