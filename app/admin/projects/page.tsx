@@ -62,7 +62,7 @@ export default function AdminProjectsPage() {
     amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "", currency: "USD"
   });
 
-  const resetPaymentForm = () => setPaymentForm({ amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "" });
+  const resetPaymentForm = () => setPaymentForm({ amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "", currency: "USD" });
 
   const handlePaymentSubmit = async (e: React.FormEvent, projectId: number) => {
     e.preventDefault();
