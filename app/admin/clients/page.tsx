@@ -75,13 +75,24 @@ export default function AdminClientsPage() {
           ) : (
             <div className="grid gap-4">
               {projects.map(project => (
-                <Link key={project.id} href={`/admin/projects/${project.id}`} className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:shadow-lg transition-shadow">
+                <button
+                  key={project.id}
+                  className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:shadow-lg transition-shadow text-left w-full focus:outline-elvion-primary"
+                  aria-label={`View project ${project.name}`}
+                  onClick={() => {
+                    // Analytics event
+                    if (window && typeof window !== "undefined") {
+                      window?.gtag?.("event", "view_project", { projectId: project.id, projectName: project.name });
+                    }
+                    window.location.href = `/admin/projects/${project.id}`;
+                  }}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <FolderOpen size={18} className="text-elvion-primary" />
                     <span className="font-semibold text-gray-900 dark:text-white">{project.name}</span>
                   </div>
                   <p className="text-xs text-gray-500">{project.description}</p>
-                </Link>
+                </button>
               ))}
             </div>
           )}
