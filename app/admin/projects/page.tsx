@@ -59,7 +59,7 @@ export default function AdminProjectsPage() {
   const [showPaymentForm, setShowPaymentForm] = useState<number | null>(null); // projectId
   const [editPaymentId, setEditPaymentId] = useState<number | null>(null);
   const [paymentForm, setPaymentForm] = useState({
-    amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "",
+    amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "", currency: "USD"
   });
 
   const resetPaymentForm = () => setPaymentForm({ amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "" });
