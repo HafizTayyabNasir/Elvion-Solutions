@@ -641,11 +641,24 @@ export default function AdminProjectsPage() {
                               </div>
                               <form onSubmit={e => handlePaymentSubmit(e, project.id)} className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 <div>
-                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Amount ($) *</label>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Amount *</label>
                                   <input required type="number" step="0.01" min="0.01" value={paymentForm.amount}
                                     onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
                                     placeholder="0.00"
                                     className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm" />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] text-gray-500 uppercase mb-1">Currency</label>
+                                  <select value={paymentForm.currency || "USD"} onChange={e => setPaymentForm({ ...paymentForm, currency: e.target.value })}
+                                    className="w-full p-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="PKR">PKR</option>
+                                    <option value="INR">INR</option>
+                                    <option value="SAR">SAR</option>
+                                    <option value="AED">AED</option>
+                                  </select>
                                 </div>
                                 <div>
                                   <label className="block text-[10px] text-gray-500 uppercase mb-1">Status</label>
