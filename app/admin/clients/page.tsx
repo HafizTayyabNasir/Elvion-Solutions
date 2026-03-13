@@ -21,6 +21,12 @@ export default function AdminClientsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [clientForm, setClientForm] = useState({ name: '', email: '' });
+    const [projectForm, setProjectForm] = useState({ name: '', description: '' });
+    const [addLoading, setAddLoading] = useState(false);
+    const [addError, setAddError] = useState('');
+    const [addSuccess, setAddSuccess] = useState('');
 
   useEffect(() => {
     fetchAPI("/crm/contacts").then((data) => {
@@ -43,7 +49,12 @@ export default function AdminClientsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clients</h1>
           <p className="text-gray-500 mt-1">List of all clients. Click to view their projects.</p>
         </div>
-        <Link href="/admin/crm/contacts" className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90"><Plus size={18} /> Add Client</Link>
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90"
+          onClick={() => setShowAddModal(true)}
+        >
+          <Plus size={18} /> Add Client
+        </button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {clients.map(client => (
@@ -76,6 +87,91 @@ export default function AdminClientsPage() {
           )}
         </div>
       )}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-elvion-card rounded-xl p-6 w-full max-w-lg shadow-lg relative">
+              <button className="absolute top-3 right-3 text-gray-500 hover:text-black" onClick={() => setShowAddModal(false)}>&times;</button>
+              <h2 className="text-xl font-bold mb-4">Add Client & Project</h2>
+              <form
+                onSubmit={async e => {
+                  e.preventDefault();
+                  setAddLoading(true);
+                  setAddError('');
+                  setAddSuccess('');
+                  try {
+                    // Create client
+                    const clientRes = await fetchAPI('/crm/contacts', {
+                      method: 'POST',
+                      body: JSON.stringify(clientForm),
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!clientRes || !clientRes.id) throw new Error('Client creation failed');
+                    // Create project linked to client
+                    const projectRes = await fetchAPI('/projects', {
+                      method: 'POST',
+                      body: JSON.stringify({ ...projectForm, clientId: clientRes.id }),
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!projectRes || !projectRes.id) throw new Error('Project creation failed');
+                    setAddSuccess('Client and project created successfully!');
+                    setClients([...clients, clientRes]);
+                    setShowAddModal(false);
+                    setClientForm({ name: '', email: '' });
+                    setProjectForm({ name: '', description: '' });
+                  } catch (err: any) {
+                    setAddError(err.message || 'Error occurred');
+                  } finally {
+                    setAddLoading(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="font-semibold mb-2">Client Details</h3>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={clientForm.name}
+                    onChange={e => setClientForm({ ...clientForm, name: e.target.value })}
+                    className="w-full border rounded px-3 py-2 mb-2"
+                    required
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={clientForm.email}
+                    onChange={e => setClientForm({ ...clientForm, email: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">Project Details</h3>
+                  <input
+                    type="text"
+                    placeholder="Project Name"
+                    value={projectForm.name}
+                    onChange={e => setProjectForm({ ...projectForm, name: e.target.value })}
+                    className="w-full border rounded px-3 py-2 mb-2"
+                    required
+                  />
+                  <textarea
+                    placeholder="Project Description"
+                    value={projectForm.description}
+                    onChange={e => setProjectForm({ ...projectForm, description: e.target.value })}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  />
+                </div>
+                {addError && <div className="text-red-500">{addError}</div>}
+                {addSuccess && <div className="text-green-500">{addSuccess}</div>}
+                <button type="submit" className="w-full bg-elvion-primary text-black rounded-lg font-semibold py-2 mt-2" disabled={addLoading}>
+                  {addLoading ? 'Creating...' : 'Create Client & Project'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

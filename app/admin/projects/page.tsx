@@ -47,6 +47,7 @@ const taskStatusLabels: Record<string, string> = { todo: "To Do", in_progress: "
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -54,7 +55,18 @@ export default function AdminProjectsPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<Record<number, string>>({});
-  const [form, setForm] = useState({ name: "", description: "", status: "active", priority: "medium", startDate: "", endDate: "", budget: "", memberIds: [] as number[] });
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    status: "active",
+    priority: "medium",
+    startDate: "",
+    endDate: "",
+    budget: "",
+    memberIds: [] as number[],
+    clientId: null,
+    newClient: { name: "", email: "" }
+  });
 
   // Payment state
   const [showPaymentForm, setShowPaymentForm] = useState<number | null>(null); // projectId
@@ -107,9 +119,11 @@ export default function AdminProjectsPage() {
     Promise.all([
       fetchAPI("/projects"),
       fetchAPI("/hr/employees").catch(() => []),
-    ]).then(([p, e]) => {
+      fetchAPI("/crm/contacts").catch(() => [])
+    ]).then(([p, e, c]) => {
       setProjects(p);
       setEmployees(Array.isArray(e) ? e : (e.employees || []));
+      setClients(Array.isArray(c) ? c : []);
     }).catch(console.error).finally(() => setLoading(false));
   };
 
@@ -117,16 +131,54 @@ export default function AdminProjectsPage() {
 
   const employeeOptions = employees.filter((emp: Employee) => emp.userId).map((emp: Employee) => ({ id: emp.userId!, name: `${emp.firstName} ${emp.lastName}`, employeeId: emp.employeeId }));
 
-  const resetForm = () => setForm({ name: "", description: "", status: "active", priority: "medium", startDate: "", endDate: "", budget: "", memberIds: [] });
+  const resetForm = () => setForm({
+    name: "",
+    description: "",
+    status: "active",
+    priority: "medium",
+    startDate: "",
+    endDate: "",
+    budget: "",
+    memberIds: [],
+    clientId: null,
+    newClient: { name: "", email: "" }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const body = { ...form, budget: form.budget ? parseFloat(form.budget) : null };
+    let clientId = form.clientId;
+    // If new client details are filled, create client first
+    if (form.newClient.name && form.newClient.email) {
+      try {
+        const clientRes = await fetchAPI('/crm/contacts', {
+          method: 'POST',
+          body: JSON.stringify(form.newClient),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!clientRes || !clientRes.id) throw new Error('Client creation failed');
+        clientId = clientRes.id;
+        setClients([...clients, clientRes]);
+      } catch (err: any) {
+        alert(err.message || 'Failed to create client');
+        return;
+      }
+    }
+    const body = {
+      ...form,
+      budget: form.budget ? parseFloat(form.budget) : null,
+      clientId: clientId || null,
+      memberIds: form.memberIds
+    };
     try {
-      if (editId) { await fetchAPI(`/projects/${editId}`, { method: "PUT", body: JSON.stringify(body) }); }
-      else { await fetchAPI("/projects", { method: "POST", body: JSON.stringify(body) }); }
+      if (editId) {
+        await fetchAPI(`/projects/${editId}`, { method: "PUT", body: JSON.stringify(body) });
+      } else {
+        await fetchAPI("/projects", { method: "POST", body: JSON.stringify(body) });
+      }
       setShowForm(false); setEditId(null); resetForm(); fetchData();
-    } catch (err) { alert(err instanceof Error ? err.message : "Failed"); }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed");
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -136,10 +188,16 @@ export default function AdminProjectsPage() {
 
   const startEdit = (p: Project) => {
     setForm({
-      name: p.name, description: p.description || "", status: p.status, priority: p.priority || "medium",
-      startDate: p.startDate ? p.startDate.split("T")[0] : "", endDate: p.endDate ? p.endDate.split("T")[0] : "",
+      name: p.name,
+      description: p.description || "",
+      status: p.status,
+      priority: p.priority || "medium",
+      startDate: p.startDate ? p.startDate.split("T")[0] : "",
+      endDate: p.endDate ? p.endDate.split("T")[0] : "",
       budget: p.budget?.toString() || "",
       memberIds: p.members.filter((m: { role: string }) => m.role !== "client").map((m: { user: { id: number } }) => m.user.id),
+      clientId: null,
+      newClient: { name: "", email: "" }
     });
     setEditId(p.id); setShowForm(true);
   };
@@ -241,6 +299,48 @@ export default function AdminProjectsPage() {
               <button onClick={() => setShowForm(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Client Section */}
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">Client</label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <select
+                      value={form.clientId === null ? "" : String(form.clientId)}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setForm({ ...form, clientId: val ? val : null, newClient: { name: "", email: "" } });
+                      }}
+                      className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white">
+                      <option value="">Select existing client...</option>
+                      {clients.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="button" className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium" onClick={() => setForm({ ...form, clientId: null })}>Add New</button>
+                </div>
+                {/* New Client Fields */}
+                {form.clientId === null && (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Client Name"
+                      value={form.newClient.name}
+                      onChange={e => setForm({ ...form, newClient: { ...form.newClient, name: e.target.value } })}
+                      className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                      required={form.clientId === null}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Client Email"
+                      value={form.newClient.email}
+                      onChange={e => setForm({ ...form, newClient: { ...form.newClient, email: e.target.value } })}
+                      className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                      required={form.clientId === null}
+                    />
+                  </div>
+                )}
+              </div>
               <div><label className="block text-sm text-gray-500 mb-1">Project Name *</label><input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white" /></div>
               <div><label className="block text-sm text-gray-500 mb-1">Description</label><textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white resize-none" /></div>
               <div className="grid grid-cols-3 gap-4">
@@ -255,7 +355,7 @@ export default function AdminProjectsPage() {
               {/* Team Members */}
               <div>
                 <label className="block text-sm text-gray-500 mb-2"><UserPlus size={14} className="inline mr-1" />Team Members</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-elvion-dark">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-50 overflow-y-auto p-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-elvion-dark">
                   {employeeOptions.map(emp => (
                     <label key={emp.id} className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer text-sm transition-colors ${form.memberIds.includes(emp.id) ? "bg-elvion-primary/10 border border-elvion-primary/30" : "hover:bg-gray-100 dark:hover:bg-white/5"}`}>
                       <input type="checkbox" checked={form.memberIds.includes(emp.id)} onChange={() => toggleMember(emp.id)} className="accent-elvion-primary" />
@@ -555,7 +655,7 @@ export default function AdminProjectsPage() {
                       return (
                         <div className="space-y-6">
                           {/* ── Grand Total Payment Received Banner ── */}
-                          <div className="p-5 rounded-xl bg-gradient-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border border-green-300 dark:border-green-500/30">
+                          <div className="p-5 rounded-xl bg-linear-to-r from-green-500/10 via-emerald-500/10 to-teal-500/10 border border-green-300 dark:border-green-500/30">
                             <div className="flex items-center justify-between flex-wrap gap-4">
                               <div>
                                 <p className="text-xs text-green-600 dark:text-green-400 font-semibold uppercase tracking-wider flex items-center gap-2"><Banknote size={14} /> Total Payment Received</p>
@@ -747,7 +847,7 @@ export default function AdminProjectsPage() {
                                   <tbody>
                                     {Object.entries(monthlyGroups).map(([month, group]) => (
                                       group.entries.map((p, idx) => (
-                                        <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                        <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                                           {idx === 0 && (
                                             <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white align-top" rowSpan={group.entries.length}>
                                               <div>{month}</div>
@@ -762,7 +862,7 @@ export default function AdminProjectsPage() {
                                             </td>
                                           )}
                                           <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
-                                          <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                          <td className="px-4 py-2.5 text-gray-400 text-xs max-w-50 truncate">{p.description || "—"}</td>
                                           <td className="px-4 py-2.5">
                                             <div className="hidden group-hover/row:flex gap-1 justify-end">
                                               <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
@@ -809,12 +909,12 @@ export default function AdminProjectsPage() {
                                   </tr></thead>
                                   <tbody>
                                     {taskPayments.map(p => (
-                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                                         <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Task Payment"}</td>
                                         <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
                                         <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
                                         <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-50 truncate">{p.description || "—"}</td>
                                         <td className="px-4 py-2.5">
                                           <div className="hidden group-hover/row:flex gap-1 justify-end">
                                             <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
@@ -859,12 +959,12 @@ export default function AdminProjectsPage() {
                                   </tr></thead>
                                   <tbody>
                                     {modulePayments.map(p => (
-                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                                         <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Module Payment"}</td>
                                         <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
                                         <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
                                         <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-[200px] truncate">{p.description || "—"}</td>
+                                        <td className="px-4 py-2.5 text-gray-400 text-xs max-w-50 truncate">{p.description || "—"}</td>
                                         <td className="px-4 py-2.5">
                                           <div className="hidden group-hover/row:flex gap-1 justify-end">
                                             <button onClick={() => startEditPayment(p, project.id)} className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded"><Edit2 size={12} /></button>
@@ -905,7 +1005,7 @@ export default function AdminProjectsPage() {
                                   </tr></thead>
                                   <tbody>
                                     {payments.map(p => (
-                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/[0.02] group/row">
+                                      <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                                         <td className="px-4 py-2 text-gray-900 dark:text-white">{p.label || "—"}</td>
                                         <td className="px-4 py-2 capitalize text-gray-500 text-xs">{p.category}</td>
                                         <td className="px-4 py-2 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
