@@ -207,6 +207,19 @@ model Task {
   creator        User      @relation("TaskCreator", fields: [creatorId], references: [id])
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  subtasks       Subtask[]
+}
+
+model Subtask {
+  id        Int       @id @default(autoincrement())
+  title     String
+  status    String    @default("pending") // pending, in_progress, completed
+  taskId    Int
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  startDate DateTime?
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Ticket {

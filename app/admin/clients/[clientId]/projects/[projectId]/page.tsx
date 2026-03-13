@@ -14,11 +14,21 @@ interface Employee {
   userId: number | null; positions: string[];
 }
 
+interface Subtask {
+  id: number;
+  title: string;
+  status: string; // pending, in_progress, completed
+  taskId: number;
+  startDate: string | null;
+  dueDate: string | null;
+}
+
 interface ProjectTask {
   id: number; title: string; status: string; priority: string;
   dueDate: string | null; startDate: string | null;
   budget: number | null; estimatedHours: number | null; actualHours: number | null;
   assignee: { id: number; name: string } | null;
+  subtasks: Subtask[];
 }
 
 interface ProjectPayment {
@@ -49,6 +59,7 @@ const statusOptions = ["active", "on_hold", "completed", "cancelled"];
 const priorityOptions = ["low", "medium", "high", "urgent"];
 const statusLabels: Record<string, string> = { active: "Active", on_hold: "On Hold", completed: "Completed", cancelled: "Cancelled" };
 const taskStatusLabels: Record<string, string> = { todo: "To Do", in_progress: "In Progress", review: "Review", done: "Done" };
+const subtaskStatusLabels: Record<string, string> = { pending: "Pending", in_progress: "In Progress", completed: "Completed" };
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -62,6 +73,11 @@ export default function ProjectDetailPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tasks");
+
+  // Timeline state
+  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
+  const [showSubtaskForm, setShowSubtaskForm] = useState<number | null>(null);
+  const [subtaskForm, setSubtaskForm] = useState({ title: "", startDate: "", dueDate: "" });
 
   // Edit project state
   const [showForm, setShowForm] = useState(false);
@@ -79,6 +95,52 @@ export default function ProjectDetailPage() {
   });
 
   const resetPaymentForm = () => setPaymentForm({ amount: "", status: "received", category: "monthly", label: "", taskId: "", description: "", paymentDate: "", currency: "USD" });
+
+  // Timeline handlers
+  const toggleTaskExpand = (taskId: number) => {
+    setExpandedTasks(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const handleTaskStatusToggle = async (task: ProjectTask) => {
+    const statusCycle: Record<string, string> = { todo: "in_progress", in_progress: "done", done: "todo", review: "done" };
+    const newStatus = statusCycle[task.status] || "todo";
+    try {
+      await fetchAPI(`/tasks/${task.id}`, { method: "PUT", body: JSON.stringify({ status: newStatus }) });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleSubtaskStatusToggle = async (taskId: number, subtask: Subtask) => {
+    const statusCycle: Record<string, string> = { pending: "in_progress", in_progress: "completed", completed: "pending" };
+    const newStatus = statusCycle[subtask.status] || "pending";
+    try {
+      await fetchAPI(`/tasks/${taskId}/subtasks/${subtask.id}`, { method: "PUT", body: JSON.stringify({ status: newStatus }) });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleCreateSubtask = async (taskId: number) => {
+    if (!subtaskForm.title.trim()) return;
+    try {
+      await fetchAPI(`/tasks/${taskId}/subtasks`, { method: "POST", body: JSON.stringify(subtaskForm) });
+      setSubtaskForm({ title: "", startDate: "", dueDate: "" });
+      setShowSubtaskForm(null);
+      fetchData();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed to create subtask"); }
+  };
+
+  const handleDeleteSubtask = async (taskId: number, subtaskId: number) => {
+    if (!confirm("Delete this subtask?")) return;
+    try {
+      await fetchAPI(`/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
 
   const fetchData = () => {
     Promise.all([
@@ -191,6 +253,23 @@ export default function ProjectDetailPage() {
     return c[s] || "bg-gray-100 text-gray-600";
   };
 
+  const getSubtaskStatusColor = (s: string) => {
+    const c: Record<string, string> = { pending: "bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400", in_progress: "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400", completed: "bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400" };
+    return c[s] || "bg-gray-100 text-gray-600";
+  };
+
+  const getTimelineNodeColor = (status: string, type: "task" | "subtask") => {
+    if (type === "task") {
+      if (status === "done") return "bg-green-500 border-green-500";
+      if (status === "in_progress" || status === "review") return "bg-blue-500 border-blue-500";
+      return "bg-gray-300 border-gray-300 dark:bg-gray-600 dark:border-gray-600";
+    } else {
+      if (status === "completed") return "bg-green-400 border-green-400";
+      if (status === "in_progress") return "bg-blue-400 border-blue-400";
+      return "bg-gray-300 border-gray-300 dark:bg-gray-600 dark:border-gray-600";
+    }
+  };
+
   const getPriorityDot = (p: string) => {
     const c: Record<string, string> = { low: "bg-gray-400", medium: "bg-blue-400", high: "bg-orange-400", urgent: "bg-red-500" };
     return c[p] || "bg-gray-400";
@@ -279,7 +358,7 @@ export default function ProjectDetailPage() {
       <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
         <div className="flex border-b border-gray-200 dark:border-white/5 px-5 overflow-x-auto">
           {[
-            { key: "tasks", label: `Tasks (${project.tasks.length})` },
+            { key: "tasks", label: `Timeline (${project.tasks.length})` },
             { key: "team", label: `Team (${project.members.length})` },
             { key: "budget", label: "Budget & Timeline" },
             { key: "payments", label: `Payments (${project.payments?.length || 0})` },
@@ -292,47 +371,189 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="p-5">
-          {/* Tasks Tab */}
-          {activeTab === "tasks" && (
-            <div>
-              {project.tasks.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">No tasks yet. Go to Tasks page to create tasks for this project.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="text-left text-gray-500 text-xs">
-                      <th className="pb-2 font-medium">Task</th>
-                      <th className="pb-2 font-medium">Assignee</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Priority</th>
-                      <th className="pb-2 font-medium">Timeline</th>
-                      <th className="pb-2 font-medium">Hours</th>
-                      <th className="pb-2 font-medium">Budget</th>
-                    </tr></thead>
-                    <tbody>
-                      {project.tasks.map(task => {
+          {/* Tasks Tab — Vertical Timeline */}
+          {activeTab === "tasks" && (() => {
+            const sortedTasks = [...project.tasks].sort((a, b) => {
+              const aDate = a.startDate || a.dueDate || "";
+              const bDate = b.startDate || b.dueDate || "";
+              if (!aDate && !bDate) return 0;
+              if (!aDate) return 1;
+              if (!bDate) return -1;
+              return new Date(aDate).getTime() - new Date(bDate).getTime();
+            });
+
+            return (
+              <div>
+                {project.tasks.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-4">No tasks yet. Go to Tasks page to create tasks for this project.</p>
+                ) : (
+                  <div className="relative">
+                    {/* Project Start */}
+                    {project.startDate && (
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-4 h-4 rounded-full bg-elvion-primary ring-4 ring-elvion-primary/20 shrink-0"></div>
+                        <span className="text-xs font-semibold text-elvion-primary">Project Start — {new Date(project.startDate).toLocaleDateString()}</span>
+                      </div>
+                    )}
+
+                    {/* Vertical Timeline */}
+                    <div className="relative ml-[7px]">
+                      {/* Continuous vertical line */}
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-white/10"></div>
+
+                      {sortedTasks.map((task) => {
+                        const isExpanded = expandedTasks.has(task.id);
+                        const subtasks = task.subtasks || [];
+                        const completedSubtasks = subtasks.filter(s => s.status === "completed").length;
                         const taskOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "done";
+
                         return (
-                          <tr key={task.id} className="border-t border-gray-100 dark:border-white/5">
-                            <td className="py-2 pr-3"><p className="font-medium text-gray-900 dark:text-white">{task.title}</p></td>
-                            <td className="py-2 pr-3 text-xs text-gray-500">{task.assignee?.name || <span className="text-gray-400 italic">Unassigned</span>}</td>
-                            <td className="py-2 pr-3"><span className={`text-[10px] px-2 py-0.5 rounded-full ${getTaskStatusColor(task.status)}`}>{taskStatusLabels[task.status]}</span></td>
-                            <td className="py-2 pr-3"><div className="flex items-center gap-1"><div className={`w-1.5 h-1.5 rounded-full ${getPriorityDot(task.priority)}`}></div><span className="text-xs text-gray-500">{task.priority}</span></div></td>
-                            <td className="py-2 pr-3 text-xs">
-                              {task.startDate && <span className="text-gray-400">{new Date(task.startDate).toLocaleDateString()} → </span>}
-                              {task.dueDate ? <span className={taskOverdue ? "text-red-400 font-medium" : "text-gray-500"}>{new Date(task.dueDate).toLocaleDateString()}</span> : <span className="text-gray-400">—</span>}
-                            </td>
-                            <td className="py-2 pr-3 text-xs text-gray-500">{task.estimatedHours ? `${task.actualHours || 0}/${task.estimatedHours}h` : "—"}</td>
-                            <td className="py-2 text-xs text-gray-500">{task.budget ? `$${task.budget.toLocaleString()}` : "—"}</td>
-                          </tr>
+                          <div key={task.id} className="relative pl-8 pb-6 last:pb-0">
+                            {/* Task Node Circle */}
+                            <div
+                              className={`absolute left-0 top-2 w-3.5 h-3.5 rounded-full -translate-x-1/2 border-2 cursor-pointer hover:scale-125 transition-transform z-10 ${getTimelineNodeColor(task.status, "task")}`}
+                              onClick={() => handleTaskStatusToggle(task)}
+                              title={`Click to change status (${taskStatusLabels[task.status] || task.status})`}
+                            ></div>
+
+                            {/* Task Card */}
+                            <div className="bg-gray-50 dark:bg-elvion-dark/30 rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:border-gray-300 dark:hover:border-white/20 transition-colors">
+                              {/* Header Row */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => toggleTaskExpand(task.id)}>
+                                  {isExpanded
+                                    ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                                    : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
+                                  <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${getTaskStatusColor(task.status)}`}>
+                                    {taskStatusLabels[task.status] || task.status}
+                                  </span>
+                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
+                                  {task.assignee && <span className="flex items-center gap-1"><Users size={10} />{task.assignee.name}</span>}
+                                  {task.budget ? <span className="text-elvion-primary">${task.budget.toLocaleString()}</span> : null}
+                                  {subtasks.length > 0 && (
+                                    <span className="text-[10px]">{completedSubtasks}/{subtasks.length}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Date Row */}
+                              <div className="mt-1.5 ml-5 flex items-center gap-3 text-[10px] text-gray-400">
+                                {task.startDate && <span>{new Date(task.startDate).toLocaleDateString()}</span>}
+                                {task.startDate && task.dueDate && <span>→</span>}
+                                {task.dueDate && (
+                                  <span className={taskOverdue ? "text-red-400 font-medium" : ""}>
+                                    {new Date(task.dueDate).toLocaleDateString()}
+                                    {taskOverdue && " (overdue)"}
+                                  </span>
+                                )}
+                                {task.estimatedHours ? <span className="ml-auto"><Timer size={9} className="inline mr-0.5" />{task.actualHours || 0}/{task.estimatedHours}h</span> : null}
+                              </div>
+
+                              {/* Subtask Progress Bar (compact) */}
+                              {subtasks.length > 0 && (
+                                <div className="mt-2 ml-5">
+                                  <div className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-400 rounded-full transition-all" style={{ width: `${subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0}%` }}></div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Expanded: Subtasks Timeline */}
+                              {isExpanded && (
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/5">
+                                  {subtasks.length > 0 && (
+                                    <div className="relative ml-3">
+                                      {/* Subtask vertical line */}
+                                      <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-white/10"></div>
+
+                                      {subtasks.map(subtask => (
+                                        <div key={subtask.id} className="relative pl-6 pb-3 last:pb-0 group">
+                                          {/* Subtask Node (smaller) */}
+                                          <div
+                                            className={`absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full -translate-x-1/2 border-2 cursor-pointer hover:scale-150 transition-transform z-10 ${getTimelineNodeColor(subtask.status, "subtask")}`}
+                                            onClick={() => handleSubtaskStatusToggle(task.id, subtask)}
+                                            title={`Click to change status (${subtaskStatusLabels[subtask.status] || subtask.status})`}
+                                          ></div>
+
+                                          {/* Subtask Content */}
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{subtask.title}</span>
+                                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full shrink-0 ${getSubtaskStatusColor(subtask.status)}`}>
+                                                {subtaskStatusLabels[subtask.status] || subtask.status}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                                              {subtask.dueDate && (
+                                                <span className="text-[10px] text-gray-400">{new Date(subtask.dueDate).toLocaleDateString()}</span>
+                                              )}
+                                              <button onClick={() => handleDeleteSubtask(task.id, subtask.id)}
+                                                className="p-0.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded">
+                                                <Trash2 size={10} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Add Subtask */}
+                                  {showSubtaskForm === task.id ? (
+                                    <div className="mt-2 ml-3 flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Subtask title..."
+                                        value={subtaskForm.title}
+                                        onChange={e => setSubtaskForm({ ...subtaskForm, title: e.target.value })}
+                                        onKeyDown={e => { if (e.key === "Enter") handleCreateSubtask(task.id); }}
+                                        className="flex-1 p-1.5 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white"
+                                        autoFocus
+                                      />
+                                      <input
+                                        type="date"
+                                        value={subtaskForm.dueDate}
+                                        onChange={e => setSubtaskForm({ ...subtaskForm, dueDate: e.target.value })}
+                                        className="p-1.5 text-[10px] rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white w-28"
+                                      />
+                                      <button onClick={() => handleCreateSubtask(task.id)}
+                                        className="px-2.5 py-1.5 text-[10px] bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90">
+                                        Add
+                                      </button>
+                                      <button onClick={() => { setShowSubtaskForm(null); setSubtaskForm({ title: "", startDate: "", dueDate: "" }); }}
+                                        className="p-1 text-gray-400 hover:text-gray-600">
+                                        <X size={12} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button onClick={() => setShowSubtaskForm(task.id)}
+                                      className="mt-2 ml-3 flex items-center gap-1 text-[10px] text-gray-400 hover:text-elvion-primary transition-colors">
+                                      <Plus size={10} /> Add subtask
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         );
                       })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+                    </div>
+
+                    {/* Project End */}
+                    {project.endDate && (
+                      <div className="flex items-center gap-3 mt-6 ml-[7px]">
+                        <div className="w-4 h-4 rounded-full bg-red-400 ring-4 ring-red-400/20 shrink-0 -translate-x-1/2"></div>
+                        <span className="text-xs font-semibold text-red-400">Project End — {new Date(project.endDate).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Team Tab */}
           {activeTab === "team" && (

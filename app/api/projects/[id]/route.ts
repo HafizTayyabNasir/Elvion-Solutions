@@ -27,6 +27,7 @@ export async function GET(
           include: {
             assignee: { select: { id: true, name: true, email: true } },
             creator: { select: { id: true, name: true } },
+            subtasks: { orderBy: { createdAt: 'asc' } },
           },
           orderBy: { createdAt: 'desc' },
         },

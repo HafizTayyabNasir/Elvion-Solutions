@@ -2,7 +2,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
-import { Users, Plus, X } from "lucide-react";
+import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, Search } from "lucide-react";
+
+interface ProjectPayment {
+  id: number;
+  amount: number;
+  status: string;
+}
+
+interface ClientProject {
+  id: number;
+  name: string;
+  status: string;
+  payments: ProjectPayment[];
+}
 
 interface Client {
   id: number;
@@ -12,22 +25,58 @@ interface Client {
   company?: string;
 }
 
+interface ClientWithProjects extends Client {
+  projects: ClientProject[];
+  totalReceived: number;
+  totalPending: number;
+}
+
+const statusLabels: Record<string, string> = { active: "Active", on_hold: "On Hold", completed: "Completed", cancelled: "Cancelled" };
+const getStatusColor = (s: string) => {
+  const c: Record<string, string> = { active: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400", on_hold: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400", completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400", cancelled: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" };
+  return c[s] || "bg-gray-100 text-gray-700";
+};
+
 export default function AdminClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const [clientsData, setClientsData] = useState<ClientWithProjects[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [clientForm, setClientForm] = useState({ name: "", email: "" });
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
 
-  useEffect(() => {
-    fetchAPI("/crm/contacts")
-      .then((data) => {
-        setClients(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const fetchData = () => {
+    Promise.all([
+      fetchAPI("/crm/contacts"),
+      fetchAPI("/projects"),
+    ]).then(([contacts, projects]) => {
+      const clientsList: Client[] = Array.isArray(contacts) ? contacts : [];
+      const projectsList: ClientProject[] = Array.isArray(projects) ? projects : [];
+
+      const enriched: ClientWithProjects[] = clientsList.map((client) => {
+        const clientProjects = projectsList.filter((p: any) => {
+          const members = p.members || [];
+          return members.some((m: any) => m.role === "client" && m.user?.id === client.id);
+        });
+
+        const totalReceived = clientProjects.reduce((sum, p) => {
+          return sum + (p.payments || []).filter((pay) => pay.status === "received").reduce((s, pay) => s + pay.amount, 0);
+        }, 0);
+
+        const totalPending = clientProjects.reduce((sum, p) => {
+          return sum + (p.payments || []).filter((pay) => pay.status === "pending").reduce((s, pay) => s + pay.amount, 0);
+        }, 0);
+
+        return { ...client, projects: clientProjects, totalReceived, totalPending };
+      });
+
+      setClientsData(enriched);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,15 +89,27 @@ export default function AdminClientsPage() {
         headers: { "Content-Type": "application/json" },
       });
       if (!clientRes || !clientRes.id) throw new Error("Client creation failed");
-      setClients([...clients, clientRes]);
       setShowAddModal(false);
       setClientForm({ name: "", email: "" });
+      fetchData();
     } catch (err: any) {
       setAddError(err.message || "Error occurred");
     } finally {
       setAddLoading(false);
     }
   };
+
+  const filtered = clientsData.filter((c) =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.email.toLowerCase().includes(search.toLowerCase()) ||
+    (c.company || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Summary stats
+  const totalClients = clientsData.length;
+  const totalProjects = clientsData.reduce((s, c) => s + c.projects.length, 0);
+  const totalReceivedAll = clientsData.reduce((s, c) => s + c.totalReceived, 0);
+  const totalPendingAll = clientsData.reduce((s, c) => s + c.totalPending, 0);
 
   if (loading)
     return (
@@ -59,10 +120,11 @@ export default function AdminClientsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clients</h1>
-          <p className="text-gray-500 mt-1">Click on a client to view their details and projects.</p>
+          <p className="text-gray-500 mt-1">Manage clients and their projects</p>
         </div>
         <button
           className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90"
@@ -72,36 +134,114 @@ export default function AdminClientsPage() {
         </button>
       </div>
 
-      {clients.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-3 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Clients</p>
+          <p className="text-lg font-bold text-gray-900 dark:text-white">{totalClients}</p>
+        </div>
+        <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-3 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Projects</p>
+          <p className="text-lg font-bold text-blue-400">{totalProjects}</p>
+        </div>
+        <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-3 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Received</p>
+          <p className="text-lg font-bold text-green-500">${totalReceivedAll.toLocaleString()}</p>
+        </div>
+        <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-3 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Pending</p>
+          <p className="text-lg font-bold text-orange-500">${totalPendingAll.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search clients by name, email, or company..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-card text-gray-900 dark:text-white"
+        />
+      </div>
+
+      {/* Client Rows */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10">
           <Users size={40} className="mx-auto mb-3 opacity-40" />
-          <p>No clients found.</p>
-          <p className="text-sm mt-1">Click &quot;Add Client&quot; to create your first client.</p>
+          <p>{search ? "No clients match your search." : "No clients found."}</p>
+          {!search && <p className="text-sm mt-1">Click &quot;Add Client&quot; to create your first client.</p>}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {clients.map((client) => (
+        <div className="space-y-3">
+          {filtered.map((client) => (
             <Link
               key={client.id}
               href={`/admin/clients/${client.id}`}
-              className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:shadow-lg transition-shadow hover:border-elvion-primary/30"
+              className="flex items-center gap-4 bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:shadow-lg transition-all hover:border-elvion-primary/30 group"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-9 h-9 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold text-sm">
-                  {client.name?.charAt(0)?.toUpperCase() || "C"}
-                </div>
-                <span className="font-semibold text-gray-900 dark:text-white truncate">{client.name}</span>
+              {/* Avatar */}
+              <div className="w-11 h-11 rounded-full bg-elvion-primary/20 flex items-center justify-center text-elvion-primary font-bold text-lg shrink-0">
+                {client.name?.charAt(0)?.toUpperCase() || "C"}
               </div>
-              <p className="text-xs text-gray-500 truncate">{client.email}</p>
-              {client.company && <p className="text-xs text-gray-400 truncate mt-0.5">{client.company}</p>}
+
+              {/* Client Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-base truncate">{client.name}</h3>
+                  {client.company && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1 shrink-0"><Building2 size={10} /> {client.company}</span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Mail size={10} /> {client.email}</p>
+              </div>
+
+              {/* Projects */}
+              <div className="hidden md:block min-w-[200px] max-w-[280px]">
+                <div className="flex items-center gap-1 mb-1">
+                  <FolderOpen size={12} className="text-blue-400" />
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{client.projects.length} Project{client.projects.length !== 1 ? "s" : ""}</span>
+                </div>
+                {client.projects.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {client.projects.slice(0, 3).map((p) => (
+                      <span key={p.id} className={`text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(p.status)}`}>
+                        {p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name}
+                      </span>
+                    ))}
+                    {client.projects.length > 3 && (
+                      <span className="text-[10px] text-gray-400 px-1.5 py-0.5">+{client.projects.length - 3} more</span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-gray-400 italic">No projects yet</p>
+                )}
+              </div>
+
+              {/* Payment Summary */}
+              <div className="hidden lg:flex items-center gap-4 shrink-0">
+                <div className="text-right">
+                  <p className="text-[10px] text-gray-500 uppercase">Received</p>
+                  <p className="text-sm font-bold text-green-500">${client.totalReceived.toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-gray-500 uppercase">Pending</p>
+                  <p className="text-sm font-bold text-orange-500">${client.totalPending.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-elvion-primary transition-colors shrink-0" />
             </Link>
           ))}
         </div>
       )}
 
+      {/* Add Client Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-elvion-card rounded-xl p-6 w-full max-w-md shadow-lg relative">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddModal(false)}>
+          <div className="bg-white dark:bg-elvion-card rounded-xl p-6 w-full max-w-md shadow-lg relative" onClick={(e) => e.stopPropagation()}>
             <button className="absolute top-3 right-3 text-gray-500 hover:text-black dark:hover:text-white" onClick={() => setShowAddModal(false)}>
               <X size={20} />
             </button>

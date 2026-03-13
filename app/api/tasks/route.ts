@@ -23,6 +23,7 @@ export async function GET(request: Request) {
           project: { select: { id: true, name: true } },
           assignee: { select: { id: true, name: true, email: true } },
           creator: { select: { id: true, name: true } },
+          subtasks: { orderBy: { createdAt: 'asc' } },
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -44,6 +45,7 @@ export async function GET(request: Request) {
           project: { select: { id: true, name: true } },
           assignee: { select: { id: true, name: true, email: true } },
           creator: { select: { id: true, name: true } },
+          subtasks: { orderBy: { createdAt: 'asc' } },
         },
         orderBy: { createdAt: 'desc' },
       });
