@@ -308,7 +308,7 @@ export default function AdminProjectsPage() {
                       value={form.clientId === null ? "" : String(form.clientId)}
                       onChange={e => {
                         const val = e.target.value;
-                        setForm({ ...form, clientId: val ? val : null, newClient: { name: "", email: "" } });
+                        setForm({ ...form, clientId: val ? Number(val) : null, newClient: { name: "", email: "" } });
                       }}
                       className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white">
                       <option value="">Select existing client...</option>
