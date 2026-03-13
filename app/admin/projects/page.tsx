@@ -25,6 +25,7 @@ interface ProjectPayment {
   taskId: number | null;
   description: string | null;
   paymentDate: string | null;
+  currency?: string;
   createdAt: string;
 }
 
