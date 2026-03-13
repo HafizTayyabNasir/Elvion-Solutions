@@ -89,10 +89,14 @@ export default function AdminProjectsPage() {
 
   const startEditPayment = (p: ProjectPayment, projectId: number) => {
     setPaymentForm({
-      amount: p.amount.toString(), status: p.status, category: p.category,
-      label: p.label || "", taskId: p.taskId?.toString() || "",
+      amount: p.amount.toString(),
+      status: p.status,
+      category: p.category,
+      label: p.label || "",
+      taskId: p.taskId?.toString() || "",
       description: p.description || "",
       paymentDate: p.paymentDate ? p.paymentDate.split("T")[0] : "",
+      currency: p.currency || "USD"
     });
     setEditPaymentId(p.id);
     setShowPaymentForm(projectId);
