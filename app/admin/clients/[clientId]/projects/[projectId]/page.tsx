@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
@@ -81,6 +81,7 @@ export default function ProjectDetailPage() {
 
   // Status dropdown state
   const [openStatusDropdown, setOpenStatusDropdown] = useState<number | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
 
   // Task creation form state
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -769,21 +770,38 @@ export default function ProjectDetailPage() {
                                     <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
                                     <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
                                       <button
-                                        onClick={() => setOpenStatusDropdown(openStatusDropdown === task.id ? null : task.id)}
+                                        onClick={(e) => {
+                                          if (openStatusDropdown === task.id) {
+                                            setOpenStatusDropdown(null);
+                                            setDropdownPos(null);
+                                          } else {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                            const menuHeight = 140;
+                                            setDropdownPos({
+                                              top: spaceBelow < menuHeight ? rect.top - menuHeight : rect.bottom + 4,
+                                              left: rect.left,
+                                            });
+                                            setOpenStatusDropdown(task.id);
+                                          }
+                                        }}
                                         className={`text-[11px] pl-2 pr-5 py-1 rounded-full cursor-pointer border border-gray-300 dark:border-white/20 outline-none font-semibold shadow-sm hover:shadow-md transition-shadow flex items-center gap-1 ${getTaskStatusColor(task.status)}`}
                                       >
                                         {taskStatusLabels[task.status] || task.status}
                                         <ChevronDown size={10} className="opacity-60" />
                                       </button>
-                                      {openStatusDropdown === task.id && (
+                                      {openStatusDropdown === task.id && dropdownPos && (
                                         <>
-                                          <div className="fixed inset-0 z-40" onClick={() => setOpenStatusDropdown(null)} />
-                                          <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-[#1a1f2e] border border-gray-200 dark:border-white/10 rounded-lg shadow-lg py-1 min-w-[130px]">
+                                          <div className="fixed inset-0 z-[9998]" onClick={() => { setOpenStatusDropdown(null); setDropdownPos(null); }} />
+                                          <div
+                                            className="fixed z-[9999] bg-white dark:bg-[#1a1f2e] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 min-w-[140px]"
+                                            style={{ top: dropdownPos.top, left: dropdownPos.left }}
+                                          >
                                             {(["todo", "in_progress", "review", "done"] as const).map(status => (
                                               <button
                                                 key={status}
-                                                onClick={() => { handleQuickStatusChange(task.id, status); setOpenStatusDropdown(null); }}
-                                                className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors ${
+                                                onClick={() => { handleQuickStatusChange(task.id, status); setOpenStatusDropdown(null); setDropdownPos(null); }}
+                                                className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors ${
                                                   task.status === status
                                                     ? "bg-elvion-primary/10 text-elvion-primary font-semibold"
                                                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
