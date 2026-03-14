@@ -86,6 +86,13 @@ export default function ProjectDetailPage() {
     budget: "", estimatedHours: "", description: ""
   });
 
+  // Task editing state
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [editingTaskData, setEditingTaskData] = useState({
+    title: "", status: "todo", priority: "medium", assigneeId: "", startDate: "", dueDate: "",
+    budget: "", estimatedHours: "", actualHours: "", description: ""
+  });
+
   // Edit project state
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -178,6 +185,46 @@ export default function ProjectDetailPage() {
       await fetchAPI(`/tasks/${taskId}`, { method: "DELETE" });
       fetchData();
     } catch (err) { alert(err instanceof Error ? err.message : "Failed to delete task"); }
+  };
+
+  const startEditTask = (task: ProjectTask) => {
+    setEditingTaskData({
+      title: task.title,
+      status: task.status,
+      priority: task.priority,
+      assigneeId: task.assignee?.id?.toString() || "",
+      startDate: task.startDate ? task.startDate.split("T")[0] : "",
+      dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
+      budget: task.budget?.toString() || "",
+      estimatedHours: task.estimatedHours?.toString() || "",
+      actualHours: task.actualHours?.toString() || "",
+      description: ""
+    });
+    setEditingTaskId(task.id);
+  };
+
+  const cancelEditTask = () => {
+    setEditingTaskId(null);
+    setEditingTaskData({
+      title: "", status: "todo", priority: "medium", assigneeId: "", startDate: "", dueDate: "",
+      budget: "", estimatedHours: "", actualHours: "", description: ""
+    });
+  };
+
+  const handleUpdateTask = async (taskId: number) => {
+    if (!editingTaskData.title.trim()) return;
+    try {
+      const taskData = {
+        ...editingTaskData,
+        assigneeId: editingTaskData.assigneeId ? Number(editingTaskData.assigneeId) : null,
+        budget: editingTaskData.budget ? parseFloat(editingTaskData.budget) : null,
+        estimatedHours: editingTaskData.estimatedHours ? parseFloat(editingTaskData.estimatedHours) : null,
+        actualHours: editingTaskData.actualHours ? parseFloat(editingTaskData.actualHours) : null
+      };
+      await fetchAPI(`/tasks/${taskId}`, { method: "PUT", body: JSON.stringify(taskData) });
+      cancelEditTask();
+      fetchData();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed to update task"); }
   };
 
   const fetchData = () => {
@@ -591,134 +638,252 @@ export default function ProjectDetailPage() {
                               title={`Click to change status (${taskStatusLabels[task.status] || task.status})`}
                             ></div>
 
-                            {/* Task Card */}
-                            <div className="bg-gray-50 dark:bg-elvion-dark/30 rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:border-gray-300 dark:hover:border-white/20 transition-colors group">
-                              {/* Header Row */}
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => toggleTaskExpand(task.id)}>
-                                  {isExpanded
-                                    ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
-                                    : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
-                                  <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${getTaskStatusColor(task.status)}`}>
-                                    {taskStatusLabels[task.status] || task.status}
-                                  </span>
-                                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0 group">
-                                  {task.assignee && <span className="flex items-center gap-1"><Users size={10} />{task.assignee.name}</span>}
-                                  {task.budget ? <span className="text-elvion-primary">${task.budget.toLocaleString()}</span> : null}
-                                  {subtasks.length > 0 && (
-                                    <span className="text-[10px]">{completedSubtasks}/{subtasks.length}</span>
-                                  )}
-                                  <button
-                                    onClick={() => handleDeleteTask(task.id)}
-                                    className="p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Delete task"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              </div>
+                            {/* Task Card - Edit or View Mode */}
+                            {editingTaskId === task.id ? (
+                              <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20 p-4">
+                                <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Edit Task</h3>
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                      required
+                                      type="text"
+                                      placeholder="Task title *"
+                                      value={editingTaskData.title}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, title: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                    <select
+                                      value={editingTaskData.status}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, status: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    >
+                                      <option value="todo">To Do</option>
+                                      <option value="in_progress">In Progress</option>
+                                      <option value="review">Review</option>
+                                      <option value="done">Done</option>
+                                    </select>
+                                  </div>
 
-                              {/* Date Row */}
-                              <div className="mt-1.5 ml-5 flex items-center gap-3 text-[10px] text-gray-400">
-                                {task.startDate && <span>{new Date(task.startDate).toLocaleDateString()}</span>}
-                                {task.startDate && task.dueDate && <span>→</span>}
-                                {task.dueDate && (
-                                  <span className={taskOverdue ? "text-red-400 font-medium" : ""}>
-                                    {new Date(task.dueDate).toLocaleDateString()}
-                                    {taskOverdue && " (overdue)"}
-                                  </span>
-                                )}
-                                {task.estimatedHours ? <span className="ml-auto"><Timer size={9} className="inline mr-0.5" />{task.actualHours || 0}/{task.estimatedHours}h</span> : null}
-                              </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <select
+                                      value={editingTaskData.priority}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, priority: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    >
+                                      <option value="low">Low</option>
+                                      <option value="medium">Medium</option>
+                                      <option value="high">High</option>
+                                      <option value="urgent">Urgent</option>
+                                    </select>
+                                    <select
+                                      value={editingTaskData.assigneeId}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, assigneeId: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    >
+                                      <option value="">Unassigned</option>
+                                      {employeeOptions.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                                    </select>
+                                  </div>
 
-                              {/* Subtask Progress Bar (compact) */}
-                              {subtasks.length > 0 && (
-                                <div className="mt-2 ml-5">
-                                  <div className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-400 rounded-full transition-all" style={{ width: `${subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0}%` }}></div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <input
+                                      type="date"
+                                      value={editingTaskData.startDate}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, startDate: e.target.value })}
+                                      placeholder="Start Date"
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                    <input
+                                      type="date"
+                                      value={editingTaskData.dueDate}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, dueDate: e.target.value })}
+                                      placeholder="Due Date"
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                    <input
+                                      type="number"
+                                      placeholder="Budget ($)"
+                                      step="0.01"
+                                      min="0"
+                                      value={editingTaskData.budget}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, budget: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                      type="number"
+                                      placeholder="Est. Hours"
+                                      step="0.5"
+                                      min="0"
+                                      value={editingTaskData.estimatedHours}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, estimatedHours: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                    <input
+                                      type="number"
+                                      placeholder="Actual Hours"
+                                      step="0.5"
+                                      min="0"
+                                      value={editingTaskData.actualHours}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, actualHours: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    />
+                                  </div>
+
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleUpdateTask(task.id)}
+                                      className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 text-sm"
+                                    >
+                                      Save Changes
+                                    </button>
+                                    <button
+                                      onClick={cancelEditTask}
+                                      className="px-4 py-2 bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-white/20 text-sm"
+                                    >
+                                      Cancel
+                                    </button>
                                   </div>
                                 </div>
-                              )}
+                              </div>
+                            ) : (
+                              <div className="bg-gray-50 dark:bg-elvion-dark/30 rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:border-gray-300 dark:hover:border-white/20 transition-colors group">
+                                {/* Header Row */}
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => toggleTaskExpand(task.id)}>
+                                    {isExpanded
+                                      ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
+                                      : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
+                                    <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${getTaskStatusColor(task.status)}`}>
+                                      {taskStatusLabels[task.status] || task.status}
+                                    </span>
+                                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0 group">
+                                    {task.assignee && <span className="flex items-center gap-1"><Users size={10} />{task.assignee.name}</span>}
+                                    {task.budget ? <span className="text-elvion-primary">${task.budget.toLocaleString()}</span> : null}
+                                    {subtasks.length > 0 && (
+                                      <span className="text-[10px]">{completedSubtasks}/{subtasks.length}</span>
+                                    )}
+                                    <button
+                                      onClick={() => startEditTask(task)}
+                                      className="p-1 text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Edit task"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteTask(task.id)}
+                                      className="p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Delete task"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
 
-                              {/* Expanded: Subtasks Timeline */}
-                              {isExpanded && (
-                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/5">
-                                  {subtasks.length > 0 && (
-                                    <div className="relative ml-3">
-                                      {/* Subtask vertical line */}
-                                      <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-white/10"></div>
+                                {/* Date Row */}
+                                <div className="mt-1.5 ml-5 flex items-center gap-3 text-[10px] text-gray-400">
+                                  {task.startDate && <span>{new Date(task.startDate).toLocaleDateString()}</span>}
+                                  {task.startDate && task.dueDate && <span>→</span>}
+                                  {task.dueDate && (
+                                    <span className={taskOverdue ? "text-red-400 font-medium" : ""}>
+                                      {new Date(task.dueDate).toLocaleDateString()}
+                                      {taskOverdue && " (overdue)"}
+                                    </span>
+                                  )}
+                                  {task.estimatedHours ? <span className="ml-auto"><Timer size={9} className="inline mr-0.5" />{task.actualHours || 0}/{task.estimatedHours}h</span> : null}
+                                </div>
 
-                                      {subtasks.map(subtask => (
-                                        <div key={subtask.id} className="relative pl-6 pb-3 last:pb-0 group">
-                                          {/* Subtask Node (smaller) */}
-                                          <div
-                                            className={`absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full -translate-x-1/2 border-2 cursor-pointer hover:scale-150 transition-transform z-10 ${getTimelineNodeColor(subtask.status, "subtask")}`}
-                                            onClick={() => handleSubtaskStatusToggle(task.id, subtask)}
-                                            title={`Click to change status (${subtaskStatusLabels[subtask.status] || subtask.status})`}
-                                          ></div>
+                                {/* Subtask Progress Bar (compact) */}
+                                {subtasks.length > 0 && (
+                                  <div className="mt-2 ml-5">
+                                    <div className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                                      <div className="h-full bg-green-400 rounded-full transition-all" style={{ width: `${subtasks.length > 0 ? Math.round((completedSubtasks / subtasks.length) * 100) : 0}%` }}></div>
+                                    </div>
+                                  </div>
+                                )}
 
-                                          {/* Subtask Content */}
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{subtask.title}</span>
-                                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full shrink-0 ${getSubtaskStatusColor(subtask.status)}`}>
-                                                {subtaskStatusLabels[subtask.status] || subtask.status}
-                                              </span>
-                                            </div>
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-                                              {subtask.dueDate && (
-                                                <span className="text-[10px] text-gray-400">{new Date(subtask.dueDate).toLocaleDateString()}</span>
-                                              )}
-                                              <button onClick={() => handleDeleteSubtask(task.id, subtask.id)}
-                                                className="p-0.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded">
-                                                <Trash2 size={10} />
-                                              </button>
+                                {/* Expanded: Subtasks Timeline */}
+                                {isExpanded && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/5">
+                                    {subtasks.length > 0 && (
+                                      <div className="relative ml-3">
+                                        {/* Subtask vertical line */}
+                                        <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200 dark:bg-white/10"></div>
+
+                                        {subtasks.map(subtask => (
+                                          <div key={subtask.id} className="relative pl-6 pb-3 last:pb-0 group">
+                                            {/* Subtask Node (smaller) */}
+                                            <div
+                                              className={`absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full -translate-x-1/2 border-2 cursor-pointer hover:scale-150 transition-transform z-10 ${getTimelineNodeColor(subtask.status, "subtask")}`}
+                                              onClick={() => handleSubtaskStatusToggle(task.id, subtask)}
+                                              title={`Click to change status (${subtaskStatusLabels[subtask.status] || subtask.status})`}
+                                            ></div>
+
+                                            {/* Subtask Content */}
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center gap-2 min-w-0">
+                                                <span className="text-xs text-gray-700 dark:text-gray-300 truncate">{subtask.title}</span>
+                                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full shrink-0 ${getSubtaskStatusColor(subtask.status)}`}>
+                                                  {subtaskStatusLabels[subtask.status] || subtask.status}
+                                                </span>
+                                              </div>
+                                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                                                {subtask.dueDate && (
+                                                  <span className="text-[10px] text-gray-400">{new Date(subtask.dueDate).toLocaleDateString()}</span>
+                                                )}
+                                                <button onClick={() => handleDeleteSubtask(task.id, subtask.id)}
+                                                  className="p-0.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded">
+                                                  <Trash2 size={10} />
+                                                </button>
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
+                                        ))}
+                                      </div>
+                                    )}
 
-                                  {/* Add Subtask */}
-                                  {showSubtaskForm === task.id ? (
-                                    <div className="mt-2 ml-3 flex items-center gap-2">
-                                      <input
-                                        type="text"
-                                        placeholder="Subtask title..."
-                                        value={subtaskForm.title}
-                                        onChange={e => setSubtaskForm({ ...subtaskForm, title: e.target.value })}
-                                        onKeyDown={e => { if (e.key === "Enter") handleCreateSubtask(task.id); }}
-                                        className="flex-1 p-1.5 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white"
-                                        autoFocus
-                                      />
-                                      <input
-                                        type="date"
-                                        value={subtaskForm.dueDate}
-                                        onChange={e => setSubtaskForm({ ...subtaskForm, dueDate: e.target.value })}
-                                        className="p-1.5 text-[10px] rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white w-28"
-                                      />
-                                      <button onClick={() => handleCreateSubtask(task.id)}
-                                        className="px-2.5 py-1.5 text-[10px] bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90">
-                                        Add
+                                    {/* Add Subtask */}
+                                    {showSubtaskForm === task.id ? (
+                                      <div className="mt-2 ml-3 flex items-center gap-2">
+                                        <input
+                                          type="text"
+                                          placeholder="Subtask title..."
+                                          value={subtaskForm.title}
+                                          onChange={e => setSubtaskForm({ ...subtaskForm, title: e.target.value })}
+                                          onKeyDown={e => { if (e.key === "Enter") handleCreateSubtask(task.id); }}
+                                          className="flex-1 p-1.5 text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white"
+                                          autoFocus
+                                        />
+                                        <input
+                                          type="date"
+                                          value={subtaskForm.dueDate}
+                                          onChange={e => setSubtaskForm({ ...subtaskForm, dueDate: e.target.value })}
+                                          className="p-1.5 text-[10px] rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white w-28"
+                                        />
+                                        <button onClick={() => handleCreateSubtask(task.id)}
+                                          className="px-2.5 py-1.5 text-[10px] bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90">
+                                          Add
+                                        </button>
+                                        <button onClick={() => { setShowSubtaskForm(null); setSubtaskForm({ title: "", startDate: "", dueDate: "" }); }}
+                                          className="p-1 text-gray-400 hover:text-gray-600">
+                                          <X size={12} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button onClick={() => setShowSubtaskForm(task.id)}
+                                        className="mt-2 ml-3 flex items-center gap-1 text-[10px] text-gray-400 hover:text-elvion-primary transition-colors">
+                                        <Plus size={10} /> Add subtask
                                       </button>
-                                      <button onClick={() => { setShowSubtaskForm(null); setSubtaskForm({ title: "", startDate: "", dueDate: "" }); }}
-                                        className="p-1 text-gray-400 hover:text-gray-600">
-                                        <X size={12} />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button onClick={() => setShowSubtaskForm(task.id)}
-                                      className="mt-2 ml-3 flex items-center gap-1 text-[10px] text-gray-400 hover:text-elvion-primary transition-colors">
-                                      <Plus size={10} /> Add subtask
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
