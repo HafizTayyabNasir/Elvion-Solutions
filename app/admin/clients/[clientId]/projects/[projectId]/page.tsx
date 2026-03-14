@@ -79,6 +79,9 @@ export default function ProjectDetailPage() {
   const [showSubtaskForm, setShowSubtaskForm] = useState<number | null>(null);
   const [subtaskForm, setSubtaskForm] = useState({ title: "", startDate: "", dueDate: "" });
 
+  // Status dropdown state
+  const [openStatusDropdown, setOpenStatusDropdown] = useState<number | null>(null);
+
   // Task creation form state
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [taskForm, setTaskForm] = useState({
@@ -765,18 +768,39 @@ export default function ProjectDetailPage() {
                                       : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
                                     <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
                                     <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
-                                      <select
-                                        value={task.status}
-                                        onChange={e => handleQuickStatusChange(task.id, e.target.value)}
-                                        className={`text-[11px] pl-2 pr-6 py-1 rounded-full cursor-pointer border border-gray-300 dark:border-white/20 outline-none font-semibold shadow-sm hover:shadow-md transition-shadow ${getTaskStatusColor(task.status)}`}
-                                        style={{ WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                                      <button
+                                        onClick={() => setOpenStatusDropdown(openStatusDropdown === task.id ? null : task.id)}
+                                        className={`text-[11px] pl-2 pr-5 py-1 rounded-full cursor-pointer border border-gray-300 dark:border-white/20 outline-none font-semibold shadow-sm hover:shadow-md transition-shadow flex items-center gap-1 ${getTaskStatusColor(task.status)}`}
                                       >
-                                        <option value="todo">To Do</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="review">Review</option>
-                                        <option value="done">Done</option>
-                                      </select>
-                                      <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                                        {taskStatusLabels[task.status] || task.status}
+                                        <ChevronDown size={10} className="opacity-60" />
+                                      </button>
+                                      {openStatusDropdown === task.id && (
+                                        <>
+                                          <div className="fixed inset-0 z-40" onClick={() => setOpenStatusDropdown(null)} />
+                                          <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-[#1a1f2e] border border-gray-200 dark:border-white/10 rounded-lg shadow-lg py-1 min-w-[130px]">
+                                            {(["todo", "in_progress", "review", "done"] as const).map(status => (
+                                              <button
+                                                key={status}
+                                                onClick={() => { handleQuickStatusChange(task.id, status); setOpenStatusDropdown(null); }}
+                                                className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors ${
+                                                  task.status === status
+                                                    ? "bg-elvion-primary/10 text-elvion-primary font-semibold"
+                                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                                                }`}
+                                              >
+                                                <span className={`w-2 h-2 rounded-full ${
+                                                  status === "todo" ? "bg-gray-400" :
+                                                  status === "in_progress" ? "bg-blue-500" :
+                                                  status === "review" ? "bg-yellow-500" :
+                                                  "bg-green-500"
+                                                }`} />
+                                                {taskStatusLabels[status]}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
                                   </div>
