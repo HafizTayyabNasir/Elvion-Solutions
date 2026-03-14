@@ -79,6 +79,13 @@ export default function ProjectDetailPage() {
   const [showSubtaskForm, setShowSubtaskForm] = useState<number | null>(null);
   const [subtaskForm, setSubtaskForm] = useState({ title: "", startDate: "", dueDate: "" });
 
+  // Task creation form state
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: "", priority: "medium", assigneeId: "", startDate: "", dueDate: "",
+    budget: "", estimatedHours: "", description: ""
+  });
+
   // Edit project state
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
@@ -140,6 +147,37 @@ export default function ProjectDetailPage() {
       await fetchAPI(`/tasks/${taskId}/subtasks/${subtaskId}`, { method: "DELETE" });
       fetchData();
     } catch (err) { console.error(err); }
+  };
+
+  const resetTaskForm = () => setTaskForm({
+    title: "", priority: "medium", assigneeId: "", startDate: "", dueDate: "",
+    budget: "", estimatedHours: "", description: ""
+  });
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskForm.title.trim()) return;
+    try {
+      const taskData = {
+        ...taskForm,
+        projectId: Number(projectId),
+        assigneeId: taskForm.assigneeId ? Number(taskForm.assigneeId) : null,
+        budget: taskForm.budget ? parseFloat(taskForm.budget) : null,
+        estimatedHours: taskForm.estimatedHours ? parseFloat(taskForm.estimatedHours) : null
+      };
+      await fetchAPI("/tasks", { method: "POST", body: JSON.stringify(taskData) });
+      resetTaskForm();
+      setShowTaskForm(false);
+      fetchData();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed to create task"); }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    if (!confirm("Delete this task and all its subtasks?")) return;
+    try {
+      await fetchAPI(`/tasks/${taskId}`, { method: "DELETE" });
+      fetchData();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed to delete task"); }
   };
 
   const fetchData = () => {
@@ -384,8 +422,145 @@ export default function ProjectDetailPage() {
 
             return (
               <div>
+                {/* Task Statistics Card */}
+                <div className="mb-6">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-elvion-dark/50 border border-gray-200 dark:border-white/10">
+                      <p className="text-[10px] text-gray-500 uppercase font-semibold">Total Tasks</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{project.tasks.length}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+                      <p className="text-[10px] text-green-600 dark:text-green-400 uppercase font-semibold">Completed</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{project.tasks.filter(t => t.status === "done").length}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                      <p className="text-[10px] text-blue-600 dark:text-blue-400 uppercase font-semibold">In Progress</p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{project.tasks.filter(t => t.status === "in_progress").length}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
+                      <p className="text-[10px] text-yellow-600 dark:text-yellow-400 uppercase font-semibold">Pending</p>
+                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{project.tasks.filter(t => t.status === "todo").length}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
+                      <p className="text-[10px] text-purple-600 dark:text-purple-400 uppercase font-semibold">Progress</p>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{project.tasks.length > 0 ? Math.round((project.tasks.filter(t => t.status === "done").length / project.tasks.length) * 100) : 0}%</p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  {project.tasks.length > 0 && (
+                    <div className="w-full h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 rounded-full transition-all" style={{ width: `${project.tasks.length > 0 ? Math.round((project.tasks.filter(t => t.status === "done").length / project.tasks.length) * 100) : 0}%` }}></div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Task Form */}
+                {showTaskForm ? (
+                  <div className="mb-6 p-4 rounded-xl bg-gray-50 dark:bg-elvion-dark/30 border border-gray-200 dark:border-white/10">
+                    <h3 className="font-semibold text-sm text-gray-900 dark:text-white mb-3">Create New Task</h3>
+                    <form onSubmit={handleCreateTask} className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input
+                          required
+                          type="text"
+                          placeholder="Task title *"
+                          value={taskForm.title}
+                          onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        />
+                        <select
+                          value={taskForm.priority}
+                          onChange={e => setTaskForm({ ...taskForm, priority: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <select
+                          value={taskForm.assigneeId}
+                          onChange={e => setTaskForm({ ...taskForm, assigneeId: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        >
+                          <option value="">Select Assignee</option>
+                          {employeeOptions.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                        </select>
+                        <input
+                          type="date"
+                          value={taskForm.startDate}
+                          onChange={e => setTaskForm({ ...taskForm, startDate: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                          type="date"
+                          value={taskForm.dueDate}
+                          onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Budget ($)"
+                          step="0.01"
+                          min="0"
+                          value={taskForm.budget}
+                          onChange={e => setTaskForm({ ...taskForm, budget: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Est. Hours"
+                          step="0.5"
+                          min="0"
+                          value={taskForm.estimatedHours}
+                          onChange={e => setTaskForm({ ...taskForm, estimatedHours: e.target.value })}
+                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                        />
+                      </div>
+
+                      <textarea
+                        placeholder="Description (optional)"
+                        rows={2}
+                        value={taskForm.description}
+                        onChange={e => setTaskForm({ ...taskForm, description: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm resize-none"
+                      />
+
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-elvion-primary text-black rounded-lg font-medium hover:bg-elvion-primary/90 text-sm"
+                        >
+                          Create Task
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowTaskForm(false); resetTaskForm(); }}
+                          className="px-4 py-2 bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-white/20 text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowTaskForm(true)}
+                    className="mb-6 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-elvion-primary/10 border border-elvion-primary/30 text-elvion-primary font-medium hover:bg-elvion-primary/20 transition-colors text-sm"
+                  >
+                    <Plus size={16} /> Add Task
+                  </button>
+                )}
+
                 {project.tasks.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">No tasks yet. Go to Tasks page to create tasks for this project.</p>
+                  <p className="text-gray-500 text-sm text-center py-4">No tasks yet. Create a new task to start planning your project.</p>
                 ) : (
                   <div className="relative">
                     {/* Project Start */}
@@ -417,7 +592,7 @@ export default function ProjectDetailPage() {
                             ></div>
 
                             {/* Task Card */}
-                            <div className="bg-gray-50 dark:bg-elvion-dark/30 rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:border-gray-300 dark:hover:border-white/20 transition-colors">
+                            <div className="bg-gray-50 dark:bg-elvion-dark/30 rounded-xl border border-gray-200 dark:border-white/10 p-4 hover:border-gray-300 dark:hover:border-white/20 transition-colors group">
                               {/* Header Row */}
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => toggleTaskExpand(task.id)}>
@@ -430,12 +605,19 @@ export default function ProjectDetailPage() {
                                   </span>
                                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
                                 </div>
-                                <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
+                                <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0 group">
                                   {task.assignee && <span className="flex items-center gap-1"><Users size={10} />{task.assignee.name}</span>}
                                   {task.budget ? <span className="text-elvion-primary">${task.budget.toLocaleString()}</span> : null}
                                   {subtasks.length > 0 && (
                                     <span className="text-[10px]">{completedSubtasks}/{subtasks.length}</span>
                                   )}
+                                  <button
+                                    onClick={() => handleDeleteTask(task.id)}
+                                    className="p-1 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Delete task"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
                                 </div>
                               </div>
 
