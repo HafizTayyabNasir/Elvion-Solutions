@@ -396,7 +396,7 @@ export default function ProjectDetailPage() {
       </div>
     );
 
-  const progress = project.progress || calcProgress(project.tasks);
+  const progress = project.tasks.length > 0 ? calcProgress(project.tasks) : (project.progress || 0);
   const daysLeft = getDaysLeft(project.endDate);
   const taskBudget = project.tasks.reduce((s, t) => s + (t.budget || 0), 0);
   const taskEstHours = project.tasks.reduce((s, t) => s + (t.estimatedHours || 0), 0);
