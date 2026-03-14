@@ -129,6 +129,13 @@ export default function ProjectDetailPage() {
     } catch (err) { console.error(err); }
   };
 
+  const handleQuickStatusChange = async (taskId: number, newStatus: string) => {
+    try {
+      await fetchAPI(`/tasks/${taskId}`, { method: "PUT", body: JSON.stringify({ status: newStatus }) });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
   const handleSubtaskStatusToggle = async (taskId: number, subtask: Subtask) => {
     const statusCycle: Record<string, string> = { pending: "in_progress", in_progress: "completed", completed: "pending" };
     const newStatus = statusCycle[subtask.status] || "pending";
@@ -757,9 +764,20 @@ export default function ProjectDetailPage() {
                                       ? <ChevronDown size={14} className="text-gray-400 shrink-0" />
                                       : <ChevronRight size={14} className="text-gray-400 shrink-0" />}
                                     <h4 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{task.title}</h4>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${getTaskStatusColor(task.status)}`}>
-                                      {taskStatusLabels[task.status] || task.status}
-                                    </span>
+                                    <div className="relative shrink-0" onClick={e => e.stopPropagation()}>
+                                      <select
+                                        value={task.status}
+                                        onChange={e => handleQuickStatusChange(task.id, e.target.value)}
+                                        className={`text-[11px] pl-2 pr-6 py-1 rounded-full cursor-pointer border border-gray-300 dark:border-white/20 outline-none font-semibold shadow-sm hover:shadow-md transition-shadow ${getTaskStatusColor(task.status)}`}
+                                        style={{ WebkitAppearance: "none", MozAppearance: "none", appearance: "none" }}
+                                      >
+                                        <option value="todo">To Do</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="review">Review</option>
+                                        <option value="done">Done</option>
+                                      </select>
+                                      <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" />
+                                    </div>
                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getPriorityDot(task.priority)}`} title={task.priority}></div>
                                   </div>
                                   <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0 group">
