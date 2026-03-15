@@ -64,7 +64,10 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
   const [discountRate, setDiscountRate] = useState(0);
   const [notes, setNotes] = useState("");
   const [paymentMethods, setPaymentMethods] = useState<string[]>(["Bank Transfer"]);
-  const [bankAccountNo, setBankAccountNo] = useState("");
+  const [bankAccounts, setBankAccounts] = useState<string[]>([""]);
+  const addBankAccount = () => setBankAccounts([...bankAccounts, ""]);
+  const removeBankAccount = (i: number) => bankAccounts.length > 1 && setBankAccounts(bankAccounts.filter((_, idx) => idx !== i));
+  const updateBankAccount = (i: number, val: string) => { const u = [...bankAccounts]; u[i] = val; setBankAccounts(u); };
 
   // Auto-generate sequential invoice number
   useEffect(() => {
@@ -327,12 +330,27 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               )}
             </div>
 
-            {/* Bank Account */}
+            {/* Bank Accounts */}
             <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Bank Account No.</label>
-              <input type="text" value={bankAccountNo} onChange={e => setBankAccountNo(e.target.value)}
-                placeholder="Enter bank account number"
-                className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500" />
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Bank Account No(s).</label>
+              <div className="space-y-2">
+                {bankAccounts.map((acc, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input type="text" value={acc} onChange={e => updateBankAccount(i, e.target.value)}
+                      placeholder={`Bank account #${i + 1}`}
+                      className="flex-1 bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500" />
+                    {bankAccounts.length > 1 && (
+                      <button onClick={() => removeBankAccount(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded shrink-0">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button onClick={addBankAccount}
+                className="mt-2 flex items-center gap-1 text-xs text-elvion-primary hover:text-elvion-primary/80 font-medium">
+                <Plus size={14} /> Add Account
+              </button>
             </div>
 
             {/* Notes */}
@@ -445,15 +463,15 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               </div>
 
               {/* Payment Info */}
-              {(paymentMethods.length > 0 || bankAccountNo) && (
+              {(paymentMethods.length > 0 || bankAccounts.some(a => a.trim())) && (
                 <div style={{ marginTop: 28, padding: 16, backgroundColor: "#f9fafb", borderRadius: 8, fontSize: 11 }}>
                   <p style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>Payment Information</p>
                   {paymentMethods.length > 0 && (
                     <p style={{ color: "#374151" }}><strong>Method{paymentMethods.length > 1 ? "s" : ""}:</strong> {paymentMethods.join(", ")}</p>
                   )}
-                  {bankAccountNo && (
-                    <p style={{ color: "#374151", marginTop: 4 }}><strong>Bank Account No.:</strong> {bankAccountNo}</p>
-                  )}
+                  {bankAccounts.filter(a => a.trim()).map((acc, i) => (
+                    <p key={i} style={{ color: "#374151", marginTop: 4 }}><strong>Bank Account {bankAccounts.filter(a => a.trim()).length > 1 ? `#${i + 1}` : "No."}:</strong> {acc}</p>
+                  ))}
                 </div>
               )}
 
