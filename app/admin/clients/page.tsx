@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
-import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, ChevronDown, Search } from "lucide-react";
+import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, ChevronDown, Search, Trash2 } from "lucide-react";
 
 interface ProjectPayment {
   id: number;
@@ -110,6 +110,14 @@ export default function AdminClientsPage() {
   const handleProjectStatusChange = async (projectId: number, newStatus: string) => {
     try {
       await fetchAPI(`/projects/${projectId}`, { method: "PUT", body: JSON.stringify({ status: newStatus }) });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDeleteClient = async (clientId: number) => {
+    if (!confirm("Are you sure you want to delete this client? This action cannot be undone.")) return;
+    try {
+      await fetchAPI(`/crm/contacts/${clientId}`, { method: "DELETE" });
       fetchData();
     } catch (err) { console.error(err); }
   };
@@ -321,8 +329,17 @@ export default function AdminClientsPage() {
                 </div>
               </div>
 
-              {/* Arrow */}
-              <ChevronRight size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-elvion-primary transition-colors shrink-0" />
+              {/* Arrow & Delete */}
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteClient(client.id); }}
+                  className="p-1.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Delete client"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <ChevronRight size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-elvion-primary transition-colors" />
+              </div>
             </Link>
           ))}
         </div>
