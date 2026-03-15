@@ -2,8 +2,9 @@
 import { useState, useEffect } from "react";
 import { fetchAPI } from "@/lib/api";
 import { Search, Plus, X, Edit2, Trash2, FileText, DollarSign, Send, Download, Eye } from "lucide-react";
+import InvoiceGenerator from "@/components/InvoiceGenerator";
 
-interface InvoiceItem { id: number; description: string; quantity: number; rate: number; amount: number; }
+interface InvoiceItem { id: number; description: string; quantity: number; rate: number; amount: number; unitPrice: number; total: number; }
 interface Invoice {
   id: number; invoiceNumber: string; status: string; issueDate: string; dueDate: string;
   subtotal: number; tax: number; total: number; notes: string;
@@ -24,6 +25,8 @@ export default function AdminInvoicesPage() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [generatorInvoice, setGeneratorInvoice] = useState<Invoice | null>(null);
   const [form, setForm] = useState({ status: "draft", dueDate: "", notes: "", projectId: "", userId: "", tax: "0", items: [{ description: "", quantity: "1", rate: "" }] as { description: string; quantity: string; rate: string }[] });
 
   const fetchData = () => {
@@ -98,8 +101,12 @@ export default function AdminInvoicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold text-gray-900 dark:text-white">Invoices</h1><p className="text-gray-500 mt-1">Manage billing and invoices</p></div>
-        <button onClick={() => { setShowForm(true); setEditId(null); setForm({ status: "draft", dueDate: "", notes: "", projectId: "", userId: "", tax: "0", items: [{ description: "", quantity: "1", rate: "" }] }); }}
-          className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90"><Plus size={18} /> New Invoice</button>
+        <div className="flex gap-2">
+          <button onClick={() => { setShowGenerator(true); setGeneratorInvoice(null); }}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-elvion-card border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg font-semibold hover:border-elvion-primary/50 transition-colors"><FileText size={18} /> Generate Invoice</button>
+          <button onClick={() => { setShowForm(true); setEditId(null); setForm({ status: "draft", dueDate: "", notes: "", projectId: "", userId: "", tax: "0", items: [{ description: "", quantity: "1", rate: "" }] }); }}
+            className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90"><Plus size={18} /> New Invoice</button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -232,8 +239,9 @@ export default function AdminInvoicesPage() {
                   <td className="p-4 font-medium text-elvion-primary">${(invoice.total || 0).toLocaleString()}</td>
                   <td className="p-4 text-gray-500 text-xs">{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "—"}</td>
                   <td className="p-4"><div className="flex gap-1">
-                    <button onClick={() => setViewInvoice(invoice)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded text-gray-500"><Eye size={14} /></button>
-                    <button onClick={() => handleDelete(invoice.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded text-red-500"><Trash2 size={14} /></button>
+                    <button onClick={() => setViewInvoice(invoice)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded text-gray-500" title="View"><Eye size={14} /></button>
+                    <button onClick={() => { setGeneratorInvoice(invoice); setShowGenerator(true); }} className="p-1.5 hover:bg-gray-100 dark:hover:bg-white/5 rounded text-gray-500" title="Download PDF"><Download size={14} /></button>
+                    <button onClick={() => handleDelete(invoice.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-500/10 rounded text-red-500" title="Delete"><Trash2 size={14} /></button>
                   </div></td>
                 </tr>
               ))}
@@ -242,6 +250,17 @@ export default function AdminInvoicesPage() {
         </div>
         {filtered.length === 0 && <div className="p-8 text-center text-gray-500">No invoices found</div>}
       </div>
+
+      {/* Invoice Generator Modal */}
+      {showGenerator && (
+        <InvoiceGenerator
+          invoice={generatorInvoice}
+          users={users}
+          projects={projects}
+          onClose={() => { setShowGenerator(false); setGeneratorInvoice(null); }}
+          onSave={() => fetchData()}
+        />
+      )}
     </div>
   );
 }

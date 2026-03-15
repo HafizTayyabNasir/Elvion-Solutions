@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
-import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, ChevronDown, Search, Trash2 } from "lucide-react";
+import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, ChevronDown, Search, Trash2, CheckCircle2, Clock, Pause, AlertCircle } from "lucide-react";
 
 interface ProjectPayment {
   id: number;
@@ -127,6 +127,24 @@ export default function AdminClientsPage() {
     return Math.round((tasks.filter(t => t.status === "done").length / tasks.length) * 100);
   };
 
+  const getClientStatus = (client: ClientWithProjects) => {
+    if (client.projects.length === 0) return "new";
+    const allCompleted = client.projects.every(p => p.status === "completed");
+    if (allCompleted) return "completed";
+    const anyActive = client.projects.some(p => p.status === "active" || p.status === "in_progress");
+    if (anyActive) return "in_progress";
+    const anyOnHold = client.projects.some(p => p.status === "on_hold");
+    if (anyOnHold) return "on_hold";
+    return "in_progress";
+  };
+
+  const clientStatusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+    completed: { label: "Completed", color: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400 border-green-300 dark:border-green-500/30", icon: CheckCircle2 },
+    in_progress: { label: "In Progress", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-300 dark:border-blue-500/30", icon: Clock },
+    on_hold: { label: "On Hold", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400 border-yellow-300 dark:border-yellow-500/30", icon: Pause },
+    new: { label: "New Client", color: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border-purple-300 dark:border-purple-500/30", icon: AlertCircle },
+  };
+
   const filtered = clientsData.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -221,6 +239,17 @@ export default function AdminClientsPage() {
                   {client.company && (
                     <span className="text-xs text-gray-400 flex items-center gap-1 shrink-0"><Building2 size={10} /> {client.company}</span>
                   )}
+                  {(() => {
+                    const status = getClientStatus(client);
+                    const config = clientStatusConfig[status];
+                    const Icon = config.icon;
+                    return (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold flex items-center gap-1 shrink-0 ${config.color}`}>
+                        <Icon size={10} />
+                        {config.label}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Mail size={10} /> {client.email}</p>
               </div>
@@ -329,11 +358,11 @@ export default function AdminClientsPage() {
                 </div>
               </div>
 
-              {/* Arrow & Delete */}
-              <div className="flex items-center gap-1 shrink-0">
+              {/* Delete & Arrow */}
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteClient(client.id); }}
-                  className="p-1.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1.5 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-500/20"
                   title="Delete client"
                 >
                   <Trash2 size={16} />
