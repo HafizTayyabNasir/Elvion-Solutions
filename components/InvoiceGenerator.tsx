@@ -312,9 +312,7 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               {/* Header */}
               <div style={{ background: "linear-gradient(135deg, #121212 0%, #1a1f2e 100%)", borderRadius: 10, padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 40, height: 40, backgroundColor: "#00D28D", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <img src="/favicon.webp" alt="Elvion" style={{ height: 24, filter: "invert(1)" }} crossOrigin="anonymous" />
-                  </div>
+                  <img src="/logo.webp" alt="Elvion" style={{ height: 40 }} crossOrigin="anonymous" />
                   <div>
                     <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: 0.5 }}>Elvion Solutions</p>
                     <p style={{ fontSize: 10, color: "#00D28D", margin: 0, letterSpacing: 0.5 }}>Digital Marketing & Automation Solutions</p>
