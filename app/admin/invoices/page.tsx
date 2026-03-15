@@ -18,7 +18,7 @@ const statusOptions = ["draft", "sent", "paid", "overdue", "cancelled"];
 export default function AdminInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [projects, setProjects] = useState<{ id: number; name: string }[]>([]);
-  const [users, setUsers] = useState<{ id: number; name: string; email: string }[]>([]);
+  const [clients, setClients] = useState<{ id: number; name: string; email: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -33,8 +33,8 @@ export default function AdminInvoicesPage() {
     Promise.all([
       fetchAPI("/invoices"),
       fetchAPI("/projects").catch(() => []),
-      fetchAPI("/users").catch(() => []),
-    ]).then(([i, p, u]) => { setInvoices(i); setProjects(p); setUsers(u); }).catch(console.error).finally(() => setLoading(false));
+      fetchAPI("/crm/contacts").catch(() => []),
+    ]).then(([i, p, c]) => { setInvoices(i); setProjects(p); setClients(c); }).catch(console.error).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -149,7 +149,7 @@ export default function AdminInvoicesPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
-                <div><label className="block text-sm text-gray-500 mb-1">Client *</label><select required value={form.userId} onChange={e => setForm({ ...form, userId: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"><option value="">Select</option>{users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+                <div><label className="block text-sm text-gray-500 mb-1">Client *</label><select required value={form.userId} onChange={e => setForm({ ...form, userId: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"><option value="">Select</option>{clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
                 <div><label className="block text-sm text-gray-500 mb-1">Project</label><select value={form.projectId} onChange={e => setForm({ ...form, projectId: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"><option value="">None</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label className="block text-sm text-gray-500 mb-1">Due Date</label><input type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white" /></div>
               </div>
@@ -255,7 +255,7 @@ export default function AdminInvoicesPage() {
       {showGenerator && (
         <InvoiceGenerator
           invoice={generatorInvoice}
-          users={users}
+          users={clients}
           projects={projects}
           onClose={() => { setShowGenerator(false); setGeneratorInvoice(null); }}
           onSave={() => fetchData()}
