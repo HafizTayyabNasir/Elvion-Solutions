@@ -63,11 +63,12 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
   const [taxRate, setTaxRate] = useState(0);
   const [discountRate, setDiscountRate] = useState(0);
   const [notes, setNotes] = useState("");
-  const [paymentMethods, setPaymentMethods] = useState<string[]>(["Bank Transfer"]);
-  const [bankAccounts, setBankAccounts] = useState<string[]>([""]);
-  const addBankAccount = () => setBankAccounts([...bankAccounts, ""]);
-  const removeBankAccount = (i: number) => bankAccounts.length > 1 && setBankAccounts(bankAccounts.filter((_, idx) => idx !== i));
-  const updateBankAccount = (i: number, val: string) => { const u = [...bankAccounts]; u[i] = val; setBankAccounts(u); };
+  const [paymentEntries, setPaymentEntries] = useState<{ method: string; accountNo: string }[]>([{ method: "Bank Transfer", accountNo: "" }]);
+  const addPaymentEntry = () => setPaymentEntries([...paymentEntries, { method: "", accountNo: "" }]);
+  const removePaymentEntry = (i: number) => paymentEntries.length > 1 && setPaymentEntries(paymentEntries.filter((_, idx) => idx !== i));
+  const updatePaymentEntry = (i: number, field: "method" | "accountNo", val: string) => {
+    const u = [...paymentEntries]; u[i] = { ...u[i], [field]: val }; setPaymentEntries(u);
+  };
 
   // Auto-generate sequential invoice number
   useEffect(() => {
@@ -301,55 +302,35 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               </div>
             </div>
 
-            {/* Payment Methods */}
+            {/* Payment Methods & Accounts */}
             <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Payment Methods</label>
-              <select
-                value=""
-                onChange={e => {
-                  const val = e.target.value;
-                  if (val && !paymentMethods.includes(val)) setPaymentMethods([...paymentMethods, val]);
-                }}
-                className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
-                <option value="">Add Payment Method...</option>
-                {paymentMethodOptions.filter(m => !paymentMethods.includes(m)).map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-              {paymentMethods.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {paymentMethods.map(m => (
-                    <span key={m} className="inline-flex items-center gap-1 px-2 py-1 bg-elvion-primary/10 text-elvion-primary rounded text-xs font-medium">
-                      {m}
-                      <button onClick={() => setPaymentMethods(paymentMethods.filter(pm => pm !== m))} className="hover:text-red-400">
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Bank Accounts */}
-            <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Bank Account No(s).</label>
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Payment Methods</label>
               <div className="space-y-2">
-                {bankAccounts.map((acc, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input type="text" value={acc} onChange={e => updateBankAccount(i, e.target.value)}
-                      placeholder={`Bank account #${i + 1}`}
-                      className="flex-1 bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500" />
-                    {bankAccounts.length > 1 && (
-                      <button onClick={() => removeBankAccount(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded shrink-0">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
+                {paymentEntries.map((entry, i) => (
+                  <div key={i} className="bg-elvion-dark/50 border border-white/5 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <select value={entry.method} onChange={e => updatePaymentEntry(i, "method", e.target.value)}
+                        className="flex-1 bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white">
+                        <option value="">Select Method</option>
+                        {paymentMethodOptions.map(m => (
+                          <option key={m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      {paymentEntries.length > 1 && (
+                        <button onClick={() => removePaymentEntry(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded shrink-0">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <input type="text" value={entry.accountNo} onChange={e => updatePaymentEntry(i, "accountNo", e.target.value)}
+                      placeholder="Account / Bank number"
+                      className="w-full mt-2 bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white placeholder:text-gray-500" />
                   </div>
                 ))}
               </div>
-              <button onClick={addBankAccount}
+              <button onClick={addPaymentEntry}
                 className="mt-2 flex items-center gap-1 text-xs text-elvion-primary hover:text-elvion-primary/80 font-medium">
-                <Plus size={14} /> Add Account
+                <Plus size={14} /> Add Payment Method
               </button>
             </div>
 
@@ -463,14 +444,14 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               </div>
 
               {/* Payment Info */}
-              {(paymentMethods.length > 0 || bankAccounts.some(a => a.trim())) && (
+              {paymentEntries.some(e => e.method || e.accountNo.trim()) && (
                 <div style={{ marginTop: 28, padding: 16, backgroundColor: "#f9fafb", borderRadius: 8, fontSize: 11 }}>
-                  <p style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>Payment Information</p>
-                  {paymentMethods.length > 0 && (
-                    <p style={{ color: "#374151" }}><strong>Method{paymentMethods.length > 1 ? "s" : ""}:</strong> {paymentMethods.join(", ")}</p>
-                  )}
-                  {bankAccounts.filter(a => a.trim()).map((acc, i) => (
-                    <p key={i} style={{ color: "#374151", marginTop: 4 }}><strong>Bank Account {bankAccounts.filter(a => a.trim()).length > 1 ? `#${i + 1}` : "No."}:</strong> {acc}</p>
+                  <p style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#9ca3af", marginBottom: 8, fontWeight: 600 }}>Payment Information</p>
+                  {paymentEntries.filter(e => e.method || e.accountNo.trim()).map((entry, i) => (
+                    <div key={i} style={{ marginTop: i > 0 ? 8 : 0, paddingTop: i > 0 ? 8 : 0, borderTop: i > 0 ? "1px solid #e5e7eb" : "none" }}>
+                      {entry.method && <p style={{ color: "#374151", fontWeight: 500 }}>{entry.method}</p>}
+                      {entry.accountNo.trim() && <p style={{ color: "#6b7280", marginTop: 2 }}>Account: {entry.accountNo}</p>}
+                    </div>
                   ))}
                 </div>
               )}
