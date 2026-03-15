@@ -25,6 +25,21 @@ interface LineItem {
 
 const currencies = ["USD", "EUR", "GBP", "PKR", "INR", "SAR", "AED"];
 
+const paymentMethodOptions = [
+  "Bank Transfer",
+  "Cash",
+  "Credit Card",
+  "Debit Card",
+  "PayPal",
+  "Stripe",
+  "Wise",
+  "JazzCash",
+  "EasyPaisa",
+  "Payoneer",
+  "Crypto",
+  "Cheque",
+];
+
 const formatCurrency = (amount: number, currency: string) => {
   try {
     return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
@@ -48,8 +63,23 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
   const [taxRate, setTaxRate] = useState(0);
   const [discountRate, setDiscountRate] = useState(0);
   const [notes, setNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
-  const [paymentDetails, setPaymentDetails] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<string[]>(["Bank Transfer"]);
+  const [bankAccountNo, setBankAccountNo] = useState("");
+
+  // Auto-generate sequential invoice number
+  useEffect(() => {
+    if (!invoice) {
+      fetchAPI("/invoices").then((invoices: { invoiceNumber?: string; number?: string }[]) => {
+        let maxNum = 0;
+        invoices.forEach((inv) => {
+          const num = inv.invoiceNumber || inv.number || "";
+          const match = num.match(/INV-(\d+)/);
+          if (match) maxNum = Math.max(maxNum, parseInt(match[1]));
+        });
+        setInvoiceNumber(`INV-${String(maxNum + 1).padStart(5, "0")}`);
+      }).catch(() => setInvoiceNumber("INV-00001"));
+    }
+  }, [invoice]);
 
   useEffect(() => {
     if (invoice) {
@@ -268,19 +298,41 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               </div>
             </div>
 
-            {/* Payment */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Payment Method</label>
-                <input type="text" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
-              </div>
-              <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Payment Details</label>
-                <input type="text" value={paymentDetails} onChange={e => setPaymentDetails(e.target.value)}
-                  placeholder="Account / Bank info"
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500" />
-              </div>
+            {/* Payment Methods */}
+            <div>
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Payment Methods</label>
+              <select
+                value=""
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val && !paymentMethods.includes(val)) setPaymentMethods([...paymentMethods, val]);
+                }}
+                className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="">Add Payment Method...</option>
+                {paymentMethodOptions.filter(m => !paymentMethods.includes(m)).map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              {paymentMethods.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {paymentMethods.map(m => (
+                    <span key={m} className="inline-flex items-center gap-1 px-2 py-1 bg-elvion-primary/10 text-elvion-primary rounded text-xs font-medium">
+                      {m}
+                      <button onClick={() => setPaymentMethods(paymentMethods.filter(pm => pm !== m))} className="hover:text-red-400">
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Bank Account */}
+            <div>
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Bank Account No.</label>
+              <input type="text" value={bankAccountNo} onChange={e => setBankAccountNo(e.target.value)}
+                placeholder="Enter bank account number"
+                className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500" />
             </div>
 
             {/* Notes */}
@@ -311,13 +363,7 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
             <div ref={invoiceRef} className="bg-white rounded-lg shadow-sm mx-auto" style={{ maxWidth: 680, padding: 40, fontFamily: "system-ui, -apple-system, sans-serif" }}>
               {/* Header */}
               <div style={{ background: "linear-gradient(135deg, #121212 0%, #1a1f2e 100%)", borderRadius: 10, padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <img src="/logo.webp" alt="Elvion" style={{ height: 40 }} crossOrigin="anonymous" />
-                  <div>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: 0.5 }}>Elvion Solutions</p>
-                    <p style={{ fontSize: 10, color: "#00D28D", margin: 0, letterSpacing: 0.5 }}>Digital Marketing & Automation Solutions</p>
-                  </div>
-                </div>
+                <img src="/logo.webp" alt="Elvion" style={{ height: 40 }} crossOrigin="anonymous" />
                 <div style={{ textAlign: "right" }}>
                   <h1 style={{ fontSize: 24, fontWeight: 700, color: "#00D28D", margin: 0, letterSpacing: 3 }}>INVOICE</h1>
                   <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{invoiceNumber || "INV-XXXXX"}</p>
@@ -399,11 +445,15 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               </div>
 
               {/* Payment Info */}
-              {(paymentMethod || paymentDetails) && (
+              {(paymentMethods.length > 0 || bankAccountNo) && (
                 <div style={{ marginTop: 28, padding: 16, backgroundColor: "#f9fafb", borderRadius: 8, fontSize: 11 }}>
                   <p style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: 1, color: "#9ca3af", marginBottom: 6, fontWeight: 600 }}>Payment Information</p>
-                  {paymentMethod && <p style={{ color: "#374151" }}><strong>Method:</strong> {paymentMethod}</p>}
-                  {paymentDetails && <p style={{ color: "#6b7280", marginTop: 4 }}>{paymentDetails}</p>}
+                  {paymentMethods.length > 0 && (
+                    <p style={{ color: "#374151" }}><strong>Method{paymentMethods.length > 1 ? "s" : ""}:</strong> {paymentMethods.join(", ")}</p>
+                  )}
+                  {bankAccountNo && (
+                    <p style={{ color: "#374151", marginTop: 4 }}><strong>Bank Account No.:</strong> {bankAccountNo}</p>
+                  )}
                 </div>
               )}
 
