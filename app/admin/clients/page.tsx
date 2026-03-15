@@ -2,11 +2,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchAPI } from "@/lib/api";
-import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, Search } from "lucide-react";
+import { Users, Plus, X, FolderOpen, DollarSign, Mail, Building2, ChevronRight, ChevronDown, Search } from "lucide-react";
 
 interface ProjectPayment {
   id: number;
   amount: number;
+  status: string;
+}
+
+interface ProjectTask {
+  id: number;
   status: string;
 }
 
@@ -15,6 +20,7 @@ interface ClientProject {
   name: string;
   status: string;
   payments: ProjectPayment[];
+  tasks: ProjectTask[];
 }
 
 interface Client {
@@ -45,6 +51,8 @@ export default function AdminClientsPage() {
   const [clientForm, setClientForm] = useState({ name: "", email: "" });
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
+  const [openProjectDropdown, setOpenProjectDropdown] = useState<number | null>(null);
+  const [projectDropdownPos, setProjectDropdownPos] = useState<{ top: number; left: number } | null>(null);
 
   const fetchData = () => {
     Promise.all([
@@ -97,6 +105,18 @@ export default function AdminClientsPage() {
     } finally {
       setAddLoading(false);
     }
+  };
+
+  const handleProjectStatusChange = async (projectId: number, newStatus: string) => {
+    try {
+      await fetchAPI(`/projects/${projectId}`, { method: "PUT", body: JSON.stringify({ status: newStatus }) });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const calcProjectProgress = (tasks: ProjectTask[]) => {
+    if (!tasks.length) return 0;
+    return Math.round((tasks.filter(t => t.status === "done").length / tasks.length) * 100);
   };
 
   const filtered = clientsData.filter((c) =>
@@ -197,21 +217,91 @@ export default function AdminClientsPage() {
                 <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Mail size={10} /> {client.email}</p>
               </div>
 
-              {/* Projects */}
-              <div className="hidden md:block min-w-[200px] max-w-[280px]">
-                <div className="flex items-center gap-1 mb-1">
+              {/* Projects with Progress */}
+              <div className="hidden md:block min-w-[280px] max-w-[360px]">
+                <div className="flex items-center gap-1 mb-1.5">
                   <FolderOpen size={12} className="text-blue-400" />
                   <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{client.projects.length} Project{client.projects.length !== 1 ? "s" : ""}</span>
                 </div>
                 {client.projects.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {client.projects.slice(0, 3).map((p) => (
-                      <span key={p.id} className={`text-[10px] px-1.5 py-0.5 rounded ${getStatusColor(p.status)}`}>
-                        {p.name.length > 20 ? p.name.slice(0, 20) + "…" : p.name}
-                      </span>
-                    ))}
+                  <div className="space-y-1.5">
+                    {client.projects.slice(0, 3).map((p) => {
+                      const progress = calcProjectProgress(p.tasks || []);
+                      return (
+                        <div key={p.id} className="flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-gray-800 dark:text-gray-200 font-medium truncate">
+                                {p.name.length > 18 ? p.name.slice(0, 18) + "…" : p.name}
+                              </span>
+                              <span className="text-[10px] text-gray-500 shrink-0">{progress}%</span>
+                            </div>
+                            <div className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full mt-0.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${progress === 100 ? "bg-green-500" : progress > 0 ? "bg-blue-500" : "bg-gray-300 dark:bg-white/20"}`}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                          {/* Project status dropdown */}
+                          <div className="relative shrink-0" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (openProjectDropdown === p.id) {
+                                  setOpenProjectDropdown(null);
+                                  setProjectDropdownPos(null);
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const spaceBelow = window.innerHeight - rect.bottom;
+                                  setProjectDropdownPos({
+                                    top: spaceBelow < 170 ? rect.top - 170 : rect.bottom + 4,
+                                    left: rect.left,
+                                  });
+                                  setOpenProjectDropdown(p.id);
+                                }
+                              }}
+                              className={`text-[9px] pl-1.5 pr-4 py-0.5 rounded-full cursor-pointer border border-gray-300 dark:border-white/20 font-semibold flex items-center gap-0.5 ${getStatusColor(p.status)}`}
+                            >
+                              {statusLabels[p.status] || p.status}
+                              <ChevronDown size={8} className="opacity-60" />
+                            </button>
+                            {openProjectDropdown === p.id && projectDropdownPos && (
+                              <>
+                                <div className="fixed inset-0 z-[9998]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpenProjectDropdown(null); setProjectDropdownPos(null); }} />
+                                <div
+                                  className="fixed z-[9999] bg-white dark:bg-[#1a1f2e] border border-gray-200 dark:border-white/10 rounded-lg shadow-xl py-1 min-w-[140px]"
+                                  style={{ top: projectDropdownPos.top, left: projectDropdownPos.left }}
+                                >
+                                  {["active", "on_hold", "completed", "cancelled"].map(status => (
+                                    <button
+                                      key={status}
+                                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleProjectStatusChange(p.id, status); setOpenProjectDropdown(null); setProjectDropdownPos(null); }}
+                                      className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors ${
+                                        p.status === status
+                                          ? "bg-elvion-primary/10 text-elvion-primary font-semibold"
+                                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5"
+                                      }`}
+                                    >
+                                      <span className={`w-2 h-2 rounded-full ${
+                                        status === "active" ? "bg-green-500" :
+                                        status === "on_hold" ? "bg-yellow-500" :
+                                        status === "completed" ? "bg-blue-500" :
+                                        "bg-red-500"
+                                      }`} />
+                                      {statusLabels[status]}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                     {client.projects.length > 3 && (
-                      <span className="text-[10px] text-gray-400 px-1.5 py-0.5">+{client.projects.length - 3} more</span>
+                      <span className="text-[10px] text-gray-400 px-1.5">+{client.projects.length - 3} more</span>
                     )}
                   </div>
                 ) : (
