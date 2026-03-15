@@ -310,14 +310,19 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
           <div className="w-3/5 bg-gray-100 dark:bg-gray-800/50 overflow-y-auto p-6">
             <div ref={invoiceRef} className="bg-white rounded-lg shadow-sm mx-auto" style={{ maxWidth: 680, padding: 40, fontFamily: "system-ui, -apple-system, sans-serif" }}>
               {/* Header */}
-              <div style={{ borderTop: "4px solid #00D28D", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <img src="/logo.webp" alt="Elvion Solutions" style={{ height: 40, marginBottom: 8 }} crossOrigin="anonymous" />
-                  <p style={{ fontSize: 12, color: "#6b7280" }}>Elvion Solutions</p>
+              <div style={{ background: "linear-gradient(135deg, #121212 0%, #1a1f2e 100%)", borderRadius: 10, padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 40, height: 40, backgroundColor: "#00D28D", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src="/favicon.webp" alt="Elvion" style={{ height: 24, filter: "invert(1)" }} crossOrigin="anonymous" />
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", margin: 0, letterSpacing: 0.5 }}>Elvion Solutions</p>
+                    <p style={{ fontSize: 10, color: "#00D28D", margin: 0, letterSpacing: 0.5 }}>Digital Marketing & Automation Solutions</p>
+                  </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <h1 style={{ fontSize: 28, fontWeight: 700, color: "#00D28D", margin: 0, letterSpacing: 2 }}>INVOICE</h1>
-                  <p style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{invoiceNumber || "INV-XXXXX"}</p>
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: "#00D28D", margin: 0, letterSpacing: 3 }}>INVOICE</h1>
+                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{invoiceNumber || "INV-XXXXX"}</p>
                 </div>
               </div>
 
@@ -413,9 +418,9 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
               )}
 
               {/* Footer */}
-              <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid #e5e7eb", textAlign: "center", fontSize: 10, color: "#9ca3af" }}>
-                <p>Elvion Solutions &bull; elvionsolutions.com</p>
-                <p style={{ marginTop: 2 }}>Thank you for your business!</p>
+              <div style={{ marginTop: 32, padding: "16px 20px", background: "linear-gradient(135deg, #121212 0%, #1a1f2e 100%)", borderRadius: 8, textAlign: "center", fontSize: 10, color: "#9ca3af" }}>
+                <p style={{ color: "#00D28D", fontWeight: 600, margin: 0 }}>Elvion Solutions</p>
+                <p style={{ marginTop: 2, margin: 0 }}>Digital Marketing & Automation Solutions &bull; elvionsolutions.com</p>
               </div>
             </div>
           </div>
