@@ -94,6 +94,18 @@ export async function POST(request: Request) {
       },
     });
 
+    // Auto-add assignee as project member if not already
+    if (projectId && assigneeId) {
+      const existingMember = await prisma.projectMember.findFirst({
+        where: { projectId: parseInt(projectId), userId: parseInt(assigneeId) },
+      });
+      if (!existingMember) {
+        await prisma.projectMember.create({
+          data: { projectId: parseInt(projectId), userId: parseInt(assigneeId), role: 'member' },
+        });
+      }
+    }
+
     // Log activity
     await prisma.activity.create({
       data: {

@@ -90,6 +90,18 @@ export async function PUT(
       },
     });
 
+    // Auto-add assignee as project member if not already
+    if (task.projectId && task.assigneeId) {
+      const existingMember = await prisma.projectMember.findFirst({
+        where: { projectId: task.projectId, userId: task.assigneeId },
+      });
+      if (!existingMember) {
+        await prisma.projectMember.create({
+          data: { projectId: task.projectId, userId: task.assigneeId, role: 'member' },
+        });
+      }
+    }
+
     // Update project progress if task is part of a project
     if (task.projectId) {
       const projectTasks = await prisma.task.findMany({
