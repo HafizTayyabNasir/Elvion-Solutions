@@ -679,19 +679,6 @@ export default function ProjectDetailPage() {
                                       className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
                                     />
                                     <select
-                                      value={editingTaskData.status}
-                                      onChange={e => setEditingTaskData({ ...editingTaskData, status: e.target.value })}
-                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
-                                    >
-                                      <option value="todo">To Do</option>
-                                      <option value="in_progress">In Progress</option>
-                                      <option value="review">Review</option>
-                                      <option value="done">Done</option>
-                                    </select>
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <select
                                       value={editingTaskData.priority}
                                       onChange={e => setEditingTaskData({ ...editingTaskData, priority: e.target.value })}
                                       className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
@@ -701,6 +688,9 @@ export default function ProjectDetailPage() {
                                       <option value="high">High</option>
                                       <option value="urgent">Urgent</option>
                                     </select>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <select
                                       value={editingTaskData.assigneeId}
                                       onChange={e => setEditingTaskData({ ...editingTaskData, assigneeId: e.target.value })}
@@ -709,23 +699,27 @@ export default function ProjectDetailPage() {
                                       <option value="">Unassigned</option>
                                       {employeeOptions.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                                     </select>
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+                                      <input
+                                        type="date"
+                                        value={editingTaskData.startDate}
+                                        onChange={e => setEditingTaskData({ ...editingTaskData, startDate: e.target.value })}
+                                        className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                      />
+                                    </div>
                                   </div>
 
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <input
-                                      type="date"
-                                      value={editingTaskData.startDate}
-                                      onChange={e => setEditingTaskData({ ...editingTaskData, startDate: e.target.value })}
-                                      placeholder="Start Date"
-                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
-                                    />
-                                    <input
-                                      type="date"
-                                      value={editingTaskData.dueDate}
-                                      onChange={e => setEditingTaskData({ ...editingTaskData, dueDate: e.target.value })}
-                                      placeholder="Due Date"
-                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
-                                    />
+                                    <div>
+                                      <label className="block text-xs text-gray-500 mb-1">Due Date</label>
+                                      <input
+                                        type="date"
+                                        value={editingTaskData.dueDate}
+                                        onChange={e => setEditingTaskData({ ...editingTaskData, dueDate: e.target.value })}
+                                        className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                      />
+                                    </div>
                                     <input
                                       type="number"
                                       placeholder="Budget ($)"
@@ -735,9 +729,6 @@ export default function ProjectDetailPage() {
                                       onChange={e => setEditingTaskData({ ...editingTaskData, budget: e.target.value })}
                                       className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
                                     />
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <input
                                       type="number"
                                       placeholder="Est. Hours"
@@ -747,6 +738,19 @@ export default function ProjectDetailPage() {
                                       onChange={e => setEditingTaskData({ ...editingTaskData, estimatedHours: e.target.value })}
                                       className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
                                     />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <select
+                                      value={editingTaskData.status}
+                                      onChange={e => setEditingTaskData({ ...editingTaskData, status: e.target.value })}
+                                      className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                                    >
+                                      <option value="todo">To Do</option>
+                                      <option value="in_progress">In Progress</option>
+                                      <option value="review">Review</option>
+                                      <option value="done">Done</option>
+                                    </select>
                                     <input
                                       type="number"
                                       placeholder="Actual Hours"
