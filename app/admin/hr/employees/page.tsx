@@ -157,13 +157,19 @@ export default function EmployeesPage() {
     setSaving(true);
     setError("");
     try {
+      // Only include loginPassword if it's actually been entered
+      const formData = { ...form };
+      if (!formData.loginPassword) {
+        delete (formData as any).loginPassword;
+      }
+
       if (editingEmployee) {
         await fetchAPI(`/hr/employees/${editingEmployee.id}`, {
-          method: "PUT", body: JSON.stringify(form),
+          method: "PUT", body: JSON.stringify(formData),
         });
       } else {
         await fetchAPI("/hr/employees", {
-          method: "POST", body: JSON.stringify(form),
+          method: "POST", body: JSON.stringify(formData),
         });
       }
       setShowModal(false);
@@ -596,6 +602,7 @@ export default function EmployeesPage() {
                   <input type="email" value={form.loginEmail}
                     onChange={(e) => setForm({ ...form, loginEmail: e.target.value })}
                     placeholder={editingEmployee?.user ? "Update login email" : "employee@company.com"}
+                    autoComplete="off"
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                 </div>
                 <div>
@@ -605,7 +612,8 @@ export default function EmployeesPage() {
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} value={form.loginPassword}
                       onChange={(e) => setForm({ ...form, loginPassword: e.target.value })}
-                      placeholder={editingEmployee?.user ? "••••••••" : "Min 6 characters"}
+                      placeholder={editingEmployee?.user ? "Leave empty to keep current" : "Min 6 characters"}
+                      autoComplete="new-password"
                       className="w-full px-3 py-2 pr-10 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
