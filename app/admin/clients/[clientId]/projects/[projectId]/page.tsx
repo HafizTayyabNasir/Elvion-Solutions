@@ -557,21 +557,27 @@ export default function ProjectDetailPage() {
                           <option value="">Select Assignee</option>
                           {employeeOptions.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                         </select>
-                        <input
-                          type="date"
-                          value={taskForm.startDate}
-                          onChange={e => setTaskForm({ ...taskForm, startDate: e.target.value })}
-                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
-                        />
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            value={taskForm.startDate}
+                            onChange={e => setTaskForm({ ...taskForm, startDate: e.target.value })}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input
-                          type="date"
-                          value={taskForm.dueDate}
-                          onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })}
-                          className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
-                        />
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Due Date</label>
+                          <input
+                            type="date"
+                            value={taskForm.dueDate}
+                            onChange={e => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                            className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-elvion-dark text-gray-900 dark:text-white text-sm"
+                          />
+                        </div>
                         <input
                           type="number"
                           placeholder="Budget ($)"
