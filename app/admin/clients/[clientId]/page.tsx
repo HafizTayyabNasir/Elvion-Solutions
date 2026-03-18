@@ -44,6 +44,8 @@ const getPriorityDot = (p: string) => {
   return c[p] || "bg-gray-400";
 };
 
+const defaultForm = { name: "", description: "", status: "active", priority: "medium", startDate: "", endDate: "", budget: "" };
+
 export default function ClientDetailPage() {
   const params = useParams();
   const clientId = params.clientId as string;
@@ -51,8 +53,11 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddProject, setShowAddProject] = useState(false);
+  const [projectForm, setProjectForm] = useState(defaultForm);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
+  const fetchData = () => {
     Promise.all([
       fetchAPI(`/crm/contacts/${clientId}`).catch(() => null),
       fetchAPI(`/projects?clientId=${clientId}`).catch(() => []),
@@ -61,7 +66,39 @@ export default function ClientDetailPage() {
       setProjects(Array.isArray(p) ? p : []);
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    fetchData();
   }, [clientId]);
+
+  const handleAddProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projectForm.name.trim()) return;
+    setSubmitting(true);
+    try {
+      await fetchAPI("/projects", {
+        method: "POST",
+        body: JSON.stringify({
+          name: projectForm.name,
+          description: projectForm.description,
+          status: projectForm.status,
+          priority: projectForm.priority,
+          startDate: projectForm.startDate || null,
+          endDate: projectForm.endDate || null,
+          budget: projectForm.budget ? parseFloat(projectForm.budget) : null,
+          clientId: parseInt(clientId),
+        }),
+      });
+      setShowAddProject(false);
+      setProjectForm(defaultForm);
+      fetchData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create project");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading)
     return (
@@ -112,6 +149,12 @@ export default function ClientDetailPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Projects</h2>
+          <button
+            onClick={() => setShowAddProject(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90 transition-colors"
+          >
+            <Plus size={18} /> Add Project
+          </button>
         </div>
 
         {projects.length === 0 ? (
@@ -167,6 +210,108 @@ export default function ClientDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Add Project Modal */}
+      {showAddProject && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddProject(false)}>
+          <div className="bg-white dark:bg-elvion-card rounded-xl border border-gray-200 dark:border-white/10 p-6 w-full max-w-lg" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add Project for {client?.name}</h2>
+              <button onClick={() => setShowAddProject(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-white/5 rounded"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleAddProject} className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">Project Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={projectForm.name}
+                  onChange={e => setProjectForm({ ...projectForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  placeholder="Enter project name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={projectForm.description}
+                  onChange={e => setProjectForm({ ...projectForm, description: e.target.value })}
+                  className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white resize-none"
+                  placeholder="Project description"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-500 mb-1">Status</label>
+                  <select
+                    value={projectForm.status}
+                    onChange={e => setProjectForm({ ...projectForm, status: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  >
+                    <option value="active">Active</option>
+                    <option value="on_hold">On Hold</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-500 mb-1">Priority</label>
+                  <select
+                    value={projectForm.priority}
+                    onChange={e => setProjectForm({ ...projectForm, priority: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-500 mb-1">Start Date</label>
+                  <input
+                    type="date"
+                    value={projectForm.startDate}
+                    onChange={e => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-500 mb-1">End Date</label>
+                  <input
+                    type="date"
+                    value={projectForm.endDate}
+                    onChange={e => setProjectForm({ ...projectForm, endDate: e.target.value })}
+                    className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">Budget ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={projectForm.budget}
+                  onChange={e => setProjectForm({ ...projectForm, budget: e.target.value })}
+                  className="w-full p-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark text-gray-900 dark:text-white"
+                  placeholder="0.00"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-2.5 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90 disabled:opacity-50"
+              >
+                {submitting ? "Creating..." : "Create Project"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
