@@ -105,18 +105,19 @@ model Lead {
 }
 
 model Contact {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   name        String
   email       String
   phone       String?
   company     String?
   position    String?
-  notes       String?  @db.Text
+  notes       String?   @db.Text
   userId      Int
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   deals       Deal[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Deal {
@@ -151,6 +152,8 @@ model Project {
   progress    Int       @default(0) // 0-100%
   ownerId     Int
   owner       User      @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  contactId   Int?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
   members     ProjectMember[]
   tasks       Task[]
   invoices    Invoice[]

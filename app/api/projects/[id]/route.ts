@@ -20,6 +20,7 @@ export async function GET(
       where: { id: projectId },
       include: {
         owner: { select: { id: true, name: true, email: true } },
+        contact: { select: { id: true, name: true, email: true, company: true } },
         members: {
           include: { user: { select: { id: true, name: true, email: true, avatar: true } } }
         },

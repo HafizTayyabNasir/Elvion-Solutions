@@ -11,13 +11,17 @@ export async function GET(request: Request) {
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    
+    const url = new URL(request.url);
+    const contactId = url.searchParams.get('clientId');
+
     let projects;
     if (user?.isAdmin) {
-      // Admins see all projects
+      // Admins see all projects, optionally filtered by contactId
       projects = await prisma.project.findMany({
+        where: contactId ? { contactId: parseInt(contactId) } : undefined,
         include: {
           owner: { select: { id: true, name: true, email: true } },
+          contact: { select: { id: true, name: true, email: true, company: true } },
           members: {
             include: { user: { select: { id: true, name: true, email: true } } }
           },
@@ -43,6 +47,7 @@ export async function GET(request: Request) {
         },
         include: {
           owner: { select: { id: true, name: true, email: true } },
+          contact: { select: { id: true, name: true, email: true, company: true } },
           members: {
             include: { user: { select: { id: true, name: true, email: true } } }
           },
@@ -85,9 +90,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Project name is required' }, { status: 400 });
     }
 
-    // Build members array: client + employee team members
+    // Build team members array (employees only, not clients)
     const membersToCreate: { userId: number; role: string }[] = [];
-    if (clientId) membersToCreate.push({ userId: clientId, role: 'client' });
     if (memberIds && Array.isArray(memberIds)) {
       for (const mid of memberIds) {
         if (!membersToCreate.some(m => m.userId === mid)) {
@@ -106,12 +110,14 @@ export async function POST(request: Request) {
         endDate: endDate ? new Date(endDate) : null,
         budget: budget ? parseFloat(budget) : null,
         ownerId: userId,
+        contactId: clientId ? parseInt(clientId) : null,
         members: membersToCreate.length > 0 ? {
           create: membersToCreate
         } : undefined,
       },
       include: {
         owner: { select: { id: true, name: true, email: true } },
+        contact: { select: { id: true, name: true, email: true, company: true } },
         members: {
           include: { user: { select: { id: true, name: true, email: true } } }
         },
@@ -128,19 +134,6 @@ export async function POST(request: Request) {
         userId,
       },
     });
-
-    // Create notification for client if assigned
-    if (clientId) {
-      await prisma.notification.create({
-        data: {
-          title: 'New Project Assigned',
-          message: `You have been added to project: ${name}`,
-          type: 'info',
-          link: `/customer/projects/${project.id}`,
-          userId: clientId,
-        },
-      });
-    }
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

@@ -63,10 +63,7 @@ export default function AdminClientsPage() {
       const projectsList: ClientProject[] = Array.isArray(projects) ? projects : [];
 
       const enriched: ClientWithProjects[] = clientsList.map((client) => {
-        const clientProjects = projectsList.filter((p: any) => {
-          const members = p.members || [];
-          return members.some((m: any) => m.role === "client" && m.user?.id === client.id);
-        });
+        const clientProjects = projectsList.filter((p: any) => p.contactId === client.id);
 
         const totalReceived = clientProjects.reduce((sum, p) => {
           return sum + (p.payments || []).filter((pay) => pay.status === "received").reduce((s, pay) => s + pay.amount, 0);
