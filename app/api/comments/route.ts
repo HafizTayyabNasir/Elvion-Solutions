@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyAuth, isAdmin } from '@/lib/auth';
+
 type CommentRow = { id: number; userName: string; text: string; date: Date };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Require authentication to view comments
+    const auth = await verifyAuth(request);
+    if ('error' in auth) {
+      return NextResponse.json({ message: auth.error }, { status: auth.status });
+    }
+    if (!isAdmin(auth.user)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
+    }
+
     const comments = await prisma.comment.findMany({
       orderBy: { date: 'desc' },
     });
-    
-    // Format date if needed, or send as is (ISO string is standard)
-    // Admin dashboard might expect ISO string or specific format.
-    // Based on messages, it likely expects string.
+
     const formatted = comments.map((c: CommentRow) => ({
         id: c.id,
         user_name: c.userName,
@@ -19,28 +27,37 @@ export async function GET() {
     }));
 
     return NextResponse.json(formatted);
-  } catch {
-    console.error('Get comments error');
+  } catch (error) {
+    console.error('Get comments error:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }
 
-// Add POST if needed for users to add comments, but admin dashboard only reads/edits/deletes.
-// Assuming comments come from somewhere else or maybe admin creates them? 
-// The dashboard code doesn't show creating comments, only fetching.
-// But if there are no comments, it will be empty.
-// I'll add a POST just in case or for seeding.
 export async function POST(request: Request) {
     try {
+        // Require authentication to create comments
+        const auth = await verifyAuth(request);
+        if ('error' in auth) {
+          return NextResponse.json({ message: auth.error }, { status: auth.status });
+        }
+        if (!isAdmin(auth.user)) {
+          return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
+        }
+
         const { user_name, text } = await request.json();
+        if (!user_name || !text) {
+          return NextResponse.json({ message: 'user_name and text are required' }, { status: 400 });
+        }
+
         const comment = await prisma.comment.create({
             data: {
                 userName: user_name,
                 text
             }
         });
-        return NextResponse.json(comment);
-    } catch {
-        return NextResponse.json({ error: 'Failed' }, { status: 500 });
+        return NextResponse.json(comment, { status: 201 });
+    } catch (error) {
+        console.error('Create comment error:', error);
+        return NextResponse.json({ message: 'Failed to create comment' }, { status: 500 });
     }
 }

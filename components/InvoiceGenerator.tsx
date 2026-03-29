@@ -70,7 +70,6 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
     const u = [...paymentEntries]; u[i] = { ...u[i], [field]: val }; setPaymentEntries(u);
   };
 
-  // Auto-generate sequential invoice number
   useEffect(() => {
     if (!invoice) {
       fetchAPI("/invoices").then((invoices: { invoiceNumber?: string; number?: string }[]) => {
@@ -189,31 +188,31 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-elvion-card border border-white/10 rounded-xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="flex max-h-[95vh] w-full max-w-7xl flex-col rounded-xl border border-white/10 bg-elvion-card shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-4">
           <h2 className="text-lg font-bold text-white">Invoice Generator</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={20} /></button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Left Panel - Form */}
-          <div className="w-2/5 border-r border-white/10 p-5 overflow-y-auto space-y-4">
+          <div className="w-2/5 space-y-4 overflow-y-auto border-r border-white/10 p-5">
             {/* Client & Project */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Client *</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Client *</label>
                 <select value={clientId} onChange={e => setClientId(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white">
                   <option value="">Select Client</option>
                   {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Project</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Project</label>
                 <select value={projectId} onChange={e => setProjectId(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white">
                   <option value="">None</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -223,19 +222,19 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
             {/* Dates & Currency */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Issue Date</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Issue Date</label>
                 <input type="date" value={issueDate} onChange={e => setIssueDate(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white" />
               </div>
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Due Date</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Due Date</label>
                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white" />
               </div>
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Currency</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Currency</label>
                 <select value={currency} onChange={e => setCurrency(e.target.value)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white">
                   {currencies.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -243,36 +242,36 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
 
             {/* Line Items */}
             <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Line Items</label>
+              <label className="mb-2 block text-[10px] tracking-wider text-gray-400 uppercase">Line Items</label>
               <div className="space-y-2">
                 {items.map((item, i) => (
-                  <div key={i} className="bg-elvion-dark/50 border border-white/5 rounded-lg p-3">
+                  <div key={i} className="rounded-lg border border-white/5 bg-elvion-dark/50 p-3">
                     <div className="flex items-start gap-2">
                       <input type="text" placeholder="Description" value={item.description}
                         onChange={e => updateItem(i, "description", e.target.value)}
-                        className="flex-1 bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white placeholder:text-gray-500" />
+                        className="flex-1 rounded border border-white/10 bg-elvion-dark px-2 py-1.5 text-sm text-white placeholder:text-gray-500" />
                       {items.length > 1 && (
-                        <button onClick={() => removeItem(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded shrink-0">
+                        <button onClick={() => removeItem(i)} className="shrink-0 rounded p-1.5 text-red-400 hover:bg-red-500/10">
                           <Trash2 size={14} />
                         </button>
                       )}
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mt-2">
+                    <div className="mt-2 grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-[9px] text-gray-500 block mb-0.5">Qty</label>
+                        <label className="mb-0.5 block text-[9px] text-gray-500">Qty</label>
                         <input type="number" min="1" value={item.quantity}
                           onChange={e => updateItem(i, "quantity", e.target.value)}
-                          className="w-full bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white" />
+                          className="w-full rounded border border-white/10 bg-elvion-dark px-2 py-1.5 text-sm text-white" />
                       </div>
                       <div>
-                        <label className="text-[9px] text-gray-500 block mb-0.5">Unit Price</label>
+                        <label className="mb-0.5 block text-[9px] text-gray-500">Unit Price</label>
                         <input type="number" min="0" step="0.01" value={item.unitPrice || ""}
                           onChange={e => updateItem(i, "unitPrice", e.target.value)}
-                          className="w-full bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white" />
+                          className="w-full rounded border border-white/10 bg-elvion-dark px-2 py-1.5 text-sm text-white" />
                       </div>
                       <div>
-                        <label className="text-[9px] text-gray-500 block mb-0.5">Total</label>
-                        <div className="px-2 py-1.5 text-sm text-elvion-primary font-semibold">
+                        <label className="mb-0.5 block text-[9px] text-gray-500">Total</label>
+                        <div className="px-2 py-1.5 text-sm font-semibold text-elvion-primary">
                           {formatCurrency(item.quantity * item.unitPrice, currency)}
                         </div>
                       </div>
@@ -281,7 +280,7 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
                 ))}
               </div>
               <button onClick={addItem}
-                className="mt-2 flex items-center gap-1 text-xs text-elvion-primary hover:text-elvion-primary/80 font-medium">
+                className="mt-2 flex items-center gap-1 text-xs font-medium text-elvion-primary hover:text-elvion-primary/80">
                 <Plus size={14} /> Add Item
               </button>
             </div>
@@ -289,77 +288,77 @@ export default function InvoiceGenerator({ invoice, users, projects, onClose, on
             {/* Tax & Discount */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Tax (%)</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Tax (%)</label>
                 <input type="number" min="0" step="0.1" value={taxRate || ""}
                   onChange={e => setTaxRate(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white" />
               </div>
               <div>
-                <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Discount (%)</label>
+                <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Discount (%)</label>
                 <input type="number" min="0" step="0.1" value={discountRate || ""}
                   onChange={e => setDiscountRate(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white" />
+                  className="w-full rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white" />
               </div>
             </div>
 
             {/* Payment Methods & Accounts */}
             <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-2 block">Payment Methods</label>
+              <label className="mb-2 block text-[10px] tracking-wider text-gray-400 uppercase">Payment Methods</label>
               <div className="space-y-2">
                 {paymentEntries.map((entry, i) => (
-                  <div key={i} className="bg-elvion-dark/50 border border-white/5 rounded-lg p-3">
+                  <div key={i} className="rounded-lg border border-white/5 bg-elvion-dark/50 p-3">
                     <div className="flex items-start gap-2">
                       <select value={entry.method} onChange={e => updatePaymentEntry(i, "method", e.target.value)}
-                        className="flex-1 bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white">
+                        className="flex-1 rounded border border-white/10 bg-elvion-dark px-2 py-1.5 text-sm text-white">
                         <option value="">Select Method</option>
                         {paymentMethodOptions.map(m => (
                           <option key={m} value={m}>{m}</option>
                         ))}
                       </select>
                       {paymentEntries.length > 1 && (
-                        <button onClick={() => removePaymentEntry(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded shrink-0">
+                        <button onClick={() => removePaymentEntry(i)} className="shrink-0 rounded p-1.5 text-red-400 hover:bg-red-500/10">
                           <Trash2 size={14} />
                         </button>
                       )}
                     </div>
                     <input type="text" value={entry.accountNo} onChange={e => updatePaymentEntry(i, "accountNo", e.target.value)}
                       placeholder="Account / Bank number"
-                      className="w-full mt-2 bg-elvion-dark border border-white/10 rounded px-2 py-1.5 text-sm text-white placeholder:text-gray-500" />
+                      className="mt-2 w-full rounded border border-white/10 bg-elvion-dark px-2 py-1.5 text-sm text-white placeholder:text-gray-500" />
                   </div>
                 ))}
               </div>
               <button onClick={addPaymentEntry}
-                className="mt-2 flex items-center gap-1 text-xs text-elvion-primary hover:text-elvion-primary/80 font-medium">
+                className="mt-2 flex items-center gap-1 text-xs font-medium text-elvion-primary hover:text-elvion-primary/80">
                 <Plus size={14} /> Add Payment Method
               </button>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">Notes</label>
+              <label className="mb-1 block text-[10px] tracking-wider text-gray-400 uppercase">Notes</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
                 placeholder="Thank you for your business!"
-                className="w-full bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 resize-none" />
+                className="w-full resize-none rounded-lg border border-white/10 bg-elvion-dark px-3 py-2 text-sm text-white placeholder:text-gray-500" />
             </div>
 
             {/* Actions */}
             <div className="flex gap-3 pt-2">
               {!invoice && (
                 <button onClick={handleSave} disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-elvion-primary text-black rounded-lg font-semibold hover:bg-elvion-primary/90 disabled:opacity-50 text-sm">
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-elvion-primary px-4 py-2.5 text-sm font-semibold text-black hover:bg-elvion-primary/90 disabled:opacity-50">
                   <Save size={16} /> {saving ? "Saving..." : "Save Invoice"}
                 </button>
               )}
               <button onClick={handleDownloadPDF} disabled={downloading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-100 disabled:opacity-50 text-sm">
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-100 disabled:opacity-50">
                 <Download size={16} /> {downloading ? "Generating..." : "Download PDF"}
               </button>
             </div>
           </div>
 
           {/* Right Panel - Invoice Preview */}
-          <div className="w-3/5 bg-gray-100 dark:bg-gray-800/50 overflow-y-auto p-6">
-            <div ref={invoiceRef} className="bg-white rounded-lg shadow-sm mx-auto" style={{ maxWidth: 680, padding: 40, fontFamily: "system-ui, -apple-system, sans-serif" }}>
+          <div className="w-3/5 overflow-y-auto bg-gray-100 p-6 dark:bg-gray-800/50">
+            <div ref={invoiceRef} className="mx-auto rounded-lg bg-white shadow-sm" style={{ maxWidth: 680, padding: 40, fontFamily: "system-ui, -apple-system, sans-serif" }}>
               {/* Header */}
               <div style={{ background: "linear-gradient(135deg, #121212 0%, #1a1f2e 100%)", borderRadius: 10, padding: "20px 24px", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <img src="/logo.webp" alt="Elvion" style={{ height: 40 }} crossOrigin="anonymous" />
