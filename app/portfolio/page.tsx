@@ -65,7 +65,7 @@ export default function Portfolio() {
             description: "Complete online shopping experience with seamless checkout",
             color: "from-[#00d28d]/30 to-[#4a90e2]/30",
             stats: { views: "25K", likes: "2.5K", conversion: "+150%" },
-            image: "/portfolio/Ecommerce.png"
+            image: "/portfolios/Ecommerce.png"
         },
         {
             id: 2,
@@ -361,12 +361,14 @@ export default function Portfolio() {
                                             style={{ opacity: 0.85 }}
                                         />
                                     ) : null}
-                                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                                        <div className={`w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center transition-all duration-700 ${hoveredProject === project.id ? 'scale-125 rotate-12' : ''
-                                            }`}>
-                                            <Eye size={48} className="text-white/70" />
+                                    {!project.image && (
+                                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                                            <div className={`w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center transition-all duration-700 ${hoveredProject === project.id ? 'scale-125 rotate-12' : ''
+                                                }`}>
+                                                <Eye size={48} className="text-white/70" />
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     {/* Overlay on Hover */}
                                     <div className={`absolute inset-0 bg-[#00d28d]/90 flex items-center justify-center transition-opacity duration-500 ${hoveredProject === project.id ? 'opacity-100' : 'opacity-0'
