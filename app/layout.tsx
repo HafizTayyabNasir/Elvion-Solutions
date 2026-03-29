@@ -4,7 +4,6 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { LayoutShell } from "@/components/LayoutShell";
-import CustomCursor from "@/components/CustomCursor";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className={montserrat.className}>
         <LanguageProvider>
           <AuthProvider>
-            <CustomCursor />
             <LayoutShell>
               {children}
             </LayoutShell>
