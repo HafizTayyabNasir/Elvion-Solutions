@@ -40,8 +40,8 @@ interface APIComment {
 }
 
 const initialComments: Comment[] = [
-  { id: 1, user: "Ali Khan", text: "Elvion transformed our sales funnel!", date: "2025-11-20" },
-  { id: 2, user: "Sarah J.", text: "Best web dev team in Pakistan.", date: "2025-12-05" }
+  { id: 1, user: "Ali Khan", text: "Elvion transformed our sales funnel!", date: "2025-11-10" },
+  { id: 2, user: "Sarah J.", text: "Best web dev team in Pakistan.", date: "2025-11-05" }
 ];
 
 const teamMembers = [
