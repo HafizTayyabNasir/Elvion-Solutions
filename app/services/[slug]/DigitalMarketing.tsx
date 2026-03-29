@@ -469,6 +469,95 @@ export default function DigitalMarketing() {
                 </div>
             </section>
 
+            {/* Pricing Section */}
+            <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="text-center mb-16 space-y-4">
+                        <span className="text-[#4a90e2] font-bold tracking-wider uppercase text-sm animate-glow inline-block">Pricing</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white">Transparent Pricing</h2>
+                        <p className="text-[#888] text-lg max-w-2xl mx-auto">Flexible packages designed to grow with your business</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: "Starter",
+                                price: "PKR 30,000",
+                                period: "/month",
+                                features: [
+                                    "SEO Optimization",
+                                    "Social Media Management (2 platforms)",
+                                    "Monthly Performance Report",
+                                    "5 Content Posts/Month",
+                                    "Basic Analytics Setup",
+                                    "Email Support"
+                                ],
+                                popular: false
+                            },
+                            {
+                                name: "Growth",
+                                price: "PKR 70,000",
+                                period: "/month",
+                                features: [
+                                    "Full SEO + Content Marketing",
+                                    "Social Media (4 platforms)",
+                                    "Google & Meta Ads Management",
+                                    "15 Content Posts/Month",
+                                    "Custom Analytics Dashboard",
+                                    "Bi-weekly Strategy Calls",
+                                    "3 Months Support"
+                                ],
+                                popular: true
+                            },
+                            {
+                                name: "Enterprise",
+                                price: "Custom",
+                                period: "",
+                                features: [
+                                    "Full Digital Marketing Suite",
+                                    "All Social Platforms Managed",
+                                    "Advanced Paid Advertising",
+                                    "Unlimited Content Creation",
+                                    "Dedicated Account Manager",
+                                    "Weekly Reporting & Strategy",
+                                    "Priority 24/7 Support"
+                                ],
+                                popular: false
+                            }
+                        ].map((pkg, idx) => (
+                            <div
+                                key={idx}
+                                className={`bg-[#111] p-8 rounded-2xl border transition-all duration-500 hover-lift relative ${pkg.popular ? "border-[#4a90e2]/60 scale-105" : "border-white/10 hover:border-[#4a90e2]/40"}`}
+                            >
+                                {pkg.popular && (
+                                    <div className="text-center mb-4">
+                                        <span className="bg-[#4a90e2] text-white px-4 py-1 rounded-full text-xs font-bold animate-glow">POPULAR</span>
+                                    </div>
+                                )}
+                                <div className="text-center mb-6">
+                                    <h3 className="text-2xl font-bold text-white mb-2">{pkg.name}</h3>
+                                    <div className="text-4xl font-black text-[#4a90e2]">{pkg.price}</div>
+                                    {pkg.period && <div className="text-sm text-[#888] mt-1">{pkg.period}</div>}
+                                </div>
+                                <ul className="space-y-3 mb-8">
+                                    {pkg.features.map((feature, i) => (
+                                        <li key={i} className="flex items-center text-sm text-[#888]">
+                                            <CheckCircle2 size={16} className="text-[#4a90e2] mr-2 flex-shrink-0" />
+                                            {feature}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    className={`w-full py-3 rounded-full font-bold transition-all duration-300 ${pkg.popular ? "bg-[#4a90e2] text-white hover:bg-[#3a80d2]" : "bg-white/5 text-white hover:bg-[#4a90e2] hover:text-white border border-white/10"}`}
+                                >
+                                    Get Started
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* CTA Section */}
             <section className="py-20 bg-gradient-to-r from-[#4a90e2] to-[#00d28d] relative overflow-hidden animate-gradient">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20"></div>

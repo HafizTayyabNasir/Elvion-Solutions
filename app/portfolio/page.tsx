@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
     ArrowRight,
     Globe,
@@ -25,7 +24,6 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Portfolio() {
-    const router = useRouter();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [activeFilter, setActiveFilter] = useState("all");
@@ -59,85 +57,102 @@ export default function Portfolio() {
     const projects = [
         {
             id: 1,
+            slug: "ecommerce-platform",
             title: "Modern E-commerce Platform",
             category: "ecommerce",
             tags: ["E-commerce", "Web Design", "UI/UX"],
             description: "Complete online shopping experience with seamless checkout",
             color: "from-[#00d28d]/30 to-[#4a90e2]/30",
             stats: { views: "25K", likes: "2.5K", conversion: "+150%" },
-            image: "/portfolios/Ecommerce 01.png"
+            image: "/portfolios/Ecommerce Portfolios/Ecommerce 01.png"
         },
         {
             id: 2,
+            slug: "fitness-mobile-app",
             title: "Fitness Mobile App",
             category: "mobile",
             tags: ["Mobile App", "UI/UX", "Health"],
             description: "Interactive fitness tracking with personalized workouts",
             color: "from-purple-500/30 to-pink-500/30",
-            stats: { views: "18K", likes: "1.8K", conversion: "+85%" }
+            stats: { views: "18K", likes: "1.8K", conversion: "+85%" },
+            image: "/portfolios/Fitness Mobile App Portfolios/Fitness App 01.png"
         },
         {
             id: 3,
+            slug: "tech-startup-branding",
             title: "Tech Startup Branding",
             category: "branding",
             tags: ["Branding", "Logo Design", "Identity"],
             description: "Complete brand identity and visual guidelines",
             color: "from-blue-500/30 to-green-500/30",
-            stats: { views: "12K", likes: "1.2K", conversion: "+200%" }
+            stats: { views: "12K", likes: "1.2K", conversion: "+200%" },
+            image: "/portfolios/Tech Startup/Tech 01.png"
         },
         {
             id: 4,
+            slug: "saas-dashboard",
             title: "SaaS Dashboard Design",
             category: "web",
             tags: ["Web Design", "Dashboard", "Analytics"],
             description: "Intuitive analytics platform for data visualization",
             color: "from-[#4a90e2]/30 to-[#00d28d]/30",
-            stats: { views: "30K", likes: "3.2K", conversion: "+120%" }
+            stats: { views: "30K", likes: "3.2K", conversion: "+120%" },
+            image: "/portfolios/SAAS/SAAS 01.png"
         },
         {
             id: 5,
+            slug: "restaurant-booking-app",
             title: "Restaurant Booking App",
             category: "mobile",
             tags: ["Mobile App", "Food Tech", "Booking"],
             description: "Seamless table reservation and menu browsing",
             color: "from-orange-500/30 to-red-500/30",
-            stats: { views: "22K", likes: "2.1K", conversion: "+95%" }
+            stats: { views: "22K", likes: "2.1K", conversion: "+95%" },
+            image: "/portfolios/Restaurant App/Restaurant 01.png"
         },
         {
             id: 6,
+            slug: "fashion-brand-website",
             title: "Fashion Brand Website",
             category: "web",
             tags: ["Web Design", "E-commerce", "Fashion"],
             description: "Luxury fashion brand with stunning visuals",
             color: "from-pink-500/30 to-purple-500/30",
-            stats: { views: "28K", likes: "2.8K", conversion: "+175%" }
+            stats: { views: "28K", likes: "2.8K", conversion: "+175%" },
+            image: "/portfolios/Fashion Brand/Fashion 01.png"
         },
         {
             id: 7,
+            slug: "real-estate-portal",
             title: "Real Estate Portal",
             category: "web",
             tags: ["Web Design", "Real Estate", "Search"],
             description: "Property search platform with advanced filters",
             color: "from-[#00d28d]/30 to-blue-500/30",
-            stats: { views: "20K", likes: "1.9K", conversion: "+110%" }
+            stats: { views: "20K", likes: "1.9K", conversion: "+110%" },
+            image: "/portfolios/Real Estate/Real Estate 01.png"
         },
         {
             id: 8,
+            slug: "fintech-app",
             title: "Fintech App Interface",
             category: "mobile",
             tags: ["Mobile App", "Finance", "Banking"],
             description: "Modern banking app with intuitive money management",
             color: "from-blue-500/30 to-purple-500/30",
-            stats: { views: "35K", likes: "3.5K", conversion: "+140%" }
+            stats: { views: "35K", likes: "3.5K", conversion: "+140%" },
+            image: "/portfolios/Fintech/Fintech 01.png"
         },
         {
             id: 9,
+            slug: "coffee-shop-branding",
             title: "Coffee Shop Branding",
             category: "branding",
             tags: ["Branding", "Packaging", "Identity"],
             description: "Warm and inviting brand identity for local café",
             color: "from-amber-500/30 to-orange-500/30",
-            stats: { views: "15K", likes: "1.5K", conversion: "+160%" }
+            stats: { views: "15K", likes: "1.5K", conversion: "+160%" },
+            image: "/portfolios/Coffee Shop/Coffee 01.png"
         }
     ];
 
@@ -339,9 +354,10 @@ export default function Portfolio() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {filteredProjects.map((project, idx) => (
-                            <div
+                            <Link
                                 key={project.id}
-                                className="group bg-[#111] rounded-2xl border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 overflow-hidden hover-lift card-3d cursor-pointer animate-pulse-border"
+                                href={`/portfolio/${project.slug}`}
+                                className="group bg-[#111] rounded-2xl border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 overflow-hidden hover-lift card-3d cursor-pointer animate-pulse-border block"
                                 style={{
                                     animation: `slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
                                     animationDelay: `${idx * 0.1}s`,
@@ -374,12 +390,9 @@ export default function Portfolio() {
                                     <div className={`absolute inset-0 bg-[#00d28d]/90 flex items-center justify-center transition-opacity duration-500 ${hoveredProject === project.id ? 'opacity-100' : 'opacity-0'
                                         }`}>
                                         <div className="text-center space-y-4">
-                                            <button 
-                                                onClick={() => router.push(`/portfolio#project-${project.id}`)}
-                                                className="px-6 py-3 bg-white text-[#00d28d] rounded-full font-bold hover:scale-110 transition-transform duration-300 flex items-center gap-2 mx-auto"
-                                            >
+                                            <span className="px-6 py-3 bg-white text-[#00d28d] rounded-full font-bold flex items-center gap-2 mx-auto w-fit">
                                                 View Case Study <ExternalLink size={18} />
-                                            </button>
+                                            </span>
                                         </div>
                                     </div>
 
@@ -430,7 +443,7 @@ export default function Portfolio() {
                                         <ArrowRight size={18} className="group-hover/btn:translate-x-2 transition-transform duration-300" />
                                     </button>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
 
