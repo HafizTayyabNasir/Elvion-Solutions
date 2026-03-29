@@ -64,7 +64,8 @@ export default function Portfolio() {
             tags: ["E-commerce", "Web Design", "UI/UX"],
             description: "Complete online shopping experience with seamless checkout",
             color: "from-[#00d28d]/30 to-[#4a90e2]/30",
-            stats: { views: "25K", likes: "2.5K", conversion: "+150%" }
+            stats: { views: "25K", likes: "2.5K", conversion: "+150%" },
+            image: "/portfolio/Ecommerce.png"
         },
         {
             id: 2,
@@ -351,7 +352,16 @@ export default function Portfolio() {
                             >
                                 {/* Project Image/Preview */}
                                 <div className={`relative h-64 bg-gradient-to-br ${project.color} overflow-hidden`}>
-                                    <div className="absolute inset-0 flex items-center justify-center">
+                                    {/* Show image for Ecommerce project */}
+                                    {project.image ? (
+                                        <img
+                                            src={project.image}
+                                            alt={project.title}
+                                            className="absolute inset-0 w-full h-full object-cover object-center z-0"
+                                            style={{ opacity: 0.85 }}
+                                        />
+                                    ) : null}
+                                    <div className="absolute inset-0 flex items-center justify-center z-10">
                                         <div className={`w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center transition-all duration-700 ${hoveredProject === project.id ? 'scale-125 rotate-12' : ''
                                             }`}>
                                             <Eye size={48} className="text-white/70" />
