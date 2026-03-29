@@ -65,7 +65,7 @@ export default function Portfolio() {
             description: "Complete online shopping experience with seamless checkout",
             color: "from-[#00d28d]/30 to-[#4a90e2]/30",
             stats: { views: "25K", likes: "2.5K", conversion: "+150%" },
-            image: "/portfolios/Ecommerce.png"
+            image: "/portfolios/Ecommerce 01.png"
         },
         {
             id: 2,
