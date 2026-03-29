@@ -1,5 +1,20 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+function useScrollAnim(threshold = 0.12) {
+    const ref = useRef<HTMLElement | null>(null);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) { el.classList.add("in-view"); observer.unobserve(el); } },
+            { threshold }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [threshold]);
+    return ref;
+}
 import Link from "next/link";
 import {
     ArrowRight,
@@ -21,6 +36,10 @@ export default function Internship() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const { t } = useLanguage();
+
+    const positionsRef = useScrollAnim();
+    const benefitsRef = useScrollAnim();
+    const ctaRef = useScrollAnim();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -168,6 +187,17 @@ export default function Internship() {
         .animate-scale-pulse {
           animation: scale-pulse 2s ease-in-out infinite;
         }
+
+        .section-animate {
+          opacity: 0;
+          transform: translateY(40px);
+          transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+                      transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .section-animate.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
       `}</style>
 
             {/* Hero Section */}
@@ -234,7 +264,7 @@ export default function Internship() {
             </section>
 
             {/* Open Positions Section */}
-            <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative">
+            <section ref={positionsRef} className="section-animate py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16 space-y-4">
                         <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("internship.positions.badge")}</span>
@@ -302,7 +332,7 @@ export default function Internship() {
             </section>
 
             {/* Benefits Section */}
-            <section className="py-20 bg-[#0a0a0a]">
+            <section ref={benefitsRef} className="section-animate py-20 bg-[#0a0a0a]">
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="text-center mb-16 space-y-4">
                         <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow inline-block">{t("internship.benefits.badge")}</span>
@@ -388,7 +418,7 @@ export default function Internship() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] relative overflow-hidden animate-gradient">
+            <section ref={ctaRef} className="section-animate py-20 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] relative overflow-hidden animate-gradient">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20"></div>
 
                 <div className="max-w-4xl mx-auto px-4 text-center relative z-10">

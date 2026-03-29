@@ -1,13 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
     Target,
     Eye,
     Heart,
     Users,
-    TrendingUp,
     Award,
     Zap,
     Globe,
@@ -24,8 +22,99 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
+// ─── useScrollAnimation hook ────────────────────────────────────────────────
+function useScrollAnimation(threshold = 0.15) {
+    const ref = useRef<HTMLElement | null>(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    el.classList.add("in-view");
+                    setIsVisible(true);
+                    observer.unobserve(el); // fire once
+                }
+            },
+            { threshold }
+        );
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [threshold]);
+
+    return { ref, isVisible };
+}
+
+// ─── useCounterAnimation hook ────────────────────────────────────────────────
+function useCounterAnimation(targetString: string, isVisible: boolean, duration = 2000) {
+    const [displayValue, setDisplayValue] = useState("0");
+
+    useEffect(() => {
+        if (!isVisible) return;
+
+        // Parse number and suffix (e.g. "500+" → 500, "+") ("98%" → 98, "%")
+        const match = targetString.match(/^(\d+)(.*)$/);
+        if (!match) {
+            setDisplayValue(targetString);
+            return;
+        }
+
+        const target = parseInt(match[1], 10);
+        const suffix = match[2];
+        const startTime = performance.now();
+
+        const step = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(eased * target);
+            setDisplayValue(`${current}${suffix}`);
+            if (progress < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+    }, [isVisible, targetString, duration]);
+
+    return displayValue;
+}
+
+// ─── Individual animated achievement card ────────────────────────────────────
+function AchievementCard({
+    achievement,
+    idx,
+    sectionVisible,
+}: {
+    achievement: { number: string; label: string; icon: React.ElementType };
+    idx: number;
+    sectionVisible: boolean;
+}) {
+    const displayNumber = useCounterAnimation(achievement.number, sectionVisible);
+    const Icon = achievement.icon;
+
+    return (
+        <div
+            className="section-animate group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default"
+            style={{ transitionDelay: `${idx * 0.12}s` }}
+        >
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                <Icon size={28} className="text-[#00d28d]" />
+            </div>
+            <div className="text-4xl font-black text-[#00d28d] mb-2 group-hover:scale-110 transition-transform duration-300">
+                {displayNumber}
+            </div>
+            <div className="text-[#888] text-sm group-hover:text-white transition-colors duration-300">
+                {achievement.label}
+            </div>
+        </div>
+    );
+}
+
 export default function About() {
-    const router = useRouter();
     const { t } = useLanguage();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [activeTab, setActiveTab] = useState("mission");
@@ -69,6 +158,14 @@ export default function About() {
         { icon: Rocket, name: t("about.services.growthStrategy") }
     ];
 
+    // ── Per-section scroll refs ───────────────────────────────────────────────
+    const heroAnim        = useScrollAnimation(0.1);
+    const tabsAnim        = useScrollAnimation(0.1);
+    const achievementsAnim = useScrollAnimation(0.15);
+    const servicesAnim    = useScrollAnimation(0.1);
+    const whyUsAnim       = useScrollAnimation(0.1);
+    const ctaAnim         = useScrollAnimation(0.1);
+
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
             <style jsx global>{`
@@ -76,22 +173,22 @@ export default function About() {
           0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
         }
-        
+
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
         }
-        
+
         @keyframes glow {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
         }
-        
+
         @keyframes slide-up {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes shimmer {
           0% { background-position: -1000px 0; }
           100% { background-position: 1000px 0; }
@@ -101,50 +198,79 @@ export default function About() {
           background-size: 200% 200%;
           animation: gradient-x 3s ease infinite;
         }
-        
+
         .animate-float {
           animation: float 6s ease-in-out infinite;
         }
-        
+
         .animate-glow {
           animation: glow 2s ease-in-out infinite;
         }
-        
+
         .animate-slide-up {
           animation: slide-up 0.6s ease-out forwards;
         }
-        
+
         .shimmer {
           background: linear-gradient(90deg, transparent, rgba(0,210,141,0.1), transparent);
           background-size: 200% 100%;
           animation: shimmer 3s infinite;
         }
-        
+
         .text-shadow-glow {
           text-shadow: 0 0 20px rgba(0,210,141,0.5), 0 0 40px rgba(0,210,141,0.3);
         }
-        
+
         .hover-lift {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .hover-lift:hover {
           transform: translateY(-8px);
           box-shadow: 0 20px 40px rgba(0,210,141,0.2);
         }
-        
+
         .card-3d {
           transform-style: preserve-3d;
           transition: transform 0.3s ease;
         }
-        
+
         .card-3d:hover {
           transform: rotateY(5deg) rotateX(5deg);
         }
+
+        /* ── Scroll-triggered animation base ── */
+        .section-animate {
+          opacity: 0;
+          transform: translateY(40px);
+          transition:
+            opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .section-animate.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* ── Stagger delay helpers ── */
+        .delay-0   { transition-delay: 0s; }
+        .delay-100 { transition-delay: 0.1s; }
+        .delay-150 { transition-delay: 0.15s; }
+        .delay-200 { transition-delay: 0.2s; }
+        .delay-250 { transition-delay: 0.25s; }
+        .delay-300 { transition-delay: 0.3s; }
+        .delay-350 { transition-delay: 0.35s; }
+        .delay-400 { transition-delay: 0.4s; }
+        .delay-500 { transition-delay: 0.5s; }
+        .delay-600 { transition-delay: 0.6s; }
       `}</style>
 
             {/* Hero Section */}
-            <section className="relative pt-32 pb-20 overflow-hidden">
+            <section
+                ref={heroAnim.ref as React.RefObject<HTMLElement>}
+                className="relative pt-32 pb-20 overflow-hidden"
+            >
                 {/* Animated Background */}
                 <div className="absolute inset-0 bg-[#0a0a0a]">
                     <div
@@ -187,7 +313,10 @@ export default function About() {
             </section>
 
             {/* Mission, Vision & Values Tabs */}
-            <section className="py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative">
+            <section
+                ref={tabsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative"
+            >
                 <div className="max-w-6xl mx-auto px-4">
                     {/* Tab Navigation */}
                     <div className="flex flex-wrap justify-center gap-4 mb-12">
@@ -195,14 +324,14 @@ export default function About() {
                             { id: "mission", icon: Target, label: t("about.tabs.mission") },
                             { id: "vision", icon: Eye, label: t("about.tabs.vision") },
                             { id: "values", icon: Heart, label: t("about.tabs.values") }
-                        ].map((tab) => (
+                        ].map((tab, idx) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`group flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 ${activeTab === tab.id
+                                className={`section-animate group flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 delay-${(idx + 1) * 100} ${activeTab === tab.id
                                     ? "bg-[#00d28d] text-[#0a0a0a]"
                                     : "bg-[#111] text-white border border-white/10 hover:border-[#00d28d]/50"
-                                    }`}
+                                    } ${tabsAnim.isVisible ? "in-view" : ""}`}
                             >
                                 <tab.icon size={20} className={activeTab === tab.id ? "" : "group-hover:scale-110 transition-transform"} />
                                 {tab.label}
@@ -298,39 +427,36 @@ export default function About() {
             </section>
 
             {/* Achievements Section */}
-            <section className="py-20 bg-[#0a0a0a] relative overflow-hidden">
+            <section
+                ref={achievementsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-[#0a0a0a] relative overflow-hidden"
+            >
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="text-center mb-12">
+                    <div className={`section-animate text-center mb-12 ${achievementsAnim.isVisible ? "in-view" : ""}`}>
                         <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.achievements.badge")}</span>
                         <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.achievements.title")}</h2>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {achievements.map((achievement, idx) => (
-                            <div
+                            <AchievementCard
                                 key={idx}
-                                className="group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default"
-                                style={{ animationDelay: `${idx * 0.1}s` }}
-                            >
-                                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                                    <achievement.icon size={28} className="text-[#00d28d]" />
-                                </div>
-                                <div className="text-4xl font-black text-[#00d28d] mb-2 group-hover:scale-110 transition-transform duration-300">
-                                    {achievement.number}
-                                </div>
-                                <div className="text-[#888] text-sm group-hover:text-white transition-colors duration-300">
-                                    {achievement.label}
-                                </div>
-                            </div>
+                                achievement={achievement}
+                                idx={idx}
+                                sectionVisible={achievementsAnim.isVisible}
+                            />
                         ))}
                     </div>
                 </div>
             </section>
 
             {/* What We Do Section */}
-            <section className="py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+            <section
+                ref={servicesAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]"
+            >
                 <div className="max-w-6xl mx-auto px-4">
-                    <div className="text-center mb-12">
+                    <div className={`section-animate text-center mb-12 delay-100 ${servicesAnim.isVisible ? "in-view" : ""}`}>
                         <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.services.badge")}</span>
                         <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.services.title")}</h2>
                         <p className="text-[#888] text-lg mt-4 max-w-2xl mx-auto">
@@ -342,7 +468,8 @@ export default function About() {
                         {services.map((service, idx) => (
                             <div
                                 key={idx}
-                                className="group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default"
+                                className={`section-animate group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default ${servicesAnim.isVisible ? "in-view" : ""}`}
+                                style={{ transitionDelay: `${0.1 + idx * 0.08}s` }}
                             >
                                 <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
                                     <service.icon size={24} className="text-[#00d28d]" />
@@ -359,11 +486,14 @@ export default function About() {
 
 
             {/* Why Choose Us Section */}
-            <section className="py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+            <section
+                ref={whyUsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]"
+            >
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] rounded-3xl p-8 md:p-12 border border-white/10 hover:border-[#00d28d]/30 transition-all duration-500">
                         <div className="grid lg:grid-cols-2 gap-12 items-center">
-                            <div className="space-y-6">
+                            <div className={`section-animate space-y-6 delay-100 ${whyUsAnim.isVisible ? "in-view" : ""}`}>
                                 <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.whyUs.badge")}</span>
                                 <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
                                     {t("about.whyUs.title")}
@@ -381,7 +511,11 @@ export default function About() {
                                         t("about.whyUs.item5"),
                                         t("about.whyUs.item6")
                                     ].map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-3 group cursor-default">
+                                        <div
+                                            key={idx}
+                                            className={`section-animate flex items-center gap-3 group cursor-default ${whyUsAnim.isVisible ? "in-view" : ""}`}
+                                            style={{ transitionDelay: `${0.2 + idx * 0.08}s` }}
+                                        >
                                             <CheckCircle2 size={20} className="text-[#00d28d] flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
                                             <span className="text-[#888] group-hover:text-white transition-colors duration-300">{item}</span>
                                         </div>
@@ -389,7 +523,7 @@ export default function About() {
                                 </div>
                             </div>
 
-                            <div className="relative">
+                            <div className={`section-animate relative delay-300 ${whyUsAnim.isVisible ? "in-view" : ""}`}>
                                 <div className="aspect-square bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-white/10 rounded-3xl flex items-center justify-center relative overflow-hidden group hover-lift cursor-default">
                                     <div className="absolute inset-0 bg-gradient-to-br from-[#00d28d]/10 via-transparent to-[#4a90e2]/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-700"></div>
                                     <div className="relative z-10 text-center space-y-6 p-8">
@@ -410,10 +544,13 @@ export default function About() {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] relative overflow-hidden animate-gradient">
+            <section
+                ref={ctaAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] relative overflow-hidden animate-gradient"
+            >
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20"></div>
 
-                <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
+                <div className={`section-animate max-w-4xl mx-auto px-4 text-center relative z-10 delay-100 ${ctaAnim.isVisible ? "in-view" : ""}`}>
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-105 transition-transform duration-300 cursor-default">
                         {t("about.cta.title")}
                     </h2>
