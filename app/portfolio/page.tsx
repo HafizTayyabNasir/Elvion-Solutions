@@ -107,7 +107,7 @@ export default function Portfolio() {
             tags: ["Mobile App", "Food Tech", "Booking"],
             description: "Seamless table reservation and menu browsing",
             color: "from-orange-500/30 to-red-500/30",
-            stats: { views: "22K", likes: "2.1K", conversion: "+95%" },
+            stats: { views: "22K", likes: "2.2K", conversion: "+95%" },
             image: "/portfolios/Restaurant App/Restaurant 01.png"
         },
         {
