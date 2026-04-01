@@ -169,21 +169,21 @@ html {
    Custom cursor
    ============================================================ */
 .cursor-glow {
-  width: 32px;
-  height: 32px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,210,141,0.18) 0%, rgba(0,210,141,0) 70%);
+  background: radial-gradient(circle, rgba(0,210,141,0.10) 0%, rgba(0,210,141,0) 70%);
   position: fixed;
   pointer-events: none;
   z-index: 99999;
   transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
   transform: translate(-50%, -50%);
-  filter: blur(2px);
+  filter: blur(4px);
 }
 
 .cursor-glow.hovering {
-  width: 56px;
-  height: 56px;
-  background: radial-gradient(circle, rgba(0,210,141,0.25) 0%, rgba(0,210,141,0) 70%);
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(0,210,141,0.13) 0%, rgba(0,210,141,0) 70%);
 }
 
