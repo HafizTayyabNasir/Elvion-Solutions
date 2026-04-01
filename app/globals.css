@@ -168,37 +168,22 @@ html {
 /* ============================================================
    Custom cursor
    ============================================================ */
-* {
-  cursor: none !important;
-}
-
-.cursor-dot {
-  width: 8px;
-  height: 8px;
-  background: #00d28d;
+.cursor-glow {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,210,141,0.18) 0%, rgba(0,210,141,0) 70%);
   position: fixed;
   pointer-events: none;
   z-index: 99999;
-  transition: transform 0.1s ease;
-  mix-blend-mode: difference;
+  transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+  transform: translate(-50%, -50%);
+  filter: blur(2px);
 }
 
-.cursor-outline {
-  width: 36px;
-  height: 36px;
-  border: 2px solid rgba(0,210,141,0.6);
-  border-radius: 50%;
-  position: fixed;
-  pointer-events: none;
-  z-index: 99998;
-  transition: width 0.15s ease, height 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
-
-.cursor-outline.hovering {
+.cursor-glow.hovering {
   width: 56px;
   height: 56px;
-  background: rgba(0,210,141,0.1);
-  border-color: rgba(0,210,141,1);
+  background: radial-gradient(circle, rgba(0,210,141,0.25) 0%, rgba(0,210,141,0) 70%);
 }
 
