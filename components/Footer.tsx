@@ -91,6 +91,7 @@ export const Footer = () => {
                     <ul className="space-y-2 text-sm text-elvion-gray">
                         <li><Link href="/about" className="hover:text-elvion-primary">{t("footer.aboutUs")}</Link></li>
                         <li><Link href="/portfolio" className="hover:text-elvion-primary">{t("footer.portfolio")}</Link></li>
+                        <li><Link href="/blog" className="hover:text-elvion-primary">Blog</Link></li>
                         <li><Link href="/contact" className="hover:text-elvion-primary">{t("footer.contactUs")}</Link></li>
                         <li><Link href="/appointment" className="hover:text-elvion-primary">{t("footer.bookConsultation")}</Link></li>
                     </ul>
@@ -113,6 +114,12 @@ export const Footer = () => {
                         <p className="flex items-center gap-2">🌐 www.elvionsolutions.com</p>
                     </div>
                 </div>
+            </div>
+            {/* SEO Footer Content */}
+            <div className="max-w-7xl mx-auto px-4 pb-8 border-t border-white/5 pt-8 mb-6">
+                <p className="text-[#555] text-xs leading-relaxed text-center max-w-4xl mx-auto">
+                    <strong className="text-[#888]">Elvion Solutions</strong> — Best <strong className="text-[#888]">Digital Marketing Agency in Lahore</strong>, Pakistan. We are a leading <strong className="text-[#888]">top digital marketing company in Pakistan</strong> offering comprehensive <strong className="text-[#888]">digital marketing services in Lahore</strong> including SEO, Social Media Marketing, Google Ads, Web Development, and Content Marketing. As the <strong className="text-[#888]">best social media marketing agency in Lahore for small business</strong>, we provide <strong className="text-[#888]">affordable social media management services in Pakistan</strong> and professional <strong className="text-[#888]">social media marketing services in Lahore for brands</strong>. Our <strong className="text-[#888]">social media growth services in Pakistan</strong> help businesses across Lahore, Karachi, Islamabad, and beyond grow their online presence. Trust the <strong className="text-[#888]">online marketing agency in Pakistan</strong> that 350+ businesses rely on.
+                </p>
             </div>
             <div className="text-center text-elvion-gray text-xs border-t border-white/5 pt-8">
                 {t("footer.copyright")}

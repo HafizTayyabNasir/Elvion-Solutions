@@ -19,7 +19,12 @@ import {
   Rocket,
   MessageSquare,
   Linkedin,
-  Briefcase
+  Briefcase,
+  ChevronDown,
+  Star,
+  HelpCircle,
+  BookOpen,
+  MapPin
 } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -58,6 +63,7 @@ export default function Home() {
   const [comments, setComments] = useState(initialComments);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
 
@@ -679,6 +685,281 @@ export default function Home() {
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#00d28d] via-[#00b377] to-[#00d28d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[length:200%_100%] animate-gradient"></div>
               </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Client Reviews & Success Stories */}
+      <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm inline-block">Client Success Stories</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white">
+              Trusted by Businesses Across <span className="text-[#00d28d]">Pakistan</span>
+            </h2>
+            <p className="text-[#888] text-lg max-w-3xl mx-auto">
+              As the <strong className="text-white">best digital marketing agency in Lahore</strong>, we have helped hundreds of brands grow their online presence. Here&apos;s what our clients say about our <strong className="text-[#00d28d]">digital marketing services in Lahore</strong>.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Ahmed Raza",
+                role: "CEO, TechBridge Pakistan",
+                location: "Lahore",
+                stars: 5,
+                text: "We hired Elvion Solutions as our digital marketing agency in Lahore and the results were incredible. Our website traffic increased by 300% in just 4 months. Truly the best digital marketing agency in Lahore!",
+              },
+              {
+                name: "Fatima Malik",
+                role: "Restaurant Owner",
+                location: "Lahore",
+                stars: 5,
+                text: "Elvion Solutions provided us the best social media marketing agency in Lahore for small business that we could find. Our Instagram followers grew from 500 to 15,000 and orders increased by 60%!",
+              },
+              {
+                name: "Hassan Ali",
+                role: "E-commerce Founder",
+                location: "Karachi",
+                stars: 5,
+                text: "Looking for a top digital marketing company in Pakistan? Look no further. Elvion's social media growth services in Pakistan helped us 5x our online sales within 6 months.",
+              },
+              {
+                name: "Nadia Sheikh",
+                role: "Beauty Salon Owner",
+                location: "Lahore",
+                stars: 5,
+                text: "We thought affordable social media management services in Pakistan weren't possible with quality. Elvion proved us wrong. For less than PKR 20,000/month, they grew our client base by 200%.",
+              },
+              {
+                name: "Usman Tariq",
+                role: "Real Estate Developer",
+                location: "Islamabad",
+                stars: 5,
+                text: "Elvion Solutions' digital marketing services in Lahore helped us generate over 500 qualified property leads in 3 months. Best online marketing agency in Pakistan hands down.",
+              },
+              {
+                name: "Ayesha Rahman",
+                role: "Fashion Brand Owner",
+                location: "Lahore",
+                stars: 5,
+                text: "As the best social media marketing agency in Lahore for small business, Elvion transformed our brand completely. Their social media marketing services in Lahore for brands are unmatched!",
+              },
+            ].map((review, idx) => (
+              <div
+                key={idx}
+                className="bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500"
+              >
+                <div className="flex gap-1 mb-3">
+                  {Array.from({ length: review.stars }).map((_, i) => (
+                    <Star key={i} size={16} className="text-yellow-400 fill-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-[#aaa] text-sm leading-relaxed mb-4">&ldquo;{review.text}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-[#00d28d] to-[#4a90e2] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {review.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-sm">{review.name}</p>
+                    <p className="text-[#555] text-xs">{review.role}</p>
+                    <p className="text-[#00d28d] text-xs flex items-center gap-1"><MapPin size={10} />{review.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section — SEO Rich */}
+      <section className="py-20 lg:py-32 bg-[#0a0a0a]">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm inline-block">
+              <HelpCircle size={16} className="inline mr-2" />Frequently Asked Questions
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white">
+              Questions About <span className="text-[#00d28d]">Digital Marketing in Pakistan</span>
+            </h2>
+            <p className="text-[#888] text-lg">
+              Got questions about hiring a <strong className="text-white">digital marketing agency in Lahore</strong> or getting <strong className="text-white">social media marketing services in Lahore for brands</strong>? We&apos;ve got answers.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                q: "Why is Elvion Solutions the best digital marketing agency in Lahore?",
+                a: "Elvion Solutions is recognized as the best digital marketing agency in Lahore because of our proven track record of 350+ successful projects, 100% client satisfaction, data-driven strategies, and affordable pricing. As a top digital marketing company in Pakistan, we combine local market expertise with global standards to deliver measurable results for businesses of all sizes."
+              },
+              {
+                q: "What digital marketing services do you offer in Lahore?",
+                a: "Our digital marketing services in Lahore include Search Engine Optimization (SEO), Social Media Marketing (Facebook, Instagram, TikTok, LinkedIn), Google & Meta Ads management, Content Marketing, Web Development, Email Marketing, and Analytics & Reporting. As a complete online marketing agency in Pakistan, we offer end-to-end digital solutions."
+              },
+              {
+                q: "How much do social media marketing services cost in Lahore?",
+                a: "Our affordable social media management services in Pakistan start from PKR 15,000/month for the Starter package. The Growth package is PKR 30,000/month and includes ads management. Enterprise packages are custom-priced. As the best social media marketing agency in Lahore for small business, we ensure our pricing is accessible for businesses of all budgets."
+              },
+              {
+                q: "Do you work with small businesses in Pakistan?",
+                a: "Absolutely! We are the best social media marketing agency in Lahore for small business. We have special packages designed for startups and small businesses. Our affordable social media management services in Pakistan have helped hundreds of small businesses grow their online presence and increase sales."
+              },
+              {
+                q: "How long does it take to see results from digital marketing?",
+                a: "Results vary by service. Social media marketing and paid ads can show results within 1-2 weeks. SEO typically takes 3-6 months for significant results. As a top digital marketing company in Pakistan, we set realistic expectations and provide transparent monthly reports so you can track your ROI."
+              },
+              {
+                q: "Can you help my brand grow on social media in Pakistan?",
+                a: "Yes! Our social media growth services in Pakistan have helped brands grow from zero to thousands of engaged followers. We offer comprehensive social media marketing services in Lahore for brands including content creation, community management, influencer partnerships, and paid advertising across all major platforms."
+              },
+              {
+                q: "What makes Elvion different from other digital marketing agencies in Pakistan?",
+                a: "What sets us apart as a digital marketing agency in Pakistan is our combination of local expertise, data-driven approach, transparent reporting, affordable pricing, and dedicated support. Unlike other agencies, we focus on delivering real ROI — not just vanity metrics. Our 100% client satisfaction rate speaks for itself."
+              },
+              {
+                q: "Do you provide SEO services for businesses in Lahore?",
+                a: "Yes, SEO is one of our core digital marketing services in Lahore. We provide comprehensive SEO including keyword research, on-page optimization, technical SEO, link building, and local SEO to help your business rank #1 on Google for your target keywords in Lahore and across Pakistan."
+              },
+            ].map((faq, idx) => (
+              <div key={idx} className="bg-[#111] border border-white/10 rounded-xl overflow-hidden hover:border-[#00d28d]/30 transition-colors duration-300">
+                <button
+                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  className="w-full flex items-center justify-between p-5 text-left"
+                >
+                  <span className="text-white font-bold text-sm md:text-base pr-4">{faq.q}</span>
+                  <ChevronDown
+                    size={20}
+                    className={`text-[#00d28d] flex-shrink-0 transition-transform duration-300 ${openFaq === idx ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {openFaq === idx && (
+                  <div className="px-5 pb-5 border-t border-white/5">
+                    <p className="text-[#aaa] text-sm leading-relaxed pt-4">{faq.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Preview / Latest Articles */}
+      <section className="py-20 lg:py-32 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16 space-y-4">
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm inline-block">
+              <BookOpen size={16} className="inline mr-2" />Latest From Our Blog
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold text-white">
+              Expert <span className="text-[#00d28d]">Digital Marketing</span> Insights
+            </h2>
+            <p className="text-[#888] text-lg max-w-2xl mx-auto">
+              Stay ahead with expert articles and strategies from the <strong className="text-white">best digital marketing agency in Lahore, Pakistan</strong>.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Why Elvion Solutions is the Best Digital Marketing Agency in Lahore",
+                slug: "best-digital-marketing-agency-lahore-elvion-solutions",
+                category: "Digital Marketing",
+                excerpt: "Discover why businesses in Pakistan trust Elvion Solutions for results-driven digital marketing services in Lahore.",
+              },
+              {
+                title: "Best Social Media Marketing Agency in Lahore for Small Business",
+                slug: "social-media-marketing-small-business-lahore",
+                category: "Social Media",
+                excerpt: "A complete guide to choosing the best social media marketing agency in Lahore for your small business.",
+              },
+              {
+                title: "Complete SEO Guide for Pakistani Businesses",
+                slug: "seo-guide-pakistani-businesses-rank-google",
+                category: "SEO",
+                excerpt: "Learn how to rank #1 on Google with proven SEO strategies from Lahore's top digital marketing company.",
+              },
+            ].map((post, idx) => (
+              <Link key={idx} href={`/blog/${post.slug}`} className="group">
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 hover:border-[#00d28d]/60 transition-all duration-500 h-full flex flex-col">
+                  <div className="h-1.5 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] rounded-full mb-5" />
+                  <span className="text-[#00d28d] text-xs font-bold uppercase mb-3">{post.category}</span>
+                  <h3 className="text-white font-bold text-lg mb-3 group-hover:text-[#00d28d] transition-colors duration-300 leading-snug flex-1">
+                    {post.title}
+                  </h3>
+                  <p className="text-[#888] text-sm leading-relaxed mb-4">{post.excerpt}</p>
+                  <span className="text-[#00d28d] text-sm font-bold group-hover:translate-x-1 transition-transform duration-300 inline-block">
+                    Read Article →
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/blog"
+              className="inline-block px-8 py-4 border-2 border-[#00d28d]/40 text-[#00d28d] rounded-full font-bold hover:bg-[#00d28d]/10 hover:border-[#00d28d] transition-all duration-300"
+            >
+              View All Articles →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Keyword-Rich Content Section */}
+      <section className="py-20 bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="bg-[#111] border border-white/10 rounded-3xl p-8 md:p-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+              The Leading <span className="text-[#00d28d]">Digital Marketing Agency in Pakistan</span> — Trusted by 350+ Businesses
+            </h2>
+
+            <div className="space-y-5 text-[#aaa] leading-relaxed">
+              <p>
+                <strong className="text-white">Elvion Solutions</strong> is the <strong className="text-[#00d28d]">best digital marketing agency in Lahore</strong> offering comprehensive <strong className="text-white">digital marketing services in Lahore</strong> and across Pakistan. Our team of certified experts specializes in SEO, social media marketing, Google Ads, content marketing, and web development — everything your business needs to dominate the digital landscape.
+              </p>
+
+              <p>
+                As a <strong className="text-[#00d28d]">top digital marketing company in Pakistan</strong>, we understand the unique challenges that Pakistani businesses face when going digital. From language preferences and cultural nuances to platform algorithms and consumer behavior — our local expertise as a <strong className="text-white">digital marketing agency in Lahore</strong> gives us an unmatched edge.
+              </p>
+
+              <p>
+                Whether you are a startup looking for <strong className="text-[#00d28d]">affordable social media management services in Pakistan</strong>, an established brand seeking <strong className="text-white">social media marketing services in Lahore for brands</strong>, or an enterprise needing a full-scale <strong className="text-[#00d28d]">online marketing agency in Pakistan</strong> — Elvion Solutions has the expertise, tools, and team to deliver exceptional results.
+              </p>
+
+              <p>
+                Our <strong className="text-white">social media growth services in Pakistan</strong> have helped brands across industries — fashion, food, real estate, healthcare, e-commerce, education — build massive, engaged communities on Facebook, Instagram, TikTok, LinkedIn, and YouTube. We don&apos;t just post content; we build brand stories that resonate with Pakistani audiences.
+              </p>
+
+              <p>
+                Searching for the <strong className="text-[#00d28d]">best social media marketing agency in Lahore for small business</strong>? You&apos;ve found it. At Elvion Solutions, we believe every business — no matter how small — deserves world-class digital marketing. Our affordable packages, transparent reporting, and dedicated account managers ensure you get the best ROI on every rupee spent.
+              </p>
+
+              <p>
+                Join the <strong className="text-white">350+ businesses</strong> across Lahore, Karachi, Islamabad, and beyond that trust Elvion Solutions as their <strong className="text-[#00d28d]">digital marketing agency in Pakistan</strong>. Let&apos;s build something extraordinary together.
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              {[
+                "Digital Marketing Agency in Pakistan",
+                "Digital Marketing Agency in Lahore",
+                "Best Digital Marketing Agency in Lahore",
+                "Top Digital Marketing Company Pakistan",
+                "Digital Marketing Services in Lahore",
+                "Online Marketing Agency Pakistan",
+                "Social Media Marketing Lahore",
+                "Social Media Growth Services Pakistan",
+                "Affordable Social Media Management Pakistan",
+                "SEO Services Lahore",
+              ].map((keyword) => (
+                <span key={keyword} className="text-xs bg-[#00d28d]/10 text-[#00d28d] px-3 py-1.5 rounded-full border border-[#00d28d]/20 font-medium">
+                  {keyword}
+                </span>
+              ))}
             </div>
           </div>
         </div>

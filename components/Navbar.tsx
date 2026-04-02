@@ -43,6 +43,7 @@ const navLinks = [
         ],
     },
     { name: "nav.portfolios", href: "/portfolio" },
+    { name: "nav.blog", href: "/blog" },
     { name: "nav.internship", href: "/internship" },
 ];
 

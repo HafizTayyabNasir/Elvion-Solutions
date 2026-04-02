@@ -5,6 +5,7 @@ const ur: Record<string, string> = {
   "nav.digitalMarketing": "ڈیجیٹل مارکیٹنگ",
   "nav.uiUx": "UI/UX",
   "nav.portfolios": "پورٹ فولیو",
+  "nav.blog": "بلاگ",
   "nav.internship": "انٹرن شپ",
   "nav.contactUs": "رابطہ کریں",
   "nav.getAppointment": "ملاقات بک کریں",

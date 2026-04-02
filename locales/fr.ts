@@ -4,6 +4,7 @@ const fr: Record<string, string> = {
   "nav.digitalMarketing": "Marketing Digital",
   "nav.uiUx": "UI/UX",
   "nav.portfolios": "Portfolio",
+  "nav.blog": "Blog",
   "nav.internship": "Stage",
   "nav.contactUs": "Contactez-nous",
   "nav.getAppointment": "Prendre Rendez-vous",
