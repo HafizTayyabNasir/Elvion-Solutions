@@ -45,8 +45,10 @@ interface APIComment {
 }
 
 const initialComments: Comment[] = [
-  { id: 1, user: "Ali Khan", text: "Elvion transformed our sales funnel!", date: "2025-11-10" },
-  { id: 2, user: "Sarah J.", text: "Best web dev team in Pakistan.", date: "2025-11-05" }
+  { id: 1, user: "Ali Khan", text: "We tried three different agencies before finding Elvion. Hands down the best digital marketing agency in Lahore. Our Google rankings went from page 5 to page 1 in just 4 months. The team actually understands what Pakistani businesses need.", date: "2025-11-10" },
+  { id: 2, user: "Sarah J.", text: "Best web dev and social media marketing team in Pakistan. They rebuilt our entire website and took over our social media. Our Instagram engagement went up 400% and we're getting real leads now — not just likes.", date: "2025-11-05" },
+  { id: 3, user: "Bilal Ahmed", text: "As a small restaurant owner in Lahore, I needed affordable social media management services in Pakistan. Elvion delivered beyond expectations. They created amazing content for our Facebook and Instagram, and our monthly orders doubled within 3 months.", date: "2025-10-28" },
+  { id: 4, user: "Zainab Fatima", text: "I was skeptical about digital marketing agencies in Pakistan — most just take your money and show you vanity metrics. Elvion is different. They sent me detailed monthly reports showing exactly how many leads came from each channel. Transparent and honest team.", date: "2025-10-20" },
 ];
 
 const teamMembers = [
