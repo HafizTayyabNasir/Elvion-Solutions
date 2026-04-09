@@ -55,6 +55,15 @@ interface Project {
   _count: { tasks: number; invoices: number; files: number };
 }
 
+const currencySymbols: Record<string, string> = {
+  USD: "$", EUR: "\u20AC", GBP: "\u00A3", PKR: "Rs", INR: "\u20B9", SAR: "SAR", AED: "AED"
+};
+const getCurrSym = (payments: ProjectPayment[]) => {
+  const c = payments.find(p => p.currency)?.currency || "USD";
+  return currencySymbols[c] || c;
+};
+const pSym = (p: ProjectPayment) => currencySymbols[p.currency || "USD"] || (p.currency || "$");
+
 const statusOptions = ["active", "on_hold", "completed", "cancelled"];
 const priorityOptions = ["low", "medium", "high", "urgent"];
 const statusLabels: Record<string, string> = { active: "Active", on_hold: "On Hold", completed: "Completed", cancelled: "Cancelled" };
@@ -1194,11 +1203,11 @@ export default function ProjectDetailPage() {
                   <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>
                       <p className="text-xs text-green-600 dark:text-green-400 font-semibold uppercase tracking-wider flex items-center gap-2"><Banknote size={14} /> Total Payment Received</p>
-                      <p className="text-4xl font-extrabold text-green-600 dark:text-green-400 mt-1">${totalReceived.toLocaleString()}</p>
+                      <p className="text-4xl font-extrabold text-green-600 dark:text-green-400 mt-1">{getCurrSym(payments)}{totalReceived.toLocaleString()}</p>
                       <p className="text-xs text-gray-500 mt-1">{payments.filter(p => p.status === "received").length} received payment(s) of {payments.length} total</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">Budget: <span className="font-semibold text-gray-700 dark:text-gray-300">${(project.budget || 0).toLocaleString()}</span></p>
+                      <p className="text-xs text-gray-500">Budget: <span className="font-semibold text-gray-700 dark:text-gray-300">{getCurrSym(payments)}{(project.budget || 0).toLocaleString()}</span></p>
                       <p className="text-xs text-gray-500 mt-0.5">Collected: <span className="font-bold text-green-600 dark:text-green-400">{budgetReceivedPercent}%</span></p>
                       <div className="w-40 h-2 bg-gray-200 dark:bg-white/10 rounded-full mt-2 overflow-hidden">
                         <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.min(budgetReceivedPercent, 100)}%` }}></div>
@@ -1211,15 +1220,15 @@ export default function ProjectDetailPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="p-3 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
                     <div className="flex items-center gap-1.5 mb-1"><TrendingUp size={14} className="text-green-500" /><span className="text-[10px] text-green-600 dark:text-green-400 font-medium uppercase">Total Received</span></div>
-                    <p className="text-xl font-bold text-green-600 dark:text-green-400">${totalReceived.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">{getCurrSym(payments)}{totalReceived.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
                     <div className="flex items-center gap-1.5 mb-1"><TrendingDown size={14} className="text-orange-500" /><span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium uppercase">Total Pending</span></div>
-                    <p className="text-xl font-bold text-orange-500">${totalPending.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-orange-500">{getCurrSym(payments)}{totalPending.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
                     <div className="flex items-center gap-1.5 mb-1"><DollarSign size={14} className="text-blue-500" /><span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium uppercase">Grand Total</span></div>
-                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">${grandTotal.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{getCurrSym(payments)}{grandTotal.toLocaleString()}</p>
                   </div>
                   <div className="p-3 rounded-xl bg-elvion-primary/5 border border-elvion-primary/20">
                     <div className="flex items-center gap-1.5 mb-1"><Banknote size={14} className="text-elvion-primary" /><span className="text-[10px] text-elvion-primary font-medium uppercase">Collection Rate</span></div>
@@ -1231,18 +1240,18 @@ export default function ProjectDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
                     <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><Calendar size={10} /> Monthly</p>
-                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">${monthlyReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
-                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">${monthlyPending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
+                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">{getCurrSym(payments)}{monthlyReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
+                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">{getCurrSym(payments)}{monthlyPending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
                   </div>
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
                     <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><CheckSquare size={10} /> Task</p>
-                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">${taskReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
-                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">${taskPending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
+                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">{getCurrSym(payments)}{taskReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
+                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">{getCurrSym(payments)}{taskPending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
                   </div>
                   <div className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-elvion-dark/40">
                     <p className="text-[10px] text-gray-500 uppercase font-medium flex items-center gap-1"><FolderOpen size={10} /> Module</p>
-                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">${moduleReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
-                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">${modulePending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
+                    <div className="flex items-baseline gap-2 mt-1"><span className="text-sm font-bold text-green-500">{getCurrSym(payments)}{moduleReceived.toLocaleString()}</span><span className="text-[10px] text-gray-400">received</span></div>
+                    <div className="flex items-baseline gap-2"><span className="text-sm font-bold text-orange-500">{getCurrSym(payments)}{modulePending.toLocaleString()}</span><span className="text-[10px] text-gray-400">pending</span></div>
                   </div>
                 </div>
 
@@ -1337,8 +1346,8 @@ export default function ProjectDetailPage() {
                   <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><Calendar size={14} className="text-blue-500" /> Monthly Payments</h4>
                     <div className="flex items-center gap-3 text-xs">
-                      <span className="text-green-500 font-semibold">${monthlyReceived.toLocaleString()} received</span>
-                      <span className="text-orange-500 font-semibold">${monthlyPending.toLocaleString()} pending</span>
+                      <span className="text-green-500 font-semibold">{getCurrSym(payments)}{monthlyReceived.toLocaleString()} received</span>
+                      <span className="text-orange-500 font-semibold">{getCurrSym(payments)}{monthlyPending.toLocaleString()} pending</span>
                     </div>
                   </div>
                   {Object.keys(monthlyGroups).length > 0 ? (
@@ -1363,11 +1372,11 @@ export default function ProjectDetailPage() {
                                     <div className="text-[10px] text-gray-400 font-normal mt-0.5">{group.entries.length} entry(s)</div>
                                   </td>
                                 )}
-                                <td className="px-4 py-2.5 text-green-600 dark:text-green-400 font-medium">{p.status === "received" ? `$${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                                <td className="px-4 py-2.5 text-orange-500 font-medium">{p.status === "pending" ? `$${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                                <td className="px-4 py-2.5 text-green-600 dark:text-green-400 font-medium">{p.status === "received" ? `${pSym(p)}${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                                <td className="px-4 py-2.5 text-orange-500 font-medium">{p.status === "pending" ? `${pSym(p)}${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
                                 {idx === 0 && (
                                   <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white align-top" rowSpan={group.entries.length}>
-                                    ${(group.received + group.pending).toLocaleString()}
+                                    {getCurrSym(payments)}{(group.received + group.pending).toLocaleString()}
                                   </td>
                                 )}
                                 <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
@@ -1383,9 +1392,9 @@ export default function ProjectDetailPage() {
                           ))}
                           <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
                             <td className="px-4 py-2 text-gray-500">Total</td>
-                            <td className="px-4 py-2 text-green-600 dark:text-green-400">${monthlyReceived.toLocaleString()}</td>
-                            <td className="px-4 py-2 text-orange-500">${monthlyPending.toLocaleString()}</td>
-                            <td className="px-4 py-2 text-gray-900 dark:text-white">${(monthlyReceived + monthlyPending).toLocaleString()}</td>
+                            <td className="px-4 py-2 text-green-600 dark:text-green-400">{getCurrSym(payments)}{monthlyReceived.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-orange-500">{getCurrSym(payments)}{monthlyPending.toLocaleString()}</td>
+                            <td className="px-4 py-2 text-gray-900 dark:text-white">{getCurrSym(payments)}{(monthlyReceived + monthlyPending).toLocaleString()}</td>
                             <td colSpan={3}></td>
                           </tr>
                         </tbody>
@@ -1401,8 +1410,8 @@ export default function ProjectDetailPage() {
                   <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><CheckSquare size={14} className="text-purple-500" /> Task Payments</h4>
                     <div className="flex items-center gap-3 text-xs">
-                      <span className="text-green-500 font-semibold">${taskReceived.toLocaleString()} received</span>
-                      <span className="text-orange-500 font-semibold">${taskPending.toLocaleString()} pending</span>
+                      <span className="text-green-500 font-semibold">{getCurrSym(payments)}{taskReceived.toLocaleString()} received</span>
+                      <span className="text-orange-500 font-semibold">{getCurrSym(payments)}{taskPending.toLocaleString()} pending</span>
                     </div>
                   </div>
                   {taskPayments.length > 0 ? (
@@ -1420,7 +1429,7 @@ export default function ProjectDetailPage() {
                           {taskPayments.map(p => (
                             <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                               <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Task Payment"}</td>
-                              <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
+                              <td className="px-4 py-2.5 font-bold">{pSym(p)}{p.amount.toLocaleString()}</td>
                               <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
                               <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
                               <td className="px-4 py-2.5 text-gray-400 text-xs max-w-50 truncate">{p.description || "—"}</td>
@@ -1434,8 +1443,8 @@ export default function ProjectDetailPage() {
                           ))}
                           <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
                             <td className="px-4 py-2 text-gray-500">Total</td>
-                            <td className="px-4 py-2 text-gray-900 dark:text-white">${(taskReceived + taskPending).toLocaleString()}</td>
-                            <td className="px-4 py-2"><span className="text-green-500">${taskReceived.toLocaleString()}</span> / <span className="text-orange-500">${taskPending.toLocaleString()}</span></td>
+                            <td className="px-4 py-2 text-gray-900 dark:text-white">{getCurrSym(payments)}{(taskReceived + taskPending).toLocaleString()}</td>
+                            <td className="px-4 py-2"><span className="text-green-500">{getCurrSym(payments)}{taskReceived.toLocaleString()}</span> / <span className="text-orange-500">{getCurrSym(payments)}{taskPending.toLocaleString()}</span></td>
                             <td colSpan={3}></td>
                           </tr>
                         </tbody>
@@ -1451,8 +1460,8 @@ export default function ProjectDetailPage() {
                   <div className="px-4 py-3 bg-gray-50 dark:bg-elvion-dark/50 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2"><FolderOpen size={14} className="text-indigo-500" /> Module Payments</h4>
                     <div className="flex items-center gap-3 text-xs">
-                      <span className="text-green-500 font-semibold">${moduleReceived.toLocaleString()} received</span>
-                      <span className="text-orange-500 font-semibold">${modulePending.toLocaleString()} pending</span>
+                      <span className="text-green-500 font-semibold">{getCurrSym(payments)}{moduleReceived.toLocaleString()} received</span>
+                      <span className="text-orange-500 font-semibold">{getCurrSym(payments)}{modulePending.toLocaleString()} pending</span>
                     </div>
                   </div>
                   {modulePayments.length > 0 ? (
@@ -1470,7 +1479,7 @@ export default function ProjectDetailPage() {
                           {modulePayments.map(p => (
                             <tr key={p.id} className="border-b border-gray-50 dark:border-white/5 hover:bg-gray-50/50 dark:hover:bg-white/2 group/row">
                               <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-white">{p.label || "Module Payment"}</td>
-                              <td className="px-4 py-2.5 font-bold">${p.amount.toLocaleString()}</td>
+                              <td className="px-4 py-2.5 font-bold">{pSym(p)}{p.amount.toLocaleString()}</td>
                               <td className="px-4 py-2.5"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
                               <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
                               <td className="px-4 py-2.5 text-gray-400 text-xs max-w-50 truncate">{p.description || "—"}</td>
@@ -1484,8 +1493,8 @@ export default function ProjectDetailPage() {
                           ))}
                           <tr className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-elvion-dark/30 font-semibold text-xs uppercase">
                             <td className="px-4 py-2 text-gray-500">Total</td>
-                            <td className="px-4 py-2 text-gray-900 dark:text-white">${(moduleReceived + modulePending).toLocaleString()}</td>
-                            <td className="px-4 py-2"><span className="text-green-500">${moduleReceived.toLocaleString()}</span> / <span className="text-orange-500">${modulePending.toLocaleString()}</span></td>
+                            <td className="px-4 py-2 text-gray-900 dark:text-white">{getCurrSym(payments)}{(moduleReceived + modulePending).toLocaleString()}</td>
+                            <td className="px-4 py-2"><span className="text-green-500">{getCurrSym(payments)}{moduleReceived.toLocaleString()}</span> / <span className="text-orange-500">{getCurrSym(payments)}{modulePending.toLocaleString()}</span></td>
                             <td colSpan={3}></td>
                           </tr>
                         </tbody>
@@ -1518,7 +1527,7 @@ export default function ProjectDetailPage() {
                               <td className="px-4 py-2 text-gray-900 dark:text-white">{p.label || "—"}</td>
                               <td className="px-4 py-2 capitalize text-gray-500 text-xs">{p.category}</td>
                               <td className="px-4 py-2 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
-                              <td className="px-4 py-2 font-bold">${p.amount.toLocaleString()}</td>
+                              <td className="px-4 py-2 font-bold">{pSym(p)}{p.amount.toLocaleString()}</td>
                               <td className="px-4 py-2"><span className={`text-[10px] px-2 py-0.5 rounded-full ${p.status === "received" ? "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"}`}>{p.status}</span></td>
                               <td className="px-4 py-2">
                                 <div className="hidden group-hover/row:flex gap-1 justify-end">

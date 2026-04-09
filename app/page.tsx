@@ -373,42 +373,47 @@ export default function Home() {
                 icon: Code,
                 title: t("home.services.fullStack.title"),
                 desc: t("home.services.fullStack.desc"),
-                features: [t("home.services.fullStack.f1"), t("home.services.fullStack.f2"), t("home.services.fullStack.f3")]
+                features: [t("home.services.fullStack.f1"), t("home.services.fullStack.f2"), t("home.services.fullStack.f3")],
+                href: "/services/fullstack"
               },
               {
                 icon: Globe,
                 title: t("home.services.seo.title"),
                 desc: t("home.services.seo.desc"),
-                features: [t("home.services.seo.f1"), t("home.services.seo.f2"), t("home.services.seo.f3")]
+                features: [t("home.services.seo.f1"), t("home.services.seo.f2"), t("home.services.seo.f3")],
+                href: "/services/seo"
               },
               {
                 icon: Smartphone,
                 title: t("home.services.smm.title"),
                 desc: t("home.services.smm.desc"),
-                features: [t("home.services.smm.f1"), t("home.services.smm.f2"), t("home.services.smm.f3")]
+                features: [t("home.services.smm.f1"), t("home.services.smm.f2"), t("home.services.smm.f3")],
+                href: "/services/smm"
               },
               {
                 icon: Megaphone,
                 title: t("home.services.ads.title"),
                 desc: t("home.services.ads.desc"),
-                features: [t("home.services.ads.f1"), t("home.services.ads.f2"), t("home.services.ads.f3")]
+                features: [t("home.services.ads.f1"), t("home.services.ads.f2"), t("home.services.ads.f3")],
+                href: "/services/ads"
               },
               {
                 icon: PenTool,
                 title: t("home.services.design.title"),
                 desc: t("home.services.design.desc"),
-                features: [t("home.services.design.f1"), t("home.services.design.f2"), t("home.services.design.f3")]
+                features: [t("home.services.design.f1"), t("home.services.design.f2"), t("home.services.design.f3")],
+                href: "/services/branding"
               },
               {
                 icon: BarChart,
                 title: t("home.services.reporting.title"),
                 desc: t("home.services.reporting.desc"),
-                features: [t("home.services.reporting.f1"), t("home.services.reporting.f2"), t("home.services.reporting.f3")]
+                features: [t("home.services.reporting.f1"), t("home.services.reporting.f2"), t("home.services.reporting.f3")],
+                href: "/services/analytics"
               },
             ].map((service, idx) => (
-              <div
-                key={idx}
-                className="group bg-[#111] p-8 rounded-2xl border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 card-3d hover-lift relative overflow-hi  dden"
+              <Link href={service.href} key={idx}
+                className="group bg-[#111] p-8 rounded-2xl border border-white/5 hover:border-[#00d28d]/60 transition-all duration-700 card-3d hover-lift relative overflow-hidden"
                 style={{
                   animation: `slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
                   animationDelay: `${idx * 0.15}s`,
@@ -439,7 +444,7 @@ export default function Home() {
 
                 <div className="absolute top-0 right-0 w-40 h-40 bg-[#00d28d]/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#4a90e2]/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -963,6 +968,163 @@ export default function Home() {
                 </span>
               ))}
             </div>
+
+            {/* Internal Cross-Links */}
+            <div className="mt-10 pt-8 border-t border-white/10">
+              <h3 className="text-lg font-bold text-white mb-4">Explore Our Services</h3>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { label: "SEO Services", href: "/services/seo" },
+                  { label: "Social Media Marketing", href: "/services/smm" },
+                  { label: "Google & Meta Ads", href: "/services/ads" },
+                  { label: "Content Marketing", href: "/services/content" },
+                  { label: "Web Development", href: "/services/business-web" },
+                  { label: "E-commerce Development", href: "/services/ecommerce" },
+                  { label: "Full-Stack Solutions", href: "/services/fullstack" },
+                  { label: "UI/UX Design", href: "/services/web-ui" },
+                  { label: "Branding & Logo Design", href: "/services/branding" },
+                  { label: "Analytics & Reporting", href: "/services/analytics" },
+                  { label: "Portfolio Website Design", href: "/services/portfolio-web" },
+                  { label: "Custom Web Apps", href: "/services/custom-app" },
+                ].map((link) => (
+                  <Link key={link.href} href={link.href} className="text-sm text-[#00d28d] hover:text-white hover:underline transition-colors duration-300">
+                    → {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Blog & Resource Links */}
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <h3 className="text-lg font-bold text-white mb-4">Read Our Latest Articles</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Link href="/blog/best-digital-marketing-agency-lahore-elvion-solutions" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Why Elvion is the Best Digital Marketing Agency in Lahore</Link>
+                <Link href="/blog/social-media-marketing-small-business-lahore" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Social Media Marketing for Small Business in Lahore</Link>
+                <Link href="/blog/affordable-social-media-management-services-pakistan" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Affordable Social Media Management in Pakistan</Link>
+                <Link href="/blog/top-digital-marketing-company-pakistan-2025" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Top Digital Marketing Company Pakistan 2025</Link>
+                <Link href="/blog/seo-guide-pakistani-businesses-rank-google" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ SEO Guide: How to Rank #1 on Google in Pakistan</Link>
+                <Link href="/blog/social-media-growth-services-pakistan-brands" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Social Media Growth Services for Pakistani Brands</Link>
+              </div>
+            </div>
+
+            {/* Quick Internal Navigation */}
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <h3 className="text-lg font-bold text-white mb-4">Quick Links</h3>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/about" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">About Us</Link>
+                <Link href="/portfolio" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Our Portfolio</Link>
+                <Link href="/blog" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Blog</Link>
+                <Link href="/contact" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Contact Us</Link>
+                <Link href="/appointment" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Book Consultation</Link>
+                <Link href="/internship" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Internship</Link>
+                <Link href="/services/digital-marketing" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Digital Marketing</Link>
+                <Link href="/services/web-designs" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">Web Design</Link>
+                <Link href="/services/ui-ux" className="text-sm bg-white/5 text-[#888] px-4 py-2 rounded-full border border-white/10 hover:border-[#00d28d]/40 hover:text-[#00d28d] transition-all">UI/UX Design</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tools & Platforms We Use — Authority External Links */}
+      <section className="py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12 space-y-4">
+            <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm inline-block">Industry-Leading Tools</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white">
+              Platforms & Tools We Work With
+            </h2>
+            <p className="text-[#888] text-lg max-w-2xl mx-auto">
+              As a <strong className="text-white">top digital marketing company in Pakistan</strong>, we use the best tools in the industry to deliver results for your business.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[
+              { name: "Google Analytics", href: "https://analytics.google.com", desc: "Website analytics & tracking" },
+              { name: "Google Search Console", href: "https://search.google.com/search-console", desc: "SEO performance monitoring" },
+              { name: "Google Ads", href: "https://ads.google.com", desc: "Pay-per-click advertising" },
+              { name: "Meta Business Suite", href: "https://business.facebook.com", desc: "Facebook & Instagram management" },
+              { name: "SEMrush", href: "https://www.semrush.com", desc: "SEO & competitive research" },
+              { name: "Ahrefs", href: "https://ahrefs.com", desc: "Backlink analysis & SEO" },
+              { name: "Moz", href: "https://moz.com", desc: "SEO tools & resources" },
+              { name: "HubSpot", href: "https://www.hubspot.com", desc: "Inbound marketing platform" },
+              { name: "Mailchimp", href: "https://mailchimp.com", desc: "Email marketing automation" },
+              { name: "Canva", href: "https://www.canva.com", desc: "Graphic design platform" },
+              { name: "WordPress", href: "https://wordpress.org", desc: "Content management system" },
+              { name: "Shopify", href: "https://www.shopify.com", desc: "E-commerce platform" },
+            ].map((tool) => (
+              <a key={tool.name} href={tool.href} target="_blank" rel="noopener noreferrer" className="group bg-[#111] p-4 rounded-xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-300 text-center">
+                <p className="text-white font-bold text-sm group-hover:text-[#00d28d] transition-colors mb-1">{tool.name}</p>
+                <p className="text-[#555] text-[10px]">{tool.desc}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Learning Resources — External Authority Backlinks */}
+      <section className="py-16 bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-white mb-6">Digital Marketing Resources & Learning</h2>
+            <p className="text-[#888] text-sm mb-6 leading-relaxed">
+              As a leading <strong className="text-white">digital marketing agency in Lahore</strong>, we stay updated with the latest industry knowledge. Here are some valuable resources we recommend for businesses looking to understand digital marketing better:
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-[#00d28d] font-bold text-sm uppercase mb-3">SEO & Search Marketing</h3>
+                <ul className="space-y-2">
+                  <li><a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Google SEO Starter Guide</a></li>
+                  <li><a href="https://moz.com/beginners-guide-to-seo" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Moz Beginner&apos;s Guide to SEO</a></li>
+                  <li><a href="https://ahrefs.com/blog/seo-basics/" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Ahrefs SEO Basics</a></li>
+                  <li><a href="https://search.google.com/search-console/about" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Google Search Console</a></li>
+                  <li><a href="https://www.semrush.com/blog/" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ SEMrush Blog — SEO Insights</a></li>
+                  <li><a href="https://backlinko.com/hub/seo" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Backlinko SEO Hub</a></li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-[#00d28d] font-bold text-sm uppercase mb-3">Social Media Marketing</h3>
+                <ul className="space-y-2">
+                  <li><a href="https://www.facebook.com/business/learn" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Meta (Facebook) Business Learning</a></li>
+                  <li><a href="https://business.instagram.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Instagram for Business</a></li>
+                  <li><a href="https://www.tiktok.com/business" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ TikTok for Business</a></li>
+                  <li><a href="https://business.linkedin.com/marketing-solutions" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ LinkedIn Marketing Solutions</a></li>
+                  <li><a href="https://blog.hootsuite.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Hootsuite Blog — Social Media Tips</a></li>
+                  <li><a href="https://sproutsocial.com/insights/" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Sprout Social Insights</a></li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-[#00d28d] font-bold text-sm uppercase mb-3">Web Development & Design</h3>
+                <ul className="space-y-2">
+                  <li><a href="https://nextjs.org/docs" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Next.js Documentation</a></li>
+                  <li><a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ React Official Docs</a></li>
+                  <li><a href="https://web.dev" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Google Web.dev — Performance Best Practices</a></li>
+                  <li><a href="https://developer.mozilla.org" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ MDN Web Docs</a></li>
+                  <li><a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Tailwind CSS</a></li>
+                  <li><a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Vercel — Deployment Platform</a></li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-[#00d28d] font-bold text-sm uppercase mb-3">Analytics & Paid Advertising</h3>
+                <ul className="space-y-2">
+                  <li><a href="https://skillshop.withgoogle.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Google Skillshop — Free Certifications</a></li>
+                  <li><a href="https://www.hubspot.com/resources" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ HubSpot Marketing Resources</a></li>
+                  <li><a href="https://neilpatel.com/blog/" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Neil Patel Blog — Marketing Insights</a></li>
+                  <li><a href="https://www.thinkwithgoogle.com" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Think with Google — Data & Insights</a></li>
+                  <li><a href="https://marketingplatform.google.com/about/analytics/" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ Google Marketing Platform</a></li>
+                  <li><a href="https://www.wordstream.com/blog" target="_blank" rel="noopener noreferrer" className="text-sm text-[#888] hover:text-[#00d28d] transition-colors">→ WordStream Blog — PPC Tips</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <p className="text-[#555] text-xs mt-6">
+              These resources are recommended by our team at Elvion Solutions. For personalized guidance on <Link href="/services/seo" className="text-[#00d28d] hover:underline">SEO</Link>, <Link href="/services/smm" className="text-[#00d28d] hover:underline">social media marketing</Link>, or <Link href="/services/ads" className="text-[#00d28d] hover:underline">paid advertising</Link> — <Link href="/contact" className="text-[#00d28d] hover:underline">contact our team</Link>.
+            </p>
           </div>
         </div>
       </section>
