@@ -59,7 +59,17 @@ const currencySymbols: Record<string, string> = {
   USD: "$", EUR: "\u20AC", GBP: "\u00A3", PKR: "Rs", INR: "\u20B9", SAR: "SAR", AED: "AED"
 };
 const getCurrSym = (payments: ProjectPayment[]) => {
-  const c = payments.find(p => p.currency)?.currency || "USD";
+  // If no payments, return USD
+  if (payments.length === 0) return "$";
+
+  // Check if all payments have the same currency
+  const currencies = new Set(payments.map(p => p.currency || "USD"));
+
+  // If mixed currencies, return the currency code instead of symbol
+  if (currencies.size > 1) return "";
+
+  // If single currency, return its symbol
+  const c = payments[0]?.currency || "USD";
   return currencySymbols[c] || c;
 };
 const pSym = (p: ProjectPayment) => currencySymbols[p.currency || "USD"] || (p.currency || "$");
@@ -1376,7 +1386,7 @@ export default function ProjectDetailPage() {
                                 <td className="px-4 py-2.5 text-orange-500 font-medium">{p.status === "pending" ? `${pSym(p)}${p.amount.toLocaleString()}` : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
                                 {idx === 0 && (
                                   <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white align-top" rowSpan={group.entries.length}>
-                                    {getCurrSym(payments)}{(group.received + group.pending).toLocaleString()}
+                                    {getCurrSym(group.entries)}{(group.received + group.pending).toLocaleString()}
                                   </td>
                                 )}
                                 <td className="px-4 py-2.5 text-gray-400 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>

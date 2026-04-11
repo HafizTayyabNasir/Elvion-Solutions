@@ -28,6 +28,7 @@ export async function PUT(
         label: data.label,
         taskId: data.taskId ? parseInt(data.taskId) : null,
         description: data.description,
+        currency: data.currency || undefined,
         paymentDate: data.paymentDate ? new Date(data.paymentDate) : undefined,
       },
     });

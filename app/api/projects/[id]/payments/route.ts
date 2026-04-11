@@ -47,7 +47,7 @@ export async function POST(
 
     const { id } = await params;
     const projectId = parseInt(id);
-    const { amount, status, category, label, taskId, description, paymentDate } = await request.json();
+    const { amount, status, category, label, taskId, description, paymentDate, currency } = await request.json();
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ message: 'Amount must be greater than 0' }, { status: 400 });
@@ -62,6 +62,7 @@ export async function POST(
         label: label || null,
         taskId: taskId ? parseInt(taskId) : null,
         description: description || null,
+        currency: currency || 'USD',
         paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
       },
     });

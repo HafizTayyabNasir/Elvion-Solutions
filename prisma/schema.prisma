@@ -173,6 +173,7 @@ model ProjectPayment {
   label       String?   // e.g. "January 2026", "Module 1 – Landing Page"
   taskId      Int?
   description String?   @db.Text
+  currency    String    @default("USD")
   paymentDate DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
