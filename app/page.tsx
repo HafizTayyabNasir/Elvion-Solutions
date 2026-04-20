@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 // Main home page component - Updated for Vercel deployment
 // Last updated: 2026-04-20 - Post-Windows reinstall deployment update
+=======
+>>>>>>> 4592b955f9580453eb7a5aaa10c801f9dbb6f396
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
