@@ -1,0 +1,146 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { verifyAuth, isAdmin } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+
+// GET all employees
+export async function GET(request: Request) {
+  try {
+    const result = await verifyAuth(request);
+    if ('error' in result) {
+      return NextResponse.json({ message: result.error }, { status: result.status });
+    }
+    if (!isAdmin(result.user)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const departmentId = searchParams.get('departmentId');
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
+
+    const where: any = {};
+    if (departmentId) where.departments = { some: { id: parseInt(departmentId) } };
+    if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+        { employeeId: { contains: search, mode: 'insensitive' } },
+        { positions: { hasSome: [search] } },
+      ];
+    }
+
+    const employees = await prisma.employee.findMany({
+      where,
+      include: {
+        departments: { select: { id: true, name: true } },
+        user: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return NextResponse.json(employees);
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// POST create employee
+export async function POST(request: Request) {
+  try {
+    const result = await verifyAuth(request);
+    if ('error' in result) {
+      return NextResponse.json({ message: result.error }, { status: result.status });
+    }
+    if (!isAdmin(result.user)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const {
+      firstName, lastName, email, phone, dateOfBirth, gender,
+      address, city, country, departmentIds, positions,
+      employmentType, salary, currency, hireDate,
+      emergencyName, emergencyPhone, emergencyRelation, userId,
+      loginEmail, loginPassword,
+    } = body;
+
+    if (!firstName || !lastName || !email) {
+      return NextResponse.json({ message: 'First name, last name, and email are required' }, { status: 400 });
+    }
+
+    // If login credentials provided, create a User account (no email verification needed)
+    let linkedUserId = userId ? parseInt(userId) : null;
+    if (loginEmail && loginPassword) {
+      if (loginPassword.length < 6) {
+        return NextResponse.json({ message: 'Password must be at least 6 characters' }, { status: 400 });
+      }
+      // Check if user with this email already exists
+      const existingUser = await prisma.user.findUnique({ where: { email: loginEmail } });
+      if (existingUser) {
+        return NextResponse.json({ message: `A user account with email ${loginEmail} already exists` }, { status: 409 });
+      }
+      const hashedPassword = await bcrypt.hash(loginPassword, 10);
+      const newUser = await prisma.user.create({
+        data: {
+          email: loginEmail,
+          name: `${firstName} ${lastName}`,
+          password: hashedPassword,
+          isVerified: true, // Employee accounts skip email verification
+          isAdmin: false,
+        },
+      });
+      linkedUserId = newUser.id;
+    }
+
+    // Generate employee ID
+    const lastEmployee = await prisma.employee.findFirst({
+      orderBy: { id: 'desc' },
+      select: { id: true },
+    });
+    const nextNum = (lastEmployee?.id || 0) + 1;
+    const employeeId = `ELV-${String(nextNum).padStart(3, '0')}`;
+
+    const employee = await prisma.employee.create({
+      data: {
+        employeeId,
+        firstName,
+        lastName,
+        email,
+        phone,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        gender,
+        address,
+        city,
+        country,
+        departments: departmentIds && departmentIds.length > 0
+          ? { connect: departmentIds.map((id: number) => ({ id: Number(id) })) }
+          : undefined,
+        positions: positions || [],
+        employmentType: employmentType || 'full_time',
+        salary: salary ? parseFloat(salary) : null,
+        currency: currency || 'USD',
+        hireDate: hireDate ? new Date(hireDate) : new Date(),
+        emergencyName,
+        emergencyPhone,
+        emergencyRelation,
+        userId: linkedUserId,
+      },
+      include: {
+        departments: { select: { id: true, name: true } },
+      },
+    });
+
+    return NextResponse.json(employee, { status: 201 });
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      const field = error.meta?.target?.[0];
+      return NextResponse.json({ message: `${field === 'email' ? 'Email' : 'Employee ID'} already exists` }, { status: 409 });
+    }
+    console.error('Error creating employee:', error);
+    return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
+  }
+}

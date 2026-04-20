@@ -1,0 +1,572 @@
+"use client";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import {
+    Target,
+    Eye,
+    Heart,
+    Users,
+    Award,
+    Zap,
+    Globe,
+    Code,
+    Smartphone,
+    PenTool,
+    BarChart,
+    Rocket,
+    CheckCircle2,
+    Star,
+    Coffee,
+    Clock,
+    Shield
+} from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+
+// ─── useScrollAnimation hook ────────────────────────────────────────────────
+function useScrollAnimation(threshold = 0.15) {
+    const ref = useRef<HTMLElement | null>(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    el.classList.add("in-view");
+                    setIsVisible(true);
+                    observer.unobserve(el); // fire once
+                }
+            },
+            { threshold }
+        );
+
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [threshold]);
+
+    return { ref, isVisible };
+}
+
+// ─── useCounterAnimation hook ────────────────────────────────────────────────
+function useCounterAnimation(targetString: string, isVisible: boolean, duration = 2000) {
+    const [displayValue, setDisplayValue] = useState("0");
+
+    useEffect(() => {
+        if (!isVisible) return;
+
+        // Parse number and suffix (e.g. "500+" → 500, "+") ("98%" → 98, "%")
+        const match = targetString.match(/^(\d+)(.*)$/);
+        if (!match) {
+            setDisplayValue(targetString);
+            return;
+        }
+
+        const target = parseInt(match[1], 10);
+        const suffix = match[2];
+        const startTime = performance.now();
+
+        const step = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(eased * target);
+            setDisplayValue(`${current}${suffix}`);
+            if (progress < 1) requestAnimationFrame(step);
+        };
+
+        requestAnimationFrame(step);
+    }, [isVisible, targetString, duration]);
+
+    return displayValue;
+}
+
+// ─── Individual animated achievement card ────────────────────────────────────
+function AchievementCard({
+    achievement,
+    idx,
+    sectionVisible,
+}: {
+    achievement: { number: string; label: string; icon: React.ElementType };
+    idx: number;
+    sectionVisible: boolean;
+}) {
+    const displayNumber = useCounterAnimation(achievement.number, sectionVisible);
+    const Icon = achievement.icon;
+
+    return (
+        <div
+            className="section-animate group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default"
+            style={{ transitionDelay: `${idx * 0.12}s` }}
+        >
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                <Icon size={28} className="text-[#00d28d]" />
+            </div>
+            <div className="text-4xl font-black text-[#00d28d] mb-2 group-hover:scale-110 transition-transform duration-300">
+                {displayNumber}
+            </div>
+            <div className="text-[#888] text-sm group-hover:text-white transition-colors duration-300">
+                {achievement.label}
+            </div>
+        </div>
+    );
+}
+
+export default function About() {
+    const { t } = useLanguage();
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [activeTab, setActiveTab] = useState("mission");
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+        };
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, []);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+        };
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
+    }, []);
+
+    const coreValues = [
+        { icon: Heart, title: t("about.values.passion"), desc: t("about.values.passionDesc") },
+        { icon: Shield, title: t("about.values.integrity"), desc: t("about.values.integrityDesc") },
+        { icon: Zap, title: t("about.values.innovation"), desc: t("about.values.innovationDesc") },
+        { icon: Users, title: t("about.values.collaboration"), desc: t("about.values.collaborationDesc") }
+    ];
+
+    const achievements = [
+        { number: "500+", label: t("about.achievements.projects"), icon: Award },
+        { number: "200+", label: t("about.achievements.clients"), icon: Users },
+        { number: "5+", label: t("about.achievements.years"), icon: Clock },
+        { number: "98%", label: t("about.achievements.retention"), icon: Star }
+    ];
+
+    const services = [
+        { icon: Code, name: t("about.services.webDev") },
+        { icon: Smartphone, name: t("about.services.mobileApps") },
+        { icon: Globe, name: t("about.services.seoMarketing") },
+        { icon: PenTool, name: t("about.services.designBranding") },
+        { icon: BarChart, name: t("about.services.analytics") },
+        { icon: Rocket, name: t("about.services.growthStrategy") }
+    ];
+
+    // ── Per-section scroll refs ───────────────────────────────────────────────
+    const heroAnim        = useScrollAnimation(0.1);
+    const tabsAnim        = useScrollAnimation(0.1);
+    const achievementsAnim = useScrollAnimation(0.15);
+    const servicesAnim    = useScrollAnimation(0.1);
+    const whyUsAnim       = useScrollAnimation(0.1);
+    const ctaAnim         = useScrollAnimation(0.1);
+
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
+            <style jsx global>{`
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+
+        @keyframes glow {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient-x 3s ease infinite;
+        }
+
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .animate-glow {
+          animation: glow 2s ease-in-out infinite;
+        }
+
+        .animate-slide-up {
+          animation: slide-up 0.6s ease-out forwards;
+        }
+
+        .shimmer {
+          background: linear-gradient(90deg, transparent, rgba(0,210,141,0.1), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 3s infinite;
+        }
+
+        .text-shadow-glow {
+          text-shadow: 0 0 20px rgba(0,210,141,0.5), 0 0 40px rgba(0,210,141,0.3);
+        }
+
+        .hover-lift {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-lift:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0,210,141,0.2);
+        }
+
+        .card-3d {
+          transform-style: preserve-3d;
+          transition: transform 0.3s ease;
+        }
+
+        .card-3d:hover {
+          transform: rotateY(5deg) rotateX(5deg);
+        }
+
+        /* ── Scroll-triggered animation base ── */
+        .section-animate {
+          opacity: 0;
+          transform: translateY(40px);
+          transition:
+            opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .section-animate.in-view {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* ── Stagger delay helpers ── */
+        .delay-0   { transition-delay: 0s; }
+        .delay-100 { transition-delay: 0.1s; }
+        .delay-150 { transition-delay: 0.15s; }
+        .delay-200 { transition-delay: 0.2s; }
+        .delay-250 { transition-delay: 0.25s; }
+        .delay-300 { transition-delay: 0.3s; }
+        .delay-350 { transition-delay: 0.35s; }
+        .delay-400 { transition-delay: 0.4s; }
+        .delay-500 { transition-delay: 0.5s; }
+        .delay-600 { transition-delay: 0.6s; }
+      `}</style>
+
+            {/* Hero Section */}
+            <section
+                ref={heroAnim.ref as React.RefObject<HTMLElement>}
+                className="relative pt-32 pb-20 overflow-hidden"
+            >
+                {/* Animated Background */}
+                <div className="absolute inset-0 bg-[#0a0a0a]">
+                    <div
+                        className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00d28d]/10 blur-[120px] rounded-full animate-float"
+                        style={{
+                            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+                        }}
+                    ></div>
+                    <div
+                        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#4a90e2]/10 blur-[100px] rounded-full animate-float"
+                        style={{
+                            animationDelay: '2s',
+                            transform: `translate(${-mousePosition.x * 0.01}px, ${-mousePosition.y * 0.01}px)`
+                        }}
+                    ></div>
+                </div>
+
+                {/* Grid pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,210,141,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(0,210,141,0.12)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse" style={{ animationDuration: '4s' }}></div>
+
+                <div className="max-w-6xl mx-auto px-4 relative z-10">
+                    <div className="text-center space-y-6 animate-slide-up">
+                        <span className="text-[#00d28d] font-bold tracking-widest uppercase text-xs md:text-sm bg-[#00d28d]/10 px-6 py-2 rounded-full border border-[#00d28d]/20 hover:bg-[#00d28d]/20 hover:scale-105 transition-all duration-300 cursor-default shimmer inline-block">
+                            {t("about.hero.badge")}
+                        </span>
+
+                        <h1 className="text-5xl md:text-7xl font-black text-white leading-tight">
+                            {t("about.hero.title1")}
+                            <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00d28d] via-[#4a90e2] to-[#00d28d] animate-gradient text-shadow-glow">
+                                {t("about.hero.titleHighlight")}
+                            </span>
+                        </h1>
+
+                        <p className="text-[#888] text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+                            {t("about.hero.description")}
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Mission, Vision & Values Tabs */}
+            <section
+                ref={tabsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a] relative"
+            >
+                <div className="max-w-6xl mx-auto px-4">
+                    {/* Tab Navigation */}
+                    <div className="flex flex-wrap justify-center gap-4 mb-12">
+                        {[
+                            { id: "mission", icon: Target, label: t("about.tabs.mission") },
+                            { id: "vision", icon: Eye, label: t("about.tabs.vision") },
+                            { id: "values", icon: Heart, label: t("about.tabs.values") }
+                        ].map((tab, idx) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`section-animate group flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 delay-${(idx + 1) * 100} ${activeTab === tab.id
+                                    ? "bg-[#00d28d] text-[#0a0a0a]"
+                                    : "bg-[#111] text-white border border-white/10 hover:border-[#00d28d]/50"
+                                    } ${tabsAnim.isVisible ? "in-view" : ""}`}
+                            >
+                                <tab.icon size={20} className={activeTab === tab.id ? "" : "group-hover:scale-110 transition-transform"} />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="bg-[#111] rounded-3xl p-8 md:p-12 border border-white/10 hover:border-[#00d28d]/30 transition-all duration-500 hover-lift">
+                        {activeTab === "mission" && (
+                            <div className="space-y-6 animate-slide-up">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-2xl flex items-center justify-center">
+                                        <Target size={32} className="text-[#00d28d]" />
+                                    </div>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-white">{t("about.mission.title")}</h2>
+                                </div>
+                                <p className="text-[#888] text-lg leading-relaxed">
+                                    {t("about.mission.description")}
+                                </p>
+                                <div className="grid md:grid-cols-3 gap-4 pt-6">
+                                    {[
+                                        { icon: Zap, text: t("about.mission.item1") },
+                                        { icon: Target, text: t("about.mission.item2") },
+                                        { icon: Heart, text: t("about.mission.item3") }
+                                    ].map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 bg-[#0a0a0a] p-4 rounded-xl border border-white/5 hover:border-[#00d28d]/30 transition-all duration-300">
+                                            <item.icon size={20} className="text-[#00d28d]" />
+                                            <span className="text-white text-sm">{item.text}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "vision" && (
+                            <div className="space-y-6 animate-slide-up">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-2xl flex items-center justify-center">
+                                        <Eye size={32} className="text-[#00d28d]" />
+                                    </div>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-white">{t("about.vision.title")}</h2>
+                                </div>
+                                <p className="text-[#888] text-lg leading-relaxed">
+                                    {t("about.vision.description")}
+                                </p>
+                                <div className="grid md:grid-cols-2 gap-6 pt-6">
+                                    <div className="bg-gradient-to-br from-[#00d28d]/10 to-transparent p-6 rounded-2xl border border-[#00d28d]/20">
+                                        <Globe size={32} className="text-[#00d28d] mb-3" />
+                                        <h3 className="text-xl font-bold text-white mb-2">{t("about.vision.globalTitle")}</h3>
+                                        <p className="text-[#888] text-sm">{t("about.vision.globalDesc")}</p>
+                                    </div>
+                                    <div className="bg-gradient-to-br from-[#4a90e2]/10 to-transparent p-6 rounded-2xl border border-[#4a90e2]/20">
+                                        <Rocket size={32} className="text-[#4a90e2] mb-3" />
+                                        <h3 className="text-xl font-bold text-white mb-2">{t("about.vision.futureTitle")}</h3>
+                                        <p className="text-[#888] text-sm">{t("about.vision.futureDesc")}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "values" && (
+                            <div className="space-y-8 animate-slide-up">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-2xl flex items-center justify-center">
+                                        <Heart size={32} className="text-[#00d28d]" />
+                                    </div>
+                                    <h2 className="text-3xl md:text-4xl font-bold text-white">Core Values</h2>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {coreValues.map((value, idx) => (
+                                        <div key={idx} className="group bg-[#0a0a0a] p-6 rounded-2xl border border-white/5 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift cursor-default">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                                                    <value.icon size={24} className="text-[#00d28d]" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#00d28d] transition-colors duration-300">
+                                                        {value.title}
+                                                    </h3>
+                                                    <p className="text-[#888] group-hover:text-[#aaa] transition-colors duration-300">
+                                                        {value.desc}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </section>
+
+            {/* Achievements Section */}
+            <section
+                ref={achievementsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-[#0a0a0a] relative overflow-hidden"
+            >
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className={`section-animate text-center mb-12 ${achievementsAnim.isVisible ? "in-view" : ""}`}>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.achievements.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.achievements.title")}</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {achievements.map((achievement, idx) => (
+                            <AchievementCard
+                                key={idx}
+                                achievement={achievement}
+                                idx={idx}
+                                sectionVisible={achievementsAnim.isVisible}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* What We Do Section */}
+            <section
+                ref={servicesAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]"
+            >
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className={`section-animate text-center mb-12 delay-100 ${servicesAnim.isVisible ? "in-view" : ""}`}>
+                        <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.services.badge")}</span>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mt-4">{t("about.services.title")}</h2>
+                        <p className="text-[#888] text-lg mt-4 max-w-2xl mx-auto">
+                            {t("about.services.description")}
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        {services.map((service, idx) => (
+                            <div
+                                key={idx}
+                                className={`section-animate group bg-[#111] p-6 rounded-2xl border border-white/10 hover:border-[#00d28d]/50 transition-all duration-500 hover-lift text-center cursor-default ${servicesAnim.isVisible ? "in-view" : ""}`}
+                                style={{ transitionDelay: `${0.1 + idx * 0.08}s` }}
+                            >
+                                <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-[#00d28d]/20 to-[#4a90e2]/20 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                                    <service.icon size={24} className="text-[#00d28d]" />
+                                </div>
+                                <div className="text-white text-sm font-medium group-hover:text-[#00d28d] transition-colors duration-300">
+                                    {service.name}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+
+
+            {/* Why Choose Us Section */}
+            <section
+                ref={whyUsAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-b from-[#111]/50 to-[#0a0a0a]"
+            >
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="bg-gradient-to-br from-[#111] to-[#0a0a0a] rounded-3xl p-8 md:p-12 border border-white/10 hover:border-[#00d28d]/30 transition-all duration-500">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center">
+                            <div className={`section-animate space-y-6 delay-100 ${whyUsAnim.isVisible ? "in-view" : ""}`}>
+                                <span className="text-[#00d28d] font-bold tracking-wider uppercase text-sm animate-glow">{t("about.whyUs.badge")}</span>
+                                <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+                                    {t("about.whyUs.title")}
+                                </h2>
+                                <p className="text-[#888] text-lg leading-relaxed">
+                                    {t("about.whyUs.description")}
+                                </p>
+
+                                <div className="space-y-3 pt-4">
+                                    {[
+                                        t("about.whyUs.item1"),
+                                        t("about.whyUs.item2"),
+                                        t("about.whyUs.item3"),
+                                        t("about.whyUs.item4"),
+                                        t("about.whyUs.item5"),
+                                        t("about.whyUs.item6")
+                                    ].map((item, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`section-animate flex items-center gap-3 group cursor-default ${whyUsAnim.isVisible ? "in-view" : ""}`}
+                                            style={{ transitionDelay: `${0.2 + idx * 0.08}s` }}
+                                        >
+                                            <CheckCircle2 size={20} className="text-[#00d28d] flex-shrink-0 group-hover:scale-125 transition-transform duration-300" />
+                                            <span className="text-[#888] group-hover:text-white transition-colors duration-300">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={`section-animate relative delay-300 ${whyUsAnim.isVisible ? "in-view" : ""}`}>
+                                <div className="aspect-square bg-gradient-to-br from-[#111] to-[#0a0a0a] border border-white/10 rounded-3xl flex items-center justify-center relative overflow-hidden group hover-lift cursor-default">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#00d28d]/10 via-transparent to-[#4a90e2]/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-700"></div>
+                                    <div className="relative z-10 text-center space-y-6 p-8">
+                                        <div className="w-32 h-32 mx-auto bg-[#00d28d]/20 rounded-full flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                                            <Coffee size={64} className="text-[#00d28d] animate-pulse" />
+                                        </div>
+                                        <p className="text-white/70 text-lg italic group-hover:text-white transition-colors duration-300">
+                                            {t("about.whyUs.quote")}
+                                        </p>
+
+                                        <p className="text-[#00d28d] font-bold">{t("about.whyUs.quoteAttr")}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Section */}
+            <section
+                ref={ctaAnim.ref as React.RefObject<HTMLElement>}
+                className="section-animate py-20 bg-gradient-to-r from-[#00d28d] to-[#4a90e2] relative overflow-hidden animate-gradient"
+            >
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-20"></div>
+
+                <div className={`section-animate max-w-4xl mx-auto px-4 text-center relative z-10 delay-100 ${ctaAnim.isVisible ? "in-view" : ""}`}>
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 hover:scale-105 transition-transform duration-300 cursor-default">
+                        {t("about.cta.title")}
+                    </h2>
+                    <p className="text-white/90 text-xl mb-8">
+                        {t("about.cta.description")}
+                    </p>
+                    <Link href="/contact">
+                        <button className="group bg-white text-[#0a0a0a] hover:bg-white/90 px-8 py-6 rounded-full text-lg font-bold hover-lift relative overflow-hidden">
+                            <span className="relative z-10 flex items-center justify-center">
+                                {t("about.cta.button")}
+                            </span>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white to-[#f0f0f0] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </button>
+                    </Link>
+                </div>
+            </section>
+        </div>
+    );
+}

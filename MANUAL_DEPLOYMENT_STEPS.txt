@@ -1,0 +1,162 @@
+================================================================================
+MANUAL DEPLOYMENT STEPS - POST-WINDOWS REINSTALL
+================================================================================
+
+Copy and paste these commands one by one into your Command Prompt or PowerShell.
+Press Enter after each command.
+
+================================================================================
+STEP 1: Navigate to Project Directory
+================================================================================
+
+cd "d:\Elvion Solutions\Elvion-Solutions-main"
+
+
+================================================================================
+STEP 2: Initialize Git Repository (if not already done)
+================================================================================
+
+git init
+
+
+================================================================================
+STEP 3: Configure Git User (local configuration)
+================================================================================
+
+git config user.name "Hafiz Tayyab"
+git config user.email "hafiz@elvionsolutions.com"
+
+
+================================================================================
+STEP 4: Add GitHub Remote (if not already added)
+================================================================================
+
+git remote add origin https://github.com/HafizTayyabNasir/Elvion-Solutions.git
+
+
+================================================================================
+STEP 5: Verify Remote is Set
+================================================================================
+
+git remote -v
+
+(You should see:
+origin  https://github.com/HafizTayyabNasir/Elvion-Solutions.git (fetch)
+origin  https://github.com/HafizTayyabNasir/Elvion-Solutions.git (push)
+)
+
+
+================================================================================
+STEP 6: Check Current Status
+================================================================================
+
+git status
+
+(You should see modified files like app/page.tsx)
+
+
+================================================================================
+STEP 7: Stage All Changes
+================================================================================
+
+git add .
+
+
+================================================================================
+STEP 8: Commit Changes with Deployment Message
+================================================================================
+
+git commit -m "Post-Windows reinstall: Project refresh for Vercel deployment
+
+- Updated deployment timestamp in app/page.tsx
+- Project ready for re-deployment to Vercel
+- All dependencies verified and locked
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+
+
+================================================================================
+STEP 9: Push to GitHub
+================================================================================
+
+git push -u origin main
+
+(You may be prompted for GitHub credentials or authentication)
+
+
+================================================================================
+STEP 10: Verify Deployment
+================================================================================
+
+After pushing, within 30 seconds:
+
+1. Check GitHub: https://github.com/HafizTayyabNasir/Elvion-Solutions
+   - You should see your new commit
+
+2. Check Vercel: https://vercel.com/dashboard
+   - A build should automatically start
+   - Wait for build to complete (usually 2-5 minutes)
+   - Check build logs if any errors occur
+
+
+================================================================================
+WHAT WAS CHANGED
+================================================================================
+
+✅ app/page.tsx
+   - Added deployment timestamp comment
+   - New comment: "Last updated: 2026-04-20 - Post-Windows reinstall deployment update"
+
+✅ DEPLOYMENT_UPDATE_2026.md
+   - Created deployment documentation
+
+✅ GITHUB_VERCEL_PUSH_GUIDE.md
+   - Created deployment guide
+
+✅ PUSH_TO_GITHUB.bat
+   - Updated with complete initialization steps
+
+✅ deploy.ps1
+   - Created PowerShell deployment script
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+ERROR: "git: command not found"
+FIX: Install Git from https://git-scm.com/download/win
+
+ERROR: "fatal: 'origin' does not appear to be a 'git' repository"
+FIX: Repository hasn't been initialized. Run "git init" first.
+
+ERROR: "fatal: remote origin already exists"
+FIX: Remote already added. Skip that step and continue to "git push"
+
+ERROR: "fatal: The current branch main has no upstream branch"
+FIX: Run: git push -u origin main (instead of just "git push")
+
+ERROR: "Permission denied" or "Authentication failed"
+FIX: Use GitHub Personal Access Token
+     - Go to: https://github.com/settings/tokens
+     - Create new token with 'repo' scope
+     - Use token instead of password when prompted
+
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+All commands together (if everything is already set up):
+
+cd "d:\Elvion Solutions\Elvion-Solutions-main"
+git add .
+git commit -m "Post-Windows reinstall: Project refresh for Vercel deployment
+
+- Updated deployment timestamp in app/page.tsx
+- Project ready for re-deployment to Vercel
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+git push origin main
+
+================================================================================

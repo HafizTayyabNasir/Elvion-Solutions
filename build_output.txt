@@ -1,0 +1,125 @@
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 43s
+  Running TypeScript ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/82) ...
+  Generating static pages using 3 workers (20/82) 
+  Generating static pages using 3 workers (40/82) 
+  Generating static pages using 3 workers (61/82) 
+✓ Generating static pages using 3 workers (82/82) in 2.6s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /about
+├ ○ /admin/crm/contacts
+├ ○ /admin/crm/deals
+├ ○ /admin/crm/leads
+├ ○ /admin/dashboard
+├ ○ /admin/hr/attendance
+├ ○ /admin/hr/dashboard
+├ ○ /admin/hr/departments
+├ ○ /admin/hr/employees
+├ ○ /admin/hr/leaves
+├ ○ /admin/hr/payroll
+├ ○ /admin/invoices
+├ ○ /admin/projects
+├ ○ /admin/reports
+├ ○ /admin/settings
+├ ○ /admin/tasks
+├ ○ /admin/tickets
+├ ○ /admin/users
+├ ƒ /api/auth/forgot-password
+├ ƒ /api/auth/resend-verification
+├ ƒ /api/auth/reset_password
+├ ƒ /api/auth/verify-code
+├ ƒ /api/auth/verify-email
+├ ƒ /api/comments
+├ ƒ /api/comments/[id]
+├ ƒ /api/crm/contacts
+├ ƒ /api/crm/contacts/[id]
+├ ƒ /api/crm/deals
+├ ƒ /api/crm/deals/[id]
+├ ƒ /api/crm/leads
+├ ƒ /api/crm/leads/[id]
+├ ƒ /api/employee/attendance
+├ ƒ /api/employee/dashboard
+├ ƒ /api/employee/leaves
+├ ƒ /api/employee/payroll
+├ ƒ /api/employee/profile
+├ ƒ /api/employee/projects
+├ ƒ /api/employee/tasks
+├ ƒ /api/hr/attendance
+├ ƒ /api/hr/attendance/[id]
+├ ƒ /api/hr/dashboard
+├ ƒ /api/hr/departments
+├ ƒ /api/hr/departments/[id]
+├ ƒ /api/hr/employees
+├ ƒ /api/hr/employees/[id]
+├ ƒ /api/hr/leave-types
+├ ƒ /api/hr/leaves
+├ ƒ /api/hr/leaves/[id]
+├ ƒ /api/hr/payroll
+├ ƒ /api/hr/payroll/[id]
+├ ƒ /api/internship
+├ ƒ /api/internship/[id]
+├ ƒ /api/internship/[id]/cv
+├ ƒ /api/invoices
+├ ƒ /api/invoices/[id]
+├ ƒ /api/login
+├ ƒ /api/messages
+├ ƒ /api/messages/[messageId]
+├ ƒ /api/notifications
+├ ƒ /api/notifications/[id]
+├ ƒ /api/projects
+├ ƒ /api/projects/[id]
+├ ƒ /api/register
+├ ƒ /api/slots
+├ ƒ /api/slots/[id]
+├ ƒ /api/slots/[id]/book
+├ ƒ /api/slots/my-bookings
+├ ƒ /api/tasks
+├ ƒ /api/tasks/[id]
+├ ƒ /api/tickets
+├ ƒ /api/tickets/[id]
+├ ƒ /api/tickets/[id]/responses
+├ ƒ /api/users
+├ ƒ /api/users/[id]
+├ ○ /appointment
+├ ○ /contact
+├ ○ /customer/bookings
+├ ○ /customer/dashboard
+├ ○ /customer/invoices
+├ ○ /customer/notifications
+├ ○ /customer/projects
+├ ƒ /customer/projects/[id]
+├ ○ /customer/reports
+├ ○ /customer/settings
+├ ○ /customer/tickets
+├ ƒ /customer/tickets/[id]
+├ ○ /customer/tickets/new
+├ ○ /employee/attendance
+├ ○ /employee/dashboard
+├ ○ /employee/designation
+├ ○ /employee/leaves
+├ ○ /employee/payroll
+├ ○ /employee/profile
+├ ○ /employee/projects
+├ ○ /employee/tasks
+├ ○ /forgot-password
+├ ○ /inernshipform
+├ ○ /internship
+├ ○ /login
+├ ○ /portfolio
+├ ○ /reset-password
+├ ƒ /services/[slug]
+└ ○ /signup
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

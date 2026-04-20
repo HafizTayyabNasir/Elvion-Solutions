@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+@theme {
+  --color-elvion-dark: #121212;
+  --color-elvion-card: #1E1E1E;
+  --color-elvion-primary: #00D28D;
+  --color-elvion-secondary: #FFFFFF;
+  --color-elvion-accent: #00B074;
+  --color-elvion-gray: #A1A1A1;
+}
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 18, 18, 18;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #121212;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #00D28D;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   Page transition
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+   Animation keyframes – shared across all pages
+   ============================================================ */
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.5; box-shadow: 0 0 20px rgba(0,210,141,0.3); }
+  50% { opacity: 1; box-shadow: 0 0 40px rgba(0,210,141,0.6); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(0,210,141,0.2); box-shadow: 0 0 0 0 rgba(0,210,141,0.4); }
+  50% { border-color: rgba(0,210,141,0.6); box-shadow: 0 0 20px 5px rgba(0,210,141,0.2); }
+}
+
+@keyframes scale-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+/* ============================================================
+   Utility animation classes
+   ============================================================ */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-x 4s ease infinite;
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+.animate-scale-pulse {
+  animation: scale-pulse 2s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 8s linear infinite;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(0,210,141,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 30px rgba(0,210,141,0.6), 0 0 60px rgba(0,210,141,0.4), 0 0 90px rgba(0,210,141,0.2);
+}
+
+.hover-lift {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 25px 50px rgba(0,210,141,0.25);
+}
+
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateY(8deg) rotateX(4deg);
+}
+
+.gradient-border {
+  position: relative;
+  background: linear-gradient(90deg, #00d28d, #4a90e2, #00d28d);
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: #111;
+  border-radius: inherit;
+}
+
+/* ============================================================
+   Custom cursor
+   ============================================================ */
+.cursor-glow {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,210,141,0.10) 0%, rgba(0,210,141,0) 70%);
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+  transform: translate(-50%, -50%);
+  filter: blur(4px);
+}
+
+.cursor-glow.hovering {
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(0,210,141,0.13) 0%, rgba(0,210,141,0) 70%);
+}
+
