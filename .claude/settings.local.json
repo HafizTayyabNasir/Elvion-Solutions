@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx next:*)",
       "Bash(grep -n \"showPaymentForm\\\\|paymentForm\\\\|currency\" /d/Elvion_Solutions/Website/elvion-frontend/app/admin/clients/[clientId]/projects/[projectId]/page.tsx)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc *)"
     ]
   }
 }

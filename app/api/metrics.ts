@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyAuth } from '@/lib/auth';
+import type { Invoice, ProjectPayment, Expense, Contact } from '@prisma/client';
 import {
   calculateProfitMargin,
   calculateRunway,
@@ -53,15 +54,15 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const totalRevenue = invoices.reduce((sum, inv) => sum + Math.round(inv.total * 100), 0) +
-                         projectPayments.reduce((sum, pp) => sum + Math.round(pp.amount * 100), 0);
+    const totalRevenue = invoices.reduce((sum: number, inv: Invoice) => sum + Math.round(inv.total * 100), 0) +
+                         projectPayments.reduce((sum: number, pp: ProjectPayment) => sum + Math.round(pp.amount * 100), 0);
 
     // Calculate Expense Metrics
     const expenses = await prisma.expense.findMany({
       where: { currency, date: { gte: startDate, lte: endDate } },
     });
 
-    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalExpenses = expenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
     const monthlyBurnRate = totalExpenses / ((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) * 30;
 
     // Calculate Net Profit
@@ -78,33 +79,33 @@ export async function GET(request: NextRequest) {
     const unpaidInvoices = await prisma.invoice.findMany({
       where: { status: { in: ['sent', 'overdue'] }, currency },
     });
-    const accountsReceivable = unpaidInvoices.reduce((sum, inv) => sum + Math.round(inv.total * 100), 0);
+    const accountsReceivable = unpaidInvoices.reduce((sum: number, inv: Invoice) => sum + Math.round(inv.total * 100), 0);
 
     // Calculate Accounts Payable (recurring expenses owed)
-    const recurringExpenses = expenses.filter((e) => e.isRecurring);
-    const accountsPayable = recurringExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const recurringExpenses = expenses.filter((e: Expense) => e.isRecurring);
+    const accountsPayable = recurringExpenses.reduce((sum: number, exp: Expense) => sum + exp.amount, 0);
 
     // Calculate MRR (Monthly Recurring Revenue)
-    const retainerPayments = projectPayments.filter((pp) => pp.category === 'monthly');
-    const mrr = retainerPayments.reduce((sum, pp) => sum + Math.round(pp.amount * 100), 0) / 12; // Assume monthly items
+    const retainerPayments = projectPayments.filter((pp: ProjectPayment) => pp.category === 'monthly');
+    const mrr = retainerPayments.reduce((sum: number, pp: ProjectPayment) => sum + Math.round(pp.amount * 100), 0) / 12; // Assume monthly items
 
     // Calculate Runway
     const runway = calculateRunway(cashOnHand, monthlyBurnRate);
 
     // Calculate Collection Efficiency
-    const totalInvoiced = [...invoices, ...unpaidInvoices].reduce((sum, inv) => sum + inv.total, 0);
-    const collectionEfficiency = totalInvoiced > 0 ? (invoices.reduce((sum, inv) => sum + inv.total, 0) / totalInvoiced) * 100 : 100;
+    const totalInvoiced = [...invoices, ...unpaidInvoices].reduce((sum: number, inv: Invoice) => sum + inv.total, 0);
+    const collectionEfficiency = totalInvoiced > 0 ? (invoices.reduce((sum: number, inv: Invoice) => sum + inv.total, 0) / totalInvoiced) * 100 : 100;
 
     // Calculate Revenue Concentration Risk
     const contacts = await prisma.contact.findMany();
     let topClientRevenue = 0;
     if (contacts.length > 0) {
       const clientRevenues = await Promise.all(
-        contacts.map(async (contact) => {
+        contacts.map(async (contact: Contact) => {
           const clientInvoices = await prisma.invoice.findMany({
             where: { currency, issueDate: { gte: startDate, lte: endDate }, user: { contacts: { some: { id: contact.id } } } },
           });
-          return clientInvoices.reduce((sum, inv) => sum + inv.total, 0);
+          return clientInvoices.reduce((sum: number, inv: Invoice) => sum + inv.total, 0);
         })
       );
       topClientRevenue = Math.max(...clientRevenues);
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
       const monthInvoices = await prisma.invoice.findMany({
         where: { status: 'paid', currency, issueDate: { gte: monthStart, lte: monthEnd } },
       });
-      const monthRevenue = monthInvoices.reduce((sum, inv) => sum + inv.total, 0) * 100;
+      const monthRevenue = monthInvoices.reduce((sum: number, inv: Invoice) => sum + inv.total, 0) * 100;
       last12Months.push(monthRevenue);
     }
 

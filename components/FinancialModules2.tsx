@@ -39,9 +39,9 @@ export function Module3BurnRate({ formatCurrency }: ModuleProps) {
         {/* Runway Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs text-elvion-gray mb-2">
-            <span>Healthy (>12mo)</span>
+            <span>{'Healthy (>12mo)'}</span>
             <span>Warning (6-12mo)</span>
-            <span>Critical (<6mo)</span>
+            <span>{'Critical (<6mo)'}</span>
           </div>
           <div className="h-4 bg-gradient-to-r from-green-400 via-yellow-400 to-red-400 rounded-full overflow-hidden relative">
             <div className="absolute h-full w-1 bg-white left-[70%]"></div>
@@ -326,7 +326,7 @@ export function Module9Payroll({ formatCurrency }: ModuleProps) {
         <div className="bg-elvion-dark/50 border border-white/10 rounded-lg p-4">
           <p className="text-elvion-gray text-xs mb-2">Payroll as % of Revenue</p>
           <p className="text-3xl font-bold text-blue-400">34.8%</p>
-          <p className="text-sm text-blue-400 mt-2">Healthy: <40%</p>
+          <p className="text-sm text-blue-400 mt-2">{'Healthy: <40%'}</p>
         </div>
         <div className="bg-elvion-dark/50 border border-white/10 rounded-lg p-4">
           <p className="text-elvion-gray text-xs mb-2">Contractors Cost</p>
