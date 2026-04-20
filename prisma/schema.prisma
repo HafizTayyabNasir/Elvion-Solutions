@@ -41,6 +41,7 @@ model User {
   notifications    Notification[]
   activities       Activity[]
   employee         Employee?
+  expenses         Expense[]
 }
 
 model Message {
@@ -150,6 +151,7 @@ model Project {
   endDate     DateTime?
   budget      Float?
   progress    Int       @default(0) // 0-100%
+  directCosts Int       @default(0) // In cents/paisas - contractor fees, ad spend, tools
   ownerId     Int
   owner       User      @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   contactId   Int?
@@ -440,3 +442,58 @@ model Payroll {
   @@unique([employeeId, month, year])
 }
 
+// ============== Financial Dashboard Models ==============
+
+model Expense {
+  id              Int       @id @default(autoincrement())
+  date            DateTime
+  vendor          String
+  category        String    // "payroll", "software", "marketing", "office", "legal", "other"
+  amount          Int       // In cents/paisas to avoid float errors
+  currency        String    @default("USD")
+  paymentMethod   String?   // "bank_transfer", "cash", "credit_card", "check"
+  isRecurring     Boolean   @default(false)
+  receiptUrl      String?
+  notes           String?   @db.Text
+  createdBy       Int
+  user            User      @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Budget {
+  id              Int       @id @default(autoincrement())
+  year            Int
+  month           Int?      // null = full year
+  category        String    // Matches Expense categories + "revenue", "payroll", "software", etc.
+  plannedAmount   Int       // In cents/paisas
+  currency        String    @default("USD")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([year, month, category])
+}
+
+model TaxEntry {
+  id              Int       @id @default(autoincrement())
+  quarter         Int       // 1-4
+  year            Int
+  estimatedLiability Int    // In cents/paisas
+  amountSetAside  Int       // In cents/paisas
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([quarter, year])
+}
+
+model FinancialAlert {
+  id              Int       @id @default(autoincrement())
+  type            String    // "runway", "burn_rate", "concentration", "overdue", "budget", "revenue_decline"
+  message         String    @db.Text
+  severity        String    @default("info")  // "info", "warning", "critical"
+  metadata        String?   @db.Text          // JSON string with alert-specific data
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+  isResolved      Boolean   @default(false)
+}

@@ -20,6 +20,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Building2,
+  TrendingUp,
 } from "lucide-react";
 
 const menuItems = [
@@ -41,6 +42,7 @@ const menuItems = [
   { name: "Tasks", href: "/admin/tasks", icon: FileText },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
   { name: "Invoices", href: "/admin/invoices", icon: Receipt },
+  { name: "Finance", href: "/admin/finance", icon: TrendingUp },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Reports", href: "/admin/reports", icon: BarChart3 },
   { name: "Settings", href: "/admin/settings", icon: Settings },
