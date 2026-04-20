@@ -21,7 +21,12 @@ import {
  */
 export async function GET(request: NextRequest) {
   try {
-    const decoded = await verifyAuth(request);
+    const authResult = await verifyAuth(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
+    const decoded = authResult.user;
     if (!decoded || !decoded.is_admin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }

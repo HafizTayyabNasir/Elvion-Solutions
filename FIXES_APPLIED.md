@@ -52,6 +52,22 @@
 - Both API files now use consistent named import pattern
 - Build should now pass successfully
 
+## ✅ 6. Financial Dashboard - Type Error in Auth Check (2026-04-20)
+**Fixed in:**
+- `app/api/finance.ts` (GET and POST functions)
+- `app/api/metrics.ts` (GET function)
+
+**Issue:**
+- `verifyAuth()` returns a union type: `{ user: JWTPayload } | { error: string; status: number }`
+- Code was checking `decoded.is_admin` without first checking if it had an error
+- TypeScript type error: "Property 'is_admin' does not exist on union type"
+
+**Solution:**
+- Added proper type guard: `if ('error' in authResult)`
+- Extract user object only after confirming no error: `const decoded = authResult.user`
+- All auth checks now follow correct pattern
+- TypeScript compilation now passes
+
 ## API Endpoints Working:
 - ✅ `/api/finance` - GET/POST/PUT/DELETE (CRUD for financial entities)
 - ✅ `/api/metrics` - GET (comprehensive financial metrics)
