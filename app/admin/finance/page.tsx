@@ -391,6 +391,7 @@ export default function FinanceDashboard() {
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [loadingTab, setLoadingTab] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [receiptModal, setReceiptModal] = useState<string | null>(null);
 
   // Budget form state
   const [budgetForm, setBudgetForm] = useState({ category: "payroll", plannedAmount: "", year: new Date().getFullYear().toString(), month: (new Date().getMonth() + 1).toString() });
@@ -612,6 +613,19 @@ export default function FinanceDashboard() {
 
   return (
     <div className="min-h-screen bg-elvion-dark">
+      {/* ── RECEIPT LIGHTBOX ── */}
+      {receiptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setReceiptModal(null)}>
+          <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setReceiptModal(null)}
+              className="absolute -top-3 -right-3 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors">
+              <X size={16} />
+            </button>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={receiptModal} alt="Receipt" className="w-full max-h-[85vh] object-contain rounded-xl border border-white/10 shadow-2xl" />
+          </div>
+        </div>
+      )}
       {/* ── HEADER ── */}
       <div className="bg-elvion-card border-b border-white/10 sticky top-0 z-10 px-6 py-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -1202,10 +1216,10 @@ export default function FinanceDashboard() {
                             <td className="px-4 py-2.5">{exp.isRecurring ? <span className="text-blue-400">●</span> : <span className="text-elvion-gray">○</span>}</td>
                             <td className="px-4 py-2.5">
                               {exp.receiptUrl ? (
-                                <a href={exp.receiptUrl} target="_blank" rel="noopener noreferrer"
+                                <button onClick={() => setReceiptModal(exp.receiptUrl!)}
                                   className="inline-flex items-center gap-1 text-elvion-primary hover:text-elvion-accent transition-colors text-xs">
                                   <Eye size={12} /> View
-                                </a>
+                                </button>
                               ) : (
                                 <span className="text-elvion-gray/40 text-xs">—</span>
                               )}
