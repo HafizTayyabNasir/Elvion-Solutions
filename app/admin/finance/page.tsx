@@ -293,13 +293,47 @@ export default function FinanceDashboard() {
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [currency, setCurrency] = useState<Currency>("PKR");
-  const [dateRange, setDateRange] = useState<DateRange>(() => {
+
+  type DatePreset = "this-year" | "last-month" | "last-3-months" | "last-6-months" | "last-year" | "custom";
+  const [datePreset, setDatePreset] = useState<DatePreset>("this-year");
+  const [showPresetMenu, setShowPresetMenu] = useState(false);
+
+  const presetOptions: { value: DatePreset; label: string }[] = [
+    { value: "this-year",      label: "This Year" },
+    { value: "last-month",     label: "Last Month" },
+    { value: "last-3-months",  label: "Last 3 Months" },
+    { value: "last-6-months",  label: "Last 6 Months" },
+    { value: "last-year",      label: "Last Year" },
+    { value: "custom",         label: "Custom Range" },
+  ];
+
+  function presetToRange(preset: DatePreset): DateRange {
     const today = new Date();
-    return {
-      startDate: new Date(today.getFullYear(), 0, 1).toISOString().split("T")[0],
-      endDate: today.toISOString().split("T")[0],
-    };
-  });
+    const fmt = (d: Date) => d.toISOString().split("T")[0];
+    if (preset === "this-year") {
+      return { startDate: fmt(new Date(today.getFullYear(), 0, 1)), endDate: fmt(today) };
+    }
+    if (preset === "last-month") {
+      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const last  = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { startDate: fmt(first), endDate: fmt(last) };
+    }
+    if (preset === "last-3-months") {
+      const first = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+      return { startDate: fmt(first), endDate: fmt(today) };
+    }
+    if (preset === "last-6-months") {
+      const first = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+      return { startDate: fmt(first), endDate: fmt(today) };
+    }
+    if (preset === "last-year") {
+      const y = today.getFullYear() - 1;
+      return { startDate: fmt(new Date(y, 0, 1)), endDate: fmt(new Date(y, 11, 31)) };
+    }
+    return { startDate: fmt(new Date(today.getFullYear(), 0, 1)), endDate: fmt(today) };
+  }
+
+  const [dateRange, setDateRange] = useState<DateRange>(() => presetToRange("this-year"));
 
   // Data state
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -414,6 +448,17 @@ export default function FinanceDashboard() {
   useEffect(() => {
     if (isAuthenticated && user?.is_admin) fetchTabData(activeTab);
   }, [activeTab]);
+
+  // Close preset dropdown on outside click
+  useEffect(() => {
+    if (!showPresetMenu) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-preset-menu]")) setShowPresetMenu(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [showPresetMenu]);
 
   const deleteExpense = async (id: number) => {
     try {
@@ -536,15 +581,51 @@ export default function FinanceDashboard() {
             <p className="text-elvion-gray text-xs">Advanced financial intelligence — Elvion Solutions</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            {/* Date range */}
-            <div className="flex items-center gap-1 bg-elvion-dark border border-white/10 rounded-lg px-3 py-2">
-              <Calendar size={14} className="text-elvion-gray" />
-              <input type="date" value={dateRange.startDate} onChange={e => setDateRange(d => ({ ...d, startDate: e.target.value }))}
-                className="bg-transparent text-white text-xs border-none outline-none" />
-              <span className="text-elvion-gray text-xs">—</span>
-              <input type="date" value={dateRange.endDate} onChange={e => setDateRange(d => ({ ...d, endDate: e.target.value }))}
-                className="bg-transparent text-white text-xs border-none outline-none" />
+            {/* Date preset dropdown */}
+            <div className="relative" data-preset-menu>
+              <button
+                onClick={() => setShowPresetMenu(v => !v)}
+                className="flex items-center gap-2 bg-elvion-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white hover:border-elvion-primary transition-colors min-w-[160px] justify-between"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={13} className="text-elvion-gray" />
+                  <span>{presetOptions.find(p => p.value === datePreset)?.label}</span>
+                </div>
+                <ChevronDown size={12} className={`text-elvion-gray transition-transform ${showPresetMenu ? "rotate-180" : ""}`} />
+              </button>
+              {showPresetMenu && (
+                <div className="absolute right-0 top-full mt-1 bg-elvion-card border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden min-w-[180px]">
+                  {presetOptions.map(opt => (
+                    <button key={opt.value}
+                      onClick={() => {
+                        setDatePreset(opt.value);
+                        if (opt.value !== "custom") setDateRange(presetToRange(opt.value));
+                        setShowPresetMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-xs transition-colors hover:bg-white/5 ${datePreset === opt.value ? "text-elvion-primary font-semibold" : "text-white"}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+            {/* Custom date inputs — shown only when "Custom Range" is selected */}
+            {datePreset === "custom" && (
+              <div className="flex items-center gap-1 bg-elvion-dark border border-white/10 rounded-lg px-3 py-2">
+                <input type="date" value={dateRange.startDate} onChange={e => setDateRange(d => ({ ...d, startDate: e.target.value }))}
+                  className="bg-transparent text-white text-xs border-none outline-none" />
+                <span className="text-elvion-gray text-xs">—</span>
+                <input type="date" value={dateRange.endDate} onChange={e => setDateRange(d => ({ ...d, endDate: e.target.value }))}
+                  className="bg-transparent text-white text-xs border-none outline-none" />
+              </div>
+            )}
+            {/* Date range display (non-custom) */}
+            {datePreset !== "custom" && (
+              <div className="flex items-center gap-1 bg-elvion-dark/50 border border-white/5 rounded-lg px-3 py-2 text-xs text-elvion-gray select-none">
+                {dateRange.startDate} — {dateRange.endDate}
+              </div>
+            )}
             {/* Currency toggle */}
             <div className="flex rounded-lg overflow-hidden border border-white/10">
               {(["USD", "PKR"] as Currency[]).map(c => (
