@@ -221,7 +221,7 @@ function ExpenseForm({ currency, onSaved }: { currency: Currency; onSaved: () =>
     if (!form.vendor || !form.amount) return setError("Vendor and amount are required");
     setSaving(true); setError("");
     try {
-      await fetchAPI("/api/finance?action=expense", {
+      await fetchAPI("/finance?action=expense", {
         method: "POST",
         body: JSON.stringify({ ...form, amount: Math.round(parseFloat(form.amount) * 100), currency }),
       });
@@ -296,7 +296,7 @@ export default function FinanceDashboard() {
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const today = new Date();
     return {
-      startDate: new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0],
+      startDate: new Date(today.getFullYear(), 0, 1).toISOString().split("T")[0],
       endDate: today.toISOString().split("T")[0],
     };
   });
@@ -339,7 +339,7 @@ export default function FinanceDashboard() {
   const fetchMetrics = useCallback(async () => {
     try {
       setRefreshing(true);
-      const data = await fetchAPI(`/api/metrics?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&currency=${currency}`);
+      const data = await fetchAPI(`/metrics?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&currency=${currency}`);
       setMetrics(data);
     } catch (e) { console.error(e); }
     finally { setRefreshing(false); setLoadingMetrics(false); }
@@ -351,49 +351,49 @@ export default function FinanceDashboard() {
       const qs = `startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&currency=${currency}`;
       if (tab === "cashflow") {
         const [cf] = await Promise.all([
-          fetchAPI(`/api/finance?action=cashflow&${qs}`),
+          fetchAPI(`/finance?action=cashflow&${qs}`),
         ]);
         setCashflow(cf);
       }
       if (tab === "plrevenue") {
         const [plData, rev] = await Promise.all([
-          fetchAPI(`/api/finance?action=pl&${qs}`),
-          fetchAPI(`/api/finance?action=revenue-breakdown&${qs}`),
+          fetchAPI(`/finance?action=pl&${qs}`),
+          fetchAPI(`/finance?action=revenue-breakdown&${qs}`),
         ]);
         setPL(plData); setRevBreakdown(rev);
       }
       if (tab === "expensesbudget") {
         const [exp, bud] = await Promise.all([
-          fetchAPI(`/api/finance?action=expenses&${qs}`),
-          fetchAPI(`/api/finance?action=budgets&year=${new Date().getFullYear()}&currency=${currency}`),
+          fetchAPI(`/finance?action=expenses&${qs}`),
+          fetchAPI(`/finance?action=budgets&year=${new Date().getFullYear()}&currency=${currency}`),
         ]);
         setExpenses(exp); setBudgets(bud);
       }
       if (tab === "billing") {
         const [ag, proj] = await Promise.all([
-          fetchAPI(`/api/finance?action=invoice-aging&currency=${currency}`),
-          fetchAPI(`/api/finance?action=project-profitability&currency=${currency}`),
+          fetchAPI(`/finance?action=invoice-aging&currency=${currency}`),
+          fetchAPI(`/finance?action=project-profitability&currency=${currency}`),
         ]);
         setAging(ag); setProjects(proj);
       }
       if (tab === "payroll") {
         const now = new Date();
-        const pr = await fetchAPI(`/api/finance?action=payroll&year=${now.getFullYear()}&month=${now.getMonth() + 1}`);
+        const pr = await fetchAPI(`/finance?action=payroll&year=${now.getFullYear()}&month=${now.getMonth() + 1}`);
         setPayroll(Array.isArray(pr) ? pr : []);
       }
       if (tab === "tax") {
         const [tax, al] = await Promise.all([
-          fetchAPI(`/api/finance?action=tax-entries&year=${new Date().getFullYear()}`),
-          fetchAPI(`/api/finance?action=alerts`),
+          fetchAPI(`/finance?action=tax-entries&year=${new Date().getFullYear()}`),
+          fetchAPI(`/finance?action=alerts`),
         ]);
         setTaxEntries(Array.isArray(tax) ? tax : []); setAlerts(Array.isArray(al) ? al : []);
       }
       if (tab === "forecasting") {
-        const fc = await fetchAPI(`/api/finance?action=forecast&currency=${currency}`);
+        const fc = await fetchAPI(`/finance?action=forecast&currency=${currency}`);
         setForecast(fc);
       }
       if (tab === "overview") {
-        const al = await fetchAPI(`/api/finance?action=alerts`);
+        const al = await fetchAPI(`/finance?action=alerts`);
         setAlerts(Array.isArray(al) ? al : []);
       }
     } catch (e) { console.error(e); }
@@ -417,7 +417,7 @@ export default function FinanceDashboard() {
 
   const deleteExpense = async (id: number) => {
     try {
-      await fetchAPI("/api/finance?action=delete-expense", { method: "POST", body: JSON.stringify({ id }) });
+      await fetchAPI("/finance?action=delete-expense", { method: "POST", body: JSON.stringify({ id }) });
       setExpenses(prev => prev.filter(e => e.id !== id));
     } catch (e) { console.error(e); }
   };
@@ -425,7 +425,7 @@ export default function FinanceDashboard() {
   const saveBudget = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingBudget(true);
     try {
-      await fetchAPI("/api/finance?action=budget", {
+      await fetchAPI("/finance?action=budget", {
         method: "POST",
         body: JSON.stringify({ ...budgetForm, plannedAmount: Math.round(parseFloat(budgetForm.plannedAmount) * 100), year: parseInt(budgetForm.year), month: parseInt(budgetForm.month), currency }),
       });
@@ -438,7 +438,7 @@ export default function FinanceDashboard() {
   const saveTax = async (e: React.FormEvent) => {
     e.preventDefault(); setSavingTax(true);
     try {
-      await fetchAPI("/api/finance?action=tax-entry", {
+      await fetchAPI("/finance?action=tax-entry", {
         method: "POST",
         body: JSON.stringify({ ...taxForm, quarter: parseInt(taxForm.quarter), year: parseInt(taxForm.year), estimatedLiability: Math.round(parseFloat(taxForm.estimatedLiability) * 100), amountSetAside: Math.round(parseFloat(taxForm.amountSetAside || "0") * 100) }),
       });
@@ -450,7 +450,7 @@ export default function FinanceDashboard() {
 
   const resolveAlert = async (id: number) => {
     try {
-      await fetchAPI("/api/finance?action=alert-resolve", { method: "POST", body: JSON.stringify({ alertId: id }) });
+      await fetchAPI("/finance?action=alert-resolve", { method: "POST", body: JSON.stringify({ alertId: id }) });
       setAlerts(prev => prev.filter(a => a.id !== id));
     } catch (e) { console.error(e); }
   };
