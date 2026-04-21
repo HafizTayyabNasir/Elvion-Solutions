@@ -294,11 +294,12 @@ export default function FinanceDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [currency, setCurrency] = useState<Currency>("PKR");
 
-  type DatePreset = "this-year" | "last-month" | "last-3-months" | "last-6-months" | "last-year" | "custom";
+  type DatePreset = "this-month" | "this-year" | "last-month" | "last-3-months" | "last-6-months" | "last-year" | "custom";
   const [datePreset, setDatePreset] = useState<DatePreset>("this-year");
   const [showPresetMenu, setShowPresetMenu] = useState(false);
 
   const presetOptions: { value: DatePreset; label: string }[] = [
+    { value: "this-month",     label: "Current Month" },
     { value: "this-year",      label: "This Year" },
     { value: "last-month",     label: "Last Month" },
     { value: "last-3-months",  label: "Last 3 Months" },
@@ -310,6 +311,10 @@ export default function FinanceDashboard() {
   function presetToRange(preset: DatePreset): DateRange {
     const today = new Date();
     const fmt = (d: Date) => d.toISOString().split("T")[0];
+    if (preset === "this-month") {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { startDate: fmt(first), endDate: fmt(today) };
+    }
     if (preset === "this-year") {
       return { startDate: fmt(new Date(today.getFullYear(), 0, 1)), endDate: fmt(today) };
     }
