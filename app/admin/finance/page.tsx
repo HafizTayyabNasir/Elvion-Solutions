@@ -292,7 +292,7 @@ export default function FinanceDashboard() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currency, setCurrency] = useState<Currency>("PKR");
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const today = new Date();
     return {

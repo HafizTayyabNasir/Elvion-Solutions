@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get('action');
     const startDateParam = searchParams.get('startDate');
     const endDateParam = searchParams.get('endDate');
-    const currency = searchParams.get('currency') || 'USD';
+    const currency = searchParams.get('currency') || 'PKR';
 
     if (!action) {
       return NextResponse.json({ error: 'Missing action parameter' }, { status: 400 });
@@ -99,7 +99,13 @@ export async function GET(request: NextRequest) {
             where: { status: 'paid', currency, issueDate: { gte: mStart, lte: mEnd } },
           }),
           prisma.projectPayment.findMany({
-            where: { status: 'received', currency, paymentDate: { gte: mStart, lte: mEnd } },
+            where: {
+              status: 'received', currency,
+              OR: [
+                { paymentDate: { gte: mStart, lte: mEnd } },
+                { paymentDate: null, createdAt: { gte: mStart, lte: mEnd } },
+              ],
+            },
           }),
           prisma.expense.findMany({
             where: { currency, date: { gte: mStart, lte: mEnd } },
@@ -164,7 +170,13 @@ export async function GET(request: NextRequest) {
           where: { status: 'paid', currency, issueDate: { gte: start, lte: end } },
         }),
         prisma.projectPayment.findMany({
-          where: { status: 'received', currency, paymentDate: { gte: start, lte: end } },
+          where: {
+            status: 'received', currency,
+            OR: [
+              { paymentDate: { gte: start, lte: end } },
+              { paymentDate: null, createdAt: { gte: start, lte: end } },
+            ],
+          },
         }),
         prisma.expense.findMany({
           where: { currency, date: { gte: start, lte: end } },
@@ -215,7 +227,13 @@ export async function GET(request: NextRequest) {
       const projects = await prisma.project.findMany({
         include: {
           payments: {
-            where: { status: 'received', currency, paymentDate: { gte: start, lte: end } },
+            where: {
+              status: 'received', currency,
+              OR: [
+                { paymentDate: { gte: start, lte: end } },
+                { paymentDate: null, createdAt: { gte: start, lte: end } },
+              ],
+            },
           },
           invoices: {
             where: { status: 'paid', currency, issueDate: { gte: start, lte: end } },

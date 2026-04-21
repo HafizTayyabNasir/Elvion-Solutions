@@ -24,20 +24,30 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = new Date(searchParams.get('startDate') || new Date().toISOString().split('T')[0]);
-    const endDate = new Date(searchParams.get('endDate') || new Date().toISOString().split('T')[0]);
-    const currency = searchParams.get('currency') || 'USD';
+    const currency = searchParams.get('currency') || 'PKR';
 
-    startDate.setDate(1);
-    endDate.setMonth(endDate.getMonth() + 1, 0);
+    // UTC-safe date parsing to avoid timezone boundary issues
+    const startParam = searchParams.get('startDate') || new Date().toISOString().split('T')[0];
+    const endParam = searchParams.get('endDate') || new Date().toISOString().split('T')[0];
+    const [sy, sm] = startParam.split('-').map(Number);
+    const [ey, em] = endParam.split('-').map(Number);
+    const startDate = new Date(Date.UTC(sy, sm - 1, 1));                    // first of start month (UTC)
+    const endDate = new Date(Date.UTC(ey, em, 0, 23, 59, 59, 999));         // last ms of end month (UTC)
 
     // Revenue from paid invoices
     const invoices = await prisma.invoice.findMany({
       where: { status: 'paid', currency, issueDate: { gte: startDate, lte: endDate } },
     });
-    // Revenue from project payments
+    // Revenue from project payments — include records where paymentDate is null (use createdAt)
     const projectPayments = await prisma.projectPayment.findMany({
-      where: { status: 'received', currency, paymentDate: { gte: startDate, lte: endDate } },
+      where: {
+        status: 'received',
+        currency,
+        OR: [
+          { paymentDate: { gte: startDate, lte: endDate } },
+          { paymentDate: null, createdAt: { gte: startDate, lte: endDate } },
+        ],
+      },
     });
 
     const invoiceRevenue = invoices.reduce((sum: number, inv: Invoice) => sum + Math.round(inv.total * 100), 0);
@@ -130,7 +140,13 @@ export async function GET(request: NextRequest) {
         where: { status: 'paid', currency, issueDate: { gte: mStart, lte: mEnd } },
       });
       const mPayments = await prisma.projectPayment.findMany({
-        where: { status: 'received', currency, paymentDate: { gte: mStart, lte: mEnd } },
+        where: {
+          status: 'received', currency,
+          OR: [
+            { paymentDate: { gte: mStart, lte: mEnd } },
+            { paymentDate: null, createdAt: { gte: mStart, lte: mEnd } },
+          ],
+        },
       });
       const mRevenue = mInvoices.reduce((sum: number, inv: Invoice) => sum + Math.round(inv.total * 100), 0) +
                        mPayments.reduce((sum: number, pp: ProjectPayment) => sum + Math.round(pp.amount * 100), 0);
