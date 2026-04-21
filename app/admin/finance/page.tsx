@@ -57,6 +57,7 @@ interface RevenueBreakdown {
 interface Expense {
   id: number; date: string; vendor: string; category: string; amount: number;
   currency: string; paymentMethod: string | null; isRecurring: boolean; notes: string | null;
+  receiptUrl: string | null;
 }
 
 interface Budget { id: number; year: number; month: number | null; category: string; plannedAmount: number; currency: string; }
@@ -212,9 +213,20 @@ function CurrencyTooltip(props: any) {
 // EXPENSE ENTRY FORM
 // ─────────────────────────────────────────────
 function ExpenseForm({ currency, onSaved }: { currency: Currency; onSaved: () => void }) {
-  const [form, setForm] = useState({ date: new Date().toISOString().split("T")[0], vendor: "", category: "payroll", amount: "", paymentMethod: "bank_transfer", isRecurring: false, notes: "" });
+  const blank = { date: new Date().toISOString().split("T")[0], vendor: "", category: "payroll", amount: "", paymentMethod: "bank_transfer", isRecurring: false, notes: "" };
+  const [form, setForm] = useState(blank);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setError("Screenshot must be under 5 MB"); return; }
+    const reader = new FileReader();
+    reader.onload = () => setReceiptPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,9 +235,10 @@ function ExpenseForm({ currency, onSaved }: { currency: Currency; onSaved: () =>
     try {
       await fetchAPI("/finance?action=expense", {
         method: "POST",
-        body: JSON.stringify({ ...form, amount: Math.round(parseFloat(form.amount) * 100), currency }),
+        body: JSON.stringify({ ...form, amount: Math.round(parseFloat(form.amount) * 100), currency, receiptUrl: receiptPreview }),
       });
-      setForm({ date: new Date().toISOString().split("T")[0], vendor: "", category: "payroll", amount: "", paymentMethod: "bank_transfer", isRecurring: false, notes: "" });
+      setForm(blank);
+      setReceiptPreview(null);
       onSaved();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save");
@@ -276,6 +289,27 @@ function ExpenseForm({ currency, onSaved }: { currency: Currency; onSaved: () =>
       <div>
         <label className="text-xs text-elvion-gray mb-1 block">Notes</label>
         <input type="text" placeholder="Optional notes" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={inp} />
+      </div>
+      {/* Screenshot / Receipt upload */}
+      <div>
+        <label className="text-xs text-elvion-gray mb-1 block">Receipt / Screenshot <span className="text-white/30">(optional, max 5 MB)</span></label>
+        <label className="flex items-center gap-2 cursor-pointer border border-dashed border-white/20 rounded-lg px-3 py-3 hover:border-elvion-primary transition-colors group">
+          <Eye size={14} className="text-elvion-gray group-hover:text-elvion-primary transition-colors flex-shrink-0" />
+          <span className="text-xs text-elvion-gray group-hover:text-white transition-colors">
+            {receiptPreview ? "Change screenshot" : "Click to attach screenshot or receipt"}
+          </span>
+          <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        </label>
+        {receiptPreview && (
+          <div className="mt-2 relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={receiptPreview} alt="Receipt preview" className="max-h-40 rounded-lg border border-white/10 object-contain" />
+            <button type="button" onClick={() => setReceiptPreview(null)}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600">
+              <X size={12} />
+            </button>
+          </div>
+        )}
       </div>
       <button type="submit" disabled={saving} className="w-full py-2 bg-elvion-primary text-black text-sm font-semibold rounded-lg hover:bg-elvion-accent disabled:opacity-50 transition-colors">
         {saving ? "Saving..." : "Add Expense"}
@@ -1148,7 +1182,7 @@ export default function FinanceDashboard() {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5">
-                          {["Date", "Vendor", "Category", "Amount", "Method", "Recurring", ""].map(h => (
+                          {["Date", "Vendor", "Category", "Amount", "Method", "Recurring", "Receipt", ""].map(h => (
                             <th key={h} className="px-4 py-2.5 text-left text-elvion-gray font-medium">{h}</th>
                           ))}
                         </tr>
@@ -1167,6 +1201,16 @@ export default function FinanceDashboard() {
                             <td className="px-4 py-2.5 text-elvion-gray capitalize">{exp.paymentMethod?.replace("_", " ") || "—"}</td>
                             <td className="px-4 py-2.5">{exp.isRecurring ? <span className="text-blue-400">●</span> : <span className="text-elvion-gray">○</span>}</td>
                             <td className="px-4 py-2.5">
+                              {exp.receiptUrl ? (
+                                <a href={exp.receiptUrl} target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-elvion-primary hover:text-elvion-accent transition-colors text-xs">
+                                  <Eye size={12} /> View
+                                </a>
+                              ) : (
+                                <span className="text-elvion-gray/40 text-xs">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2.5">
                               <button onClick={() => deleteExpense(exp.id)} className="text-red-400 hover:text-red-300 transition-colors">
                                 <Trash2 size={12} />
                               </button>
@@ -1174,7 +1218,8 @@ export default function FinanceDashboard() {
                           </tr>
                         ))}
                         {expenses.length === 0 && (
-                          <tr><td colSpan={7} className="px-4 py-8 text-center text-elvion-gray">No expenses recorded for this period</td></tr>
+                          <tr><td colSpan={8} className="px-4 py-8 text-center text-elvion-gray">No expenses recorded for this period</td></tr>
+
                         )}
                       </tbody>
                     </table>
