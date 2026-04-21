@@ -26,13 +26,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const currency = searchParams.get('currency') || 'PKR';
 
-    // UTC-safe date parsing to avoid timezone boundary issues
+    // Parse exact dates provided — no forcing to month boundaries
     const startParam = searchParams.get('startDate') || new Date().toISOString().split('T')[0];
     const endParam = searchParams.get('endDate') || new Date().toISOString().split('T')[0];
-    const [sy, sm] = startParam.split('-').map(Number);
-    const [ey, em] = endParam.split('-').map(Number);
-    const startDate = new Date(Date.UTC(sy, sm - 1, 1));                    // first of start month (UTC)
-    const endDate = new Date(Date.UTC(ey, em, 0, 23, 59, 59, 999));         // last ms of end month (UTC)
+    const startDate = new Date(startParam + 'T00:00:00.000Z');
+    const endDate   = new Date(endParam   + 'T23:59:59.999Z');
 
     // Revenue from paid invoices
     const invoices = await prisma.invoice.findMany({

@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
       const where: Record<string, unknown> = {};
       if (startDateParam || endDateParam) {
         where.date = {} as Record<string, Date>;
-        if (startDateParam) (where.date as Record<string, Date>).gte = new Date(startDateParam);
-        if (endDateParam) (where.date as Record<string, Date>).lte = new Date(endDateParam);
+        if (startDateParam) (where.date as Record<string, Date>).gte = new Date(startDateParam + 'T00:00:00.000Z');
+        if (endDateParam)   (where.date as Record<string, Date>).lte = new Date(endDateParam   + 'T23:59:59.999Z');
       }
       const category = searchParams.get('category');
       if (category) where.category = category;
@@ -160,10 +160,10 @@ export async function GET(request: NextRequest) {
 
     // ── P&L STATEMENT ─────────────────────────────────────────────────────────
     if (action === 'pl') {
-      const start = startDateParam ? new Date(startDateParam) : new Date(new Date().getFullYear(), 0, 1);
-      const end = endDateParam ? new Date(endDateParam) : new Date();
-      start.setDate(1);
-      end.setMonth(end.getMonth() + 1, 0);
+      const startStr = startDateParam || `${new Date().getFullYear()}-01-01`;
+      const endStr   = endDateParam   || new Date().toISOString().split('T')[0];
+      const start = new Date(startStr + 'T00:00:00.000Z');
+      const end   = new Date(endStr   + 'T23:59:59.999Z');
 
       const [paidInvoices, receivedPayments, allExpenses] = await Promise.all([
         prisma.invoice.findMany({
@@ -220,8 +220,10 @@ export async function GET(request: NextRequest) {
 
     // ── REVENUE BREAKDOWN ────────────────────────────────────────────────────
     if (action === 'revenue-breakdown') {
-      const start = startDateParam ? new Date(startDateParam) : new Date(new Date().getFullYear(), 0, 1);
-      const end = endDateParam ? new Date(endDateParam) : new Date();
+      const startStr = startDateParam || `${new Date().getFullYear()}-01-01`;
+      const endStr   = endDateParam   || new Date().toISOString().split('T')[0];
+      const start = new Date(startStr + 'T00:00:00.000Z');
+      const end   = new Date(endStr   + 'T23:59:59.999Z');
 
       // Revenue by project/contact
       const projects = await prisma.project.findMany({
