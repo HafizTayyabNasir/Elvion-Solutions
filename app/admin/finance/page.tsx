@@ -651,13 +651,12 @@ export default function FinanceDashboard() {
 
       <div className="p-6 space-y-6">
         {/* ── MODULE 1: KPI BAR ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {[
             { label: "Total Revenue", value: metrics ? fmt(metrics.revenue.total) : "—", icon: TrendingUp, trend: metrics?.revenue.growthPercent, trendLabel: "vs prev period" },
             { label: "Total Expenses", value: metrics ? fmt(metrics.expenses.total) : "—", icon: TrendingDown, trend: metrics ? -(metrics.expenses.monthlyBurnRate / metrics.expenses.total * 10) : undefined },
             { label: "Net Profit", value: metrics ? fmt(metrics.profit.netProfit) : "—", icon: DollarSign, sub: metrics ? `Margin: ${fmtPct(metrics.profit.profitMargin)}` : undefined },
             { label: "MRR", value: metrics ? fmt(metrics.revenue.monthlyRecurring) : "—", icon: Zap },
-            { label: "Cash on Hand", value: metrics ? fmt(metrics.liquidity.cashOnHand) : "—", icon: Activity },
             { label: "Accounts Rec.", value: metrics ? fmt(metrics.liquidity.accountsReceivable) : "—", icon: Clock },
             { label: "Accounts Pay.", value: metrics ? fmt(metrics.liquidity.accountsPayable) : "—", icon: AlertCircle },
             { label: "Burn Rate/mo", value: metrics ? fmt(metrics.expenses.monthlyBurnRate) : "—", icon: TrendingDown, sub: metrics ? `Runway: ${metrics.health.runway >= 999 ? "∞" : metrics.health.runway.toFixed(1)}mo` : undefined },
