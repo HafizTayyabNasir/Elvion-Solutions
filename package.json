@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate && prisma db push --accept-data-loss && next build",
     "start": "next start",
-    "lint": "eslint . --ignore-pattern prisma/seed.js",
+    "lint": "eslint . --ignore-pattern prisma/seed.js --ignore-pattern prisma/seed-finance.js",
+    "seed": "node prisma/seed.js",
+    "seed:finance": "node prisma/seed-finance.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -25,6 +27,7 @@
     "nodemailer": "^6.9.16",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.8.1",
     "resend": "^6.9.3",
     "tailwind-merge": "^3.4.0"
   },
