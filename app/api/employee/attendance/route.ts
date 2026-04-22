@@ -66,9 +66,9 @@ export async function POST(request: Request) {
     }
 
     const { action } = await request.json();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const now = new Date();
+    const today = new Date(now);
+    today.setUTCHours(0, 0, 0, 0);
 
     if (action === 'clock_in') {
       // Check if already clocked in today

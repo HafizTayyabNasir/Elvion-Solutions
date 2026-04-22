@@ -23,12 +23,15 @@ export async function GET(request: Request) {
     if (employeeId) where.employeeId = parseInt(employeeId);
     if (status) where.status = status;
     if (date) {
-      where.date = new Date(date);
-    } else if (month) {
-      const [year, m] = month.split('-').map(Number);
       where.date = {
-        gte: new Date(year, m - 1, 1),
-        lt: new Date(year, m, 1),
+        gte: new Date(date + 'T00:00:00.000Z'),
+        lte: new Date(date + 'T23:59:59.999Z'),
+      };
+    } else if (month) {
+      const [yr, m] = month.split('-').map(Number);
+      where.date = {
+        gte: new Date(Date.UTC(yr, m - 1, 1)),
+        lt:  new Date(Date.UTC(yr, m, 1)),
       };
     }
 
@@ -66,7 +69,7 @@ export async function POST(request: Request) {
     if (Array.isArray(body)) {
       const records = body.map((r: any) => ({
         employeeId: parseInt(r.employeeId),
-        date: new Date(r.date),
+        date: new Date(r.date.includes('T') ? r.date : r.date + 'T00:00:00.000Z'),
         clockIn: r.clockIn ? new Date(r.clockIn) : null,
         clockOut: r.clockOut ? new Date(r.clockOut) : null,
         status: r.status || 'present',
@@ -97,12 +100,12 @@ export async function POST(request: Request) {
       where: {
         employeeId_date: {
           employeeId: parseInt(employeeId),
-          date: new Date(date),
+          date: new Date(date.includes('T') ? date : date + 'T00:00:00.000Z'),
         },
       },
       create: {
         employeeId: parseInt(employeeId),
-        date: new Date(date),
+        date: new Date(date.includes('T') ? date : date + 'T00:00:00.000Z'),
         clockIn: clockIn ? new Date(clockIn) : null,
         clockOut: clockOut ? new Date(clockOut) : null,
         status: status || 'present',
