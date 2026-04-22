@@ -106,10 +106,41 @@ export default function AttendancePage() {
     setSaving(true);
     setError("");
     try {
+      // Determine clock-out date — if clockOut time < clockIn time it's an overnight shift (next day)
+      let clockInISO: string | null = null;
+      let clockOutISO: string | null = null;
+      let hoursWorked: string = form.hoursWorked;
+
+      if (form.clockIn) {
+        clockInISO = `${form.date}T${form.clockIn}:00.000Z`;
+      }
+      if (form.clockOut) {
+        const [inH, inM]   = (form.clockIn || "00:00").split(":").map(Number);
+        const [outH, outM] = form.clockOut.split(":").map(Number);
+        const inMins  = inH  * 60 + inM;
+        const outMins = outH * 60 + outM;
+
+        if (form.clockIn && outMins <= inMins) {
+          // Overnight — advance clock-out to next calendar day
+          const nextDay = new Date(`${form.date}T00:00:00.000Z`);
+          nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+          clockOutISO = `${nextDay.toISOString().split("T")[0]}T${form.clockOut}:00.000Z`;
+        } else {
+          clockOutISO = `${form.date}T${form.clockOut}:00.000Z`;
+        }
+
+        // Auto-calculate hours
+        if (clockInISO) {
+          const diffMs = new Date(clockOutISO).getTime() - new Date(clockInISO).getTime();
+          hoursWorked = (Math.round((diffMs / 3_600_000) * 10) / 10).toString();
+        }
+      }
+
       const payload = {
         ...form,
-        clockIn: form.clockIn ? `${form.date}T${form.clockIn}:00.000Z` : null,
-        clockOut: form.clockOut ? `${form.date}T${form.clockOut}:00.000Z` : null,
+        clockIn:     clockInISO,
+        clockOut:    clockOutISO,
+        hoursWorked,
       };
       if (editing) {
         await fetchAPI(`/hr/attendance/${editing.id}`, { method: "PUT", body: JSON.stringify(payload) });
@@ -147,15 +178,31 @@ export default function AttendancePage() {
     setSaving(true);
     setError("");
     try {
-      const payload = Object.entries(bulkRecords).map(([empId, data]) => ({
-        employeeId: empId,
-        date: bulkDate,
-        clockIn: data.clockIn ? `${bulkDate}T${data.clockIn}:00.000Z` : null,
-        clockOut: data.clockOut ? `${bulkDate}T${data.clockOut}:00.000Z` : null,
-        status: data.status,
-        hoursWorked: data.clockIn && data.clockOut ?
-          ((new Date(`2000-01-01T${data.clockOut}`).getTime() - new Date(`2000-01-01T${data.clockIn}`).getTime()) / 3600000).toFixed(1) : null,
-      }));
+      const payload = Object.entries(bulkRecords).map(([empId, data]) => {
+        let clockInISO: string | null = null;
+        let clockOutISO: string | null = null;
+        let hoursWorked: string | null = null;
+
+        if (data.clockIn) clockInISO = `${bulkDate}T${data.clockIn}:00.000Z`;
+
+        if (data.clockOut) {
+          const [inH, inM]   = (data.clockIn || "00:00").split(":").map(Number);
+          const [outH, outM] = data.clockOut.split(":").map(Number);
+          if (data.clockIn && outH * 60 + outM <= inH * 60 + inM) {
+            const nextDay = new Date(`${bulkDate}T00:00:00.000Z`);
+            nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+            clockOutISO = `${nextDay.toISOString().split("T")[0]}T${data.clockOut}:00.000Z`;
+          } else {
+            clockOutISO = `${bulkDate}T${data.clockOut}:00.000Z`;
+          }
+          if (clockInISO) {
+            const diffMs = new Date(clockOutISO).getTime() - new Date(clockInISO).getTime();
+            hoursWorked = (Math.round((diffMs / 3_600_000) * 10) / 10).toString();
+          }
+        }
+
+        return { employeeId: empId, date: bulkDate, clockIn: clockInISO, clockOut: clockOutISO, status: data.status, hoursWorked };
+      });
       await fetchAPI("/hr/attendance", { method: "POST", body: JSON.stringify(payload) });
       setShowBulkModal(false);
       fetchRecords();

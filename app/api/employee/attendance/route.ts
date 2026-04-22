@@ -22,8 +22,8 @@ export async function GET(request: Request) {
     const month = parseInt(searchParams.get('month') || String(new Date().getMonth() + 1));
     const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()));
 
-    const firstOfMonth = new Date(year, month - 1, 1);
-    const firstOfNextMonth = new Date(year, month, 1);
+    const firstOfMonth = new Date(Date.UTC(year, month - 1, 1));
+    const firstOfNextMonth = new Date(Date.UTC(year, month, 1));
 
     const attendance = await prisma.attendance.findMany({
       where: {

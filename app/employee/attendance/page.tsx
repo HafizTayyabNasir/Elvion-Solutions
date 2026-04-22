@@ -123,13 +123,8 @@ export default function EmployeeAttendancePage() {
   };
 
   // Determine clock in/out for today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayRecord = records.find(r => {
-    const rd = new Date(r.date);
-    rd.setHours(0, 0, 0, 0);
-    return rd.getTime() === today.getTime();
-  });
+  const todayISO = new Date().toISOString().split("T")[0];
+  const todayRecord = records.find(r => r.date.split("T")[0] === todayISO);
   const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
 
   return (
@@ -239,10 +234,10 @@ export default function EmployeeAttendancePage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-300">
-                      {record.clockIn ? new Date(record.clockIn).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                      {record.clockIn ? (() => { const [h,m] = new Date(record.clockIn).toISOString().slice(11,16).split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`; })() : "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-300">
-                      {record.clockOut ? new Date(record.clockOut).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                      {record.clockOut ? (() => { const [h,m] = new Date(record.clockOut).toISOString().slice(11,16).split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`; })() : "—"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-300">
                       {record.hoursWorked !== null ? `${record.hoursWorked}h` : "—"}
