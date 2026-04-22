@@ -91,8 +91,8 @@ export default function AttendancePage() {
     setForm({
       employeeId: rec.employeeId.toString(),
       date: rec.date.split("T")[0],
-      clockIn: rec.clockIn ? new Date(rec.clockIn).toTimeString().slice(0, 5) : "",
-      clockOut: rec.clockOut ? new Date(rec.clockOut).toTimeString().slice(0, 5) : "",
+      clockIn: rec.clockIn ? new Date(rec.clockIn).toISOString().slice(11, 16) : "",
+      clockOut: rec.clockOut ? new Date(rec.clockOut).toISOString().slice(11, 16) : "",
       status: rec.status,
       hoursWorked: rec.hoursWorked?.toString() || "",
       notes: rec.notes || "",
@@ -108,8 +108,8 @@ export default function AttendancePage() {
     try {
       const payload = {
         ...form,
-        clockIn: form.clockIn ? `${form.date}T${form.clockIn}:00` : null,
-        clockOut: form.clockOut ? `${form.date}T${form.clockOut}:00` : null,
+        clockIn: form.clockIn ? `${form.date}T${form.clockIn}:00.000Z` : null,
+        clockOut: form.clockOut ? `${form.date}T${form.clockOut}:00.000Z` : null,
       };
       if (editing) {
         await fetchAPI(`/hr/attendance/${editing.id}`, { method: "PUT", body: JSON.stringify(payload) });
@@ -135,8 +135,8 @@ export default function AttendancePage() {
       const existing = records.find(r => r.employeeId === emp.id);
       initialBulk[emp.id] = {
         status: existing?.status || "present",
-        clockIn: existing?.clockIn ? new Date(existing.clockIn).toTimeString().slice(0, 5) : officeStart,
-        clockOut: existing?.clockOut ? new Date(existing.clockOut).toTimeString().slice(0, 5) : officeEnd,
+        clockIn: existing?.clockIn ? new Date(existing.clockIn).toISOString().slice(11, 16) : officeStart,
+        clockOut: existing?.clockOut ? new Date(existing.clockOut).toISOString().slice(11, 16) : officeEnd,
       };
     });
     setBulkRecords(initialBulk);
@@ -150,8 +150,8 @@ export default function AttendancePage() {
       const payload = Object.entries(bulkRecords).map(([empId, data]) => ({
         employeeId: empId,
         date: bulkDate,
-        clockIn: data.clockIn ? `${bulkDate}T${data.clockIn}:00` : null,
-        clockOut: data.clockOut ? `${bulkDate}T${data.clockOut}:00` : null,
+        clockIn: data.clockIn ? `${bulkDate}T${data.clockIn}:00.000Z` : null,
+        clockOut: data.clockOut ? `${bulkDate}T${data.clockOut}:00.000Z` : null,
         status: data.status,
         hoursWorked: data.clockIn && data.clockOut ?
           ((new Date(`2000-01-01T${data.clockOut}`).getTime() - new Date(`2000-01-01T${data.clockIn}`).getTime()) / 3600000).toFixed(1) : null,
@@ -274,8 +274,8 @@ export default function AttendancePage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-300">{new Date(rec.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{rec.clockIn ? new Date(rec.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}</td>
-                      <td className="px-4 py-3 text-sm text-gray-300">{rec.clockOut ? new Date(rec.clockOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-300">{rec.clockIn ? (() => { const t = new Date(rec.clockIn).toISOString().slice(11,16); const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`; })() : "—"}</td>
+                      <td className="px-4 py-3 text-sm text-gray-300">{rec.clockOut ? (() => { const t = new Date(rec.clockOut).toISOString().slice(11,16); const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`; })() : "—"}</td>
                       <td className="px-4 py-3 text-sm text-gray-300">{rec.hoursWorked ? `${rec.hoursWorked}h` : "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${cfg.color}`}>
