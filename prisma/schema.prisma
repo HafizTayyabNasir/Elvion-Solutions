@@ -497,3 +497,11 @@ model FinancialAlert {
   resolvedAt      DateTime?
   isResolved      Boolean   @default(false)
 }
+
+// ============== App-wide Settings ==============
+
+model Setting {
+  key       String   @id   // e.g. "office_start_time", "office_end_time"
+  value     String         // stored as string
+  updatedAt DateTime @updatedAt
+}

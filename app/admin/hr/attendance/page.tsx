@@ -39,7 +39,9 @@ export default function AttendancePage() {
   const [showModal, setShowModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [editing, setEditing] = useState<Attendance | null>(null);
-  const [form, setForm] = useState({ employeeId: "", date: selectedDate, clockIn: "09:00", clockOut: "17:00", status: "present", hoursWorked: "8", notes: "" });
+  const [officeStart, setOfficeStart] = useState("09:00");
+  const [officeEnd, setOfficeEnd] = useState("18:00");
+  const [form, setForm] = useState({ employeeId: "", date: selectedDate, clockIn: "09:00", clockOut: "18:00", status: "present", hoursWorked: "8", notes: "" });
   const [bulkDate, setBulkDate] = useState(selectedDate);
   const [bulkRecords, setBulkRecords] = useState<Record<number, { status: string; clockIn: string; clockOut: string }>>({});
   const [saving, setSaving] = useState(false);
@@ -65,12 +67,21 @@ export default function AttendancePage() {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { fetchEmployees(); }, []);
+  useEffect(() => {
+    fetchEmployees();
+    fetchAPI("/settings").then((s: Record<string, string>) => {
+      const start = s.office_start_time || "09:00";
+      const end   = s.office_end_time   || "18:00";
+      setOfficeStart(start);
+      setOfficeEnd(end);
+      setForm(f => ({ ...f, clockIn: start, clockOut: end }));
+    }).catch(() => {});
+  }, []);
   useEffect(() => { setLoading(true); fetchRecords(); }, [selectedDate, selectedMonth, filterEmployee, filterStatus, viewMode]);
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ employeeId: "", date: selectedDate, clockIn: "09:00", clockOut: "17:00", status: "present", hoursWorked: "8", notes: "" });
+    setForm({ employeeId: "", date: selectedDate, clockIn: officeStart, clockOut: officeEnd, status: "present", hoursWorked: "8", notes: "" });
     setError("");
     setShowModal(true);
   };
@@ -124,8 +135,8 @@ export default function AttendancePage() {
       const existing = records.find(r => r.employeeId === emp.id);
       initialBulk[emp.id] = {
         status: existing?.status || "present",
-        clockIn: existing?.clockIn ? new Date(existing.clockIn).toTimeString().slice(0, 5) : "09:00",
-        clockOut: existing?.clockOut ? new Date(existing.clockOut).toTimeString().slice(0, 5) : "17:00",
+        clockIn: existing?.clockIn ? new Date(existing.clockIn).toTimeString().slice(0, 5) : officeStart,
+        clockOut: existing?.clockOut ? new Date(existing.clockOut).toTimeString().slice(0, 5) : officeEnd,
       };
     });
     setBulkRecords(initialBulk);
@@ -296,7 +307,7 @@ export default function AttendancePage() {
               {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded-lg flex items-center gap-2"><AlertCircle size={16} />{error}</div>}
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Employee *</label>
-                <select value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} disabled={!!editing}
+                <select value={form.employeeId} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, employeeId: v })); }} disabled={!!editing}
                   className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary disabled:opacity-50">
                   <option value="">Select Employee</option>
                   {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.employeeId})</option>)}
@@ -305,12 +316,12 @@ export default function AttendancePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Date *</label>
-                  <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  <input type="date" value={form.date} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, date: v })); }}
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Status</label>
-                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  <select value={form.status} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, status: v })); }}
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary">
                     {Object.entries(statusConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
@@ -319,18 +330,18 @@ export default function AttendancePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Clock In</label>
-                  <input type="time" value={form.clockIn} onChange={(e) => setForm({ ...form, clockIn: e.target.value })}
+                  <input type="time" value={form.clockIn} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, clockIn: v })); }}
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Clock Out</label>
-                  <input type="time" value={form.clockOut} onChange={(e) => setForm({ ...form, clockOut: e.target.value })}
+                  <input type="time" value={form.clockOut} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, clockOut: v })); }}
                     className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" />
                 </div>
               </div>
               <div>
                 <label className="text-xs text-gray-400 mb-1 block">Notes</label>
-                <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                <input value={form.notes} onChange={(e) => { const v = e.target.value; setForm(f => ({ ...f, notes: v })); }}
                   className="w-full px-3 py-2 bg-elvion-dark border border-white/10 rounded-lg text-white text-sm outline-none focus:border-elvion-primary" placeholder="Optional notes..." />
               </div>
             </div>

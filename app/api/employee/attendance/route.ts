@@ -80,8 +80,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ message: 'Already clocked in today' }, { status: 400 });
       }
 
-      // Determine status (late if after 9:00 AM)
-      const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 0);
+      // Determine status — late if clock-in is after the configured office start time
+      const startSetting = await prisma.setting.findUnique({ where: { key: 'office_start_time' } });
+      const [startH, startM] = (startSetting?.value || '09:00').split(':').map(Number);
+      const isLate = now.getHours() > startH || (now.getHours() === startH && now.getMinutes() > startM);
 
       const attendance = await prisma.attendance.create({
         data: {
